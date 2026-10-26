@@ -1,0 +1,14 @@
+# LoCUS-2M: LCP level-2 segments, 4 kb windows of GRCh38 chromosomes 3-22, 359,466 steps of 16 crops (12.5B bases).
+model:
+  model_dim: 128
+  attention_heads: 4
+  ffn_dim: 512
+  base_attention_radii: [32, 128]
+  segment_layers: 6
+data:
+  genome_windows: data/GRCh38.p14.acgt.w4096.s4096
+  context_length: 4096
+  segmenter: lcp
+training:
+  run_name: locus-2m
+  batch_size: 16

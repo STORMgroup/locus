@@ -1,0 +1,19 @@
+# Context-length ablation, LoCUS-2M-16k with a constant learning rate: the recipe of long-range-enhancer-ep20.yaml with the
+# learning rate kept at its peak after the warm-up instead of the cosine decay. The reported runs used --micro-batches 2 at
+# 4 kb and --micro-batches 8 at 16 kb:
+#   python scripts/finetune.py --pretrained checkpoints/locus-2m-16k.pt --recipe configs/finetune/long-range-enhancer-ep20-constant.yaml \
+#       --data-root data/benchmarks/long_range --task lrb_enhancer_16k --fold 0 --micro-batches 8 \
+#       --output results/locus-2m-16k/long_range_ep20_constant/lrb_enhancer_16k/fold-00.json
+epochs: 20
+batch_size: 32
+learning_rate: 3.0e-4
+warmup_fraction: 0.01
+weight_decay: 0.1
+min_learning_rate_ratio: 0.1
+gradient_clip: 1.0
+dropout: 0.1
+autocast: bfloat16
+validation_folds: 10
+seed: 42
+test_every_epoch: false
+learning_rate_schedule: constant

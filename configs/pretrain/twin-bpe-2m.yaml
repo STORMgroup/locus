@@ -1,0 +1,16 @@
+# Tokenizer study, BPE twin of LoCUS-2M: BPE tokens (vocabulary 4,096, trained on 1 Gb of chromosomes 3-22;
+# scripts/train_bpe.py) as segments; nothing else changed.
+model:
+  model_dim: 128
+  attention_heads: 4
+  ffn_dim: 512
+  base_attention_radii: [32, 128]
+  segment_layers: 6
+data:
+  genome_windows: data/GRCh38.p14.acgt.w4096.s4096
+  context_length: 4096
+  segmenter: bpe
+  bpe_tokenizer: data/tokenizers/bpe-4096-1gb-seed42.json
+training:
+  run_name: twin-bpe-2m
+  batch_size: 16

@@ -1,0 +1,113 @@
+--- a/causal_conv1d/cpp_functions.py
++++ b/causal_conv1d/cpp_functions.py
+@@ -1,6 +1,8 @@
+ # Copyright (c) 2024, Tri Dao.
+ 
++from __future__ import annotations
+ import torch
++from typing import Optional
+ 
+ import causal_conv1d_cuda
+ 
+@@ -12,11 +14,11 @@
+ def _causal_conv1d_fwd_cpp(
+     x: torch.Tensor,
+     weight: torch.Tensor,
+-    bias: torch.Tensor | None,
+-    seq_idx: torch.Tensor | None,
+-    initial_states: torch.Tensor | None,
++    bias: Optional[torch.Tensor],
++    seq_idx: Optional[torch.Tensor],
++    initial_states: Optional[torch.Tensor],
+     out: torch.Tensor,
+-    final_states_out: torch.Tensor | None,
++    final_states_out: Optional[torch.Tensor],
+     silu_activation: bool,
+ ) -> None:
+     causal_conv1d_cuda.causal_conv1d_fwd(
+@@ -41,14 +43,14 @@
+ def _causal_conv1d_bwd_cpp(
+     x: torch.Tensor,
+     weight: torch.Tensor,
+-    bias: torch.Tensor | None,
++    bias: Optional[torch.Tensor],
+     dout: torch.Tensor,
+-    seq_idx: torch.Tensor | None,
+-    initial_states: torch.Tensor | None,
+-    dfinal_states: torch.Tensor | None,
++    seq_idx: Optional[torch.Tensor],
++    initial_states: Optional[torch.Tensor],
++    dfinal_states: Optional[torch.Tensor],
+     dx: torch.Tensor,
+     dweight: torch.Tensor,
+-    dbias: torch.Tensor | None,
++    dbias: Optional[torch.Tensor],
+     dinitial_states: torch.Tensor,
+     silu_activation: bool,
+ ) -> None:
+@@ -73,11 +75,11 @@
+     x: torch.Tensor,
+     conv_state: torch.Tensor,
+     weight: torch.Tensor,
+-    bias: torch.Tensor | None,
++    bias: Optional[torch.Tensor],
+     out: torch.Tensor,
+     silu_activation: bool,
+-    cache_seqlens: torch.Tensor | None,
+-    conv_state_indices: torch.Tensor | None,
++    cache_seqlens: Optional[torch.Tensor],
++    conv_state_indices: Optional[torch.Tensor],
+ ) -> None:
+     causal_conv1d_cuda.causal_conv1d_update(
+         x,
+@@ -94,10 +96,10 @@
+ def causal_conv1d_fwd_function(
+     x: torch.Tensor,
+     weight: torch.Tensor,
+-    bias: torch.Tensor | None,
+-    seq_idx: torch.Tensor | None,
+-    initial_states: torch.Tensor | None,
+-    final_states_out: torch.Tensor | None,
++    bias: Optional[torch.Tensor],
++    seq_idx: Optional[torch.Tensor],
++    initial_states: Optional[torch.Tensor],
++    final_states_out: Optional[torch.Tensor],
+     silu_activation: bool,
+ ) -> torch.Tensor:
+     out = torch.empty_like(x)
+@@ -117,15 +119,15 @@
+ def causal_conv1d_bwd_function(
+     x: torch.Tensor,
+     weight: torch.Tensor,
+-    bias: torch.Tensor | None,
++    bias: Optional[torch.Tensor],
+     dout: torch.Tensor,
+-    seq_idx: torch.Tensor | None,
+-    initial_states: torch.Tensor | None,
+-    dfinal_states: torch.Tensor | None,
+-    dx: torch.Tensor | None,
++    seq_idx: Optional[torch.Tensor],
++    initial_states: Optional[torch.Tensor],
++    dfinal_states: Optional[torch.Tensor],
++    dx: Optional[torch.Tensor],
+     return_dinitial_states: torch.Tensor,
+     silu_activation: bool,
+-) -> tuple[torch.Tensor | None]:
++) -> tuple[Optional[torch.Tensor]]:
+     batch_size, dim = x.size()[:2]
+     width = weight.size(-1)
+ 
+@@ -164,10 +166,10 @@
+     x: torch.Tensor,
+     conv_state: torch.Tensor,
+     weight: torch.Tensor,
+-    bias: torch.Tensor | None,
++    bias: Optional[torch.Tensor],
+     silu_activation: bool,
+-    cache_seqlens: torch.Tensor | None,
+-    conv_state_indices: torch.Tensor | None,
++    cache_seqlens: Optional[torch.Tensor],
++    conv_state_indices: Optional[torch.Tensor],
+ ) -> torch.Tensor:
+     out = torch.empty_like(x)
+     _causal_conv1d_update_cpp(

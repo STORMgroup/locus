@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "locus"
+version = "1.0.0"
+description = "LoCUS: DNA language models on locally consistent parsing (LCP) segments"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+dependencies = [
+    "torch>=2.0",
+    "numpy",
+    "pyyaml",
+    "tokenizers",
+    "safetensors",
+    "huggingface_hub",
+]
+
+[project.optional-dependencies]
+benchmarks = ["pyarrow", "transformers", "scikit-learn"]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["locus*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -1,0 +1,2 @@
+Headers of htslib 1.24 (https://github.com/samtools/htslib), unmodified: kseq.h, the FASTA reader of
+tools/split_fasta.c, and the headers it includes. License: third_party/htslib/LICENSE.

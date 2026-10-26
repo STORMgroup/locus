@@ -1,0 +1,16 @@
+# LoCUS-2M-16k (context-length ablation): LoCUS-2M on 16 kb windows, 4 crops per step (crop lengths 256-16,384 bp;
+# 12.0B bases in 359,466 steps).
+model:
+  model_dim: 128
+  attention_heads: 4
+  ffn_dim: 512
+  base_attention_radii: [32, 128]
+  segment_layers: 6
+data:
+  genome_windows: data/GRCh38.p14.acgt.w16384.s16384
+  context_length: 16384
+  segmenter: lcp
+  example_workers: 7
+training:
+  run_name: locus-2m-16k
+  batch_size: 4

@@ -1,0 +1,49 @@
+"""Download pretrained models into the local Hugging Face cache: the LoCUS models and, with --baselines, the public models
+fine-tuned as same-protocol baselines (at the revisions pinned in locus/finetune/baselines.py).
+
+    python scripts/download_models.py                  # the six LoCUS models (same as --locus)
+    python scripts/download_models.py locus-2m locus-7m
+    python scripts/download_models.py --baselines      # the three baselines
+    python scripts/download_models.py --locus --baselines
+
+The models are then loaded by name: locus.load("locus-2m"), scripts/finetune.py --pretrained locus-2m, or
+scripts/finetune_baseline.py --baseline hyenadna-tiny-0.44m."""
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from locus.finetune.baselines import BASELINES  # noqa: E402
+from locus.hub import MODELS, download  # noqa: E402
+
+
+def download_baseline(name: str) -> Path:
+    from huggingface_hub import snapshot_download
+
+    baseline = BASELINES[name]
+    return Path(snapshot_download(baseline.repository, revision=baseline.revision))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("models", nargs="*", metavar="MODEL",
+                        help=f"models to download (default: all of {', '.join(MODELS)}; baselines: {', '.join(BASELINES)})")
+    parser.add_argument("--locus", action="store_true", help="all six LoCUS models")
+    parser.add_argument("--baselines", action="store_true", help="all three baselines")
+    arguments = parser.parse_args()
+    unknown = [name for name in arguments.models if name not in MODELS and name not in BASELINES]
+    if unknown:
+        parser.error(f"unknown model(s) {', '.join(unknown)}; choose from {', '.join(list(MODELS) + list(BASELINES))}")
+    names = list(arguments.models)
+    if arguments.locus or not (names or arguments.baselines):
+        names += [name for name in MODELS if name not in names]
+    if arguments.baselines:
+        names += [name for name in BASELINES if name not in names]
+    for name in names:
+        path = download_baseline(name) if name in BASELINES else download(name)
+        print(f"{name}: {path}", flush=True)
+
+
+if __name__ == "__main__":
+    main()

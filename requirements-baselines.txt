@@ -1,0 +1,5 @@
+# Same-protocol baselines (scripts/finetune_baseline.py): Caduceus-PS needs the mamba-ssm and causal-conv1d CUDA kernels.
+# Versions used for the paper. Install with: pip install -r requirements-baselines.txt --no-build-isolation
+einops==0.8.2
+causal-conv1d==1.7.0
+mamba-ssm==2.3.1

@@ -1,0 +1,16 @@
+# Tokenizer study, fixed-segment twin of LoCUS-2M: segments of 10 bp starting every 5 bp; nothing else changed.
+model:
+  model_dim: 128
+  attention_heads: 4
+  ffn_dim: 512
+  base_attention_radii: [32, 128]
+  segment_layers: 6
+data:
+  genome_windows: data/GRCh38.p14.acgt.w4096.s4096
+  context_length: 4096
+  segmenter: fixed
+  fixed_length: 10
+  fixed_stride: 5
+training:
+  run_name: twin-fixed-2m
+  batch_size: 16

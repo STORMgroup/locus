@@ -1,0 +1,12 @@
+# Fine-tuning recipe of LoCUS-0.5M and LoCUS-2M, the same for every task.
+epochs: 20
+batch_size: 128
+learning_rate: 1.0e-3
+warmup_fraction: 0.01
+weight_decay: 0.1
+min_learning_rate_ratio: 0.1
+gradient_clip: 1.0
+dropout: 0.1
+autocast: bfloat16
+validation_folds: 10
+seed: 42

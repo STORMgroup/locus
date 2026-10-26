@@ -1,0 +1,14 @@
+# LoCUS-0.5M: LoCUS-2M at width 64 (2 heads, feed-forward 256).
+model:
+  model_dim: 64
+  attention_heads: 2
+  ffn_dim: 256
+  base_attention_radii: [32, 128]
+  segment_layers: 6
+data:
+  genome_windows: data/GRCh38.p14.acgt.w4096.s4096
+  context_length: 4096
+  segmenter: lcp
+training:
+  run_name: locus-0.5m
+  batch_size: 16

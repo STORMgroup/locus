@@ -1,0 +1,12 @@
+# Versions used for all results in the paper (Python 3.9, CUDA 11.8).
+torch==2.6.0
+numpy==2.0.2
+pyyaml==6.0.3
+tokenizers==0.22.2
+safetensors==0.7.0
+huggingface_hub==0.36.2
+# benchmark preparation and baselines
+pyarrow
+transformers
+scikit-learn
+pytest
