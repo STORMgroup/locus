@@ -144,6 +144,24 @@
     "sd": 0.017373437724769517,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.6237444872495064,
+     0.631445396184653,
+     0.5824819652172714,
+     0.616145161790282,
+     0.5979381443298969,
+     0.6082474226804123,
+     0.6056882083488881,
+     0.6084495398738103,
+     0.6138017600440696,
+     0.6340543134850355
+    ],
+    "mean": 0.6121996399203825,
+    "sd": 0.01548495966051306,
+    "complete": true,
+    "folds": 10
    }
   },
   "H3K27ac": {
@@ -288,6 +306,24 @@
     ],
     "mean": 0.43903294865370396,
     "sd": 0.016198096243151022,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.4057702867578187,
+     0.3896414829101765,
+     0.41504280349627964,
+     0.41607353122941837,
+     0.42013618015543475,
+     0.39993185770905026,
+     0.4114297148062947,
+     0.4283673162527922,
+     0.42167749459479126,
+     0.4195538012337302
+    ],
+    "mean": 0.41276244691457864,
+    "sd": 0.011496459539366144,
     "complete": true,
     "folds": 10
    }
@@ -436,6 +472,24 @@
     "sd": 0.0077232838214711524,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.5030414735010503,
+     0.5014153738471371,
+     0.5129686864842432,
+     0.4952676667711108,
+     0.49951337317001065,
+     0.5059636521800587,
+     0.5012573157265567,
+     0.49624196181576136,
+     0.5036239811240181,
+     0.5098310675603287
+    ],
+    "mean": 0.5029124552180275,
+    "sd": 0.005560780046402824,
+    "complete": true,
+    "folds": 10
    }
   },
   "H3K9me3": {
@@ -580,6 +634,24 @@
     ],
     "mean": 0.39434175808905325,
     "sd": 0.020043553332750878,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.3458976733158166,
+     0.362378020107959,
+     0.327189272385921,
+     0.25455844122715715,
+     0.3438732188795513,
+     0.3404112635125052,
+     0.3697435312787345,
+     0.3294199718108754,
+     0.32379021932484114,
+     0.3088137128267418
+    ],
+    "mean": 0.3306075324670103,
+    "sd": 0.032257429268674746,
     "complete": true,
     "folds": 10
    }
@@ -728,6 +800,24 @@
     "sd": 0.007836674096873237,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.4000315619309991,
+     0.40090677310224715,
+     0.39650837162426184,
+     0.4048349298908611,
+     0.39845744087360124,
+     0.4074135236413376,
+     0.4040098140736882,
+     0.4058254003728342,
+     0.39621194448742536,
+     0.3914183577922653
+    ],
+    "mean": 0.4005618117789521,
+    "sd": 0.0050396493707945515,
+    "complete": true,
+    "folds": 10
    }
   },
   "H3K27me3": {
@@ -874,6 +964,18 @@
     "sd": 0.0075849894572636335,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.5211355159154247,
+     0.5439877021462048,
+     0.5215753347296177,
+     0.519572714634838
+    ],
+    "mean": 0.5265678168565213,
+    "sd": null,
+    "complete": false,
+    "folds": 10
    }
   },
   "H3K4me1": {
@@ -1018,6 +1120,24 @@
     ],
     "mean": 0.4096638501066944,
     "sd": 0.0060323023565617235,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.3886404482502885,
+     0.3841828036109055,
+     0.3687990507238973,
+     0.37655690161194905,
+     0.38126198682270546,
+     0.3931079404084316,
+     0.38063366748204147,
+     0.3863177627736273,
+     0.3931887958120936,
+     0.392919600966076
+    ],
+    "mean": 0.38456089584620157,
+    "sd": 0.00800026715900432,
     "complete": true,
     "folds": 10
    }
@@ -1166,6 +1286,24 @@
     "sd": 0.012587617606105958,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.46583019763100125,
+     0.4631343574518023,
+     0.4565946469792815,
+     0.4424527424294597,
+     0.45482218815234166,
+     0.4670624797832507,
+     0.4633331354668756,
+     0.4671170594514883,
+     0.45593007304519156,
+     0.4564522805425713
+    ],
+    "mean": 0.4592729160933264,
+    "sd": 0.0076422282286036465,
+    "complete": true,
+    "folds": 10
    }
   },
   "H3K9ac": {
@@ -1310,6 +1448,24 @@
     ],
     "mean": 0.49949634486438527,
     "sd": 0.01751839953789794,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.47873017674234675,
+     0.4651495537642024,
+     0.4991541512320419,
+     0.45755821204777797,
+     0.4874543565101406,
+     0.4677755216115159,
+     0.48109042448200945,
+     0.47117468928984324,
+     0.47877144353686274,
+     0.49947764266773864
+    ],
+    "mean": 0.47863361718844794,
+    "sd": 0.013900287338961195,
     "complete": true,
     "folds": 10
    }
@@ -1458,6 +1614,18 @@
     "sd": 0.009720975206845374,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.5682998062104749,
+     0.5575278696164069,
+     0.5871398075746644,
+     0.5651000332458858
+    ],
+    "mean": 0.569516879161858,
+    "sd": null,
+    "complete": false,
+    "folds": 10
    }
   },
   "promoter_all": {
@@ -1602,6 +1770,24 @@
     ],
     "mean": 0.7144725131854002,
     "sd": 0.007264013495635086,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.7048691602618428,
+     0.7146487432719958,
+     0.7062185802274028,
+     0.7160055519604099,
+     0.7198438766120938,
+     0.7101758726232597,
+     0.7058536565083064,
+     0.6969719192334659,
+     0.7046263391625105,
+     0.7037547637611545
+    ],
+    "mean": 0.7082968463622442,
+    "sd": 0.00683967099886867,
     "complete": true,
     "folds": 10
    }
@@ -1750,6 +1936,24 @@
     "sd": 0.008517721294053997,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.7387435988921782,
+     0.7321550270232381,
+     0.7409596757918213,
+     0.7337299589909148,
+     0.7331538065981864,
+     0.73080615389955,
+     0.7334115008593817,
+     0.728465600799564,
+     0.7348937925561373,
+     0.7317596784616196
+    ],
+    "mean": 0.7338078793872591,
+    "sd": 0.0036781195282066153,
+    "complete": true,
+    "folds": 10
    }
   },
   "promoter_tata": {
@@ -1894,6 +2098,24 @@
     ],
     "mean": 0.7134546362471652,
     "sd": 0.02769996611155763,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.7461135290755401,
+     0.6604949365843475,
+     0.6425396041156862,
+     0.8118990304530631,
+     0.7391455924894308,
+     0.7090950347467495,
+     0.7113879915305903,
+     0.6766202127932383,
+     0.702630162553507,
+     0.6889552260233327
+    ],
+    "mean": 0.7088881320365485,
+    "sd": 0.0484659232592949,
     "complete": true,
     "folds": 10
    }
@@ -2042,6 +2264,24 @@
     "sd": 0.02271647823837169,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.7641149611112279,
+     0.8120692703238023,
+     0.6888663670373646,
+     0.8159344342668747,
+     0.848834181855453,
+     0.7791730523737251,
+     0.8690864188743741,
+     0.6958374909128399,
+     0.8625603456553772,
+     0.6962358339555293
+    ],
+    "mean": 0.7832712356366568,
+    "sd": 0.07020729460548811,
+    "complete": true,
+    "folds": 10
    }
   },
   "splice_sites_acceptors": {
@@ -2186,6 +2426,24 @@
     ],
     "mean": 0.9078472716958239,
     "sd": 0.01629007826415139,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.8137227415391127,
+     0.8283480788038203,
+     0.8312999400480223,
+     0.8079664541286286,
+     0.8093469565916455,
+     0.7763720526847167,
+     0.8293039333559613,
+     0.826623094199419,
+     0.8229253167814253,
+     0.888671814473778
+    ],
+    "mean": 0.823458038260653,
+    "sd": 0.02815374108468263,
     "complete": true,
     "folds": 10
    }
@@ -2334,6 +2592,24 @@
     "sd": 0.008214557418173974,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.8876317656428478,
+     0.6787214673327692,
+     0.8084484782863866,
+     0.8954984750421696,
+     0.8960144762501211,
+     0.8547565075390154,
+     0.8793740592052834,
+     0.9120359788536649,
+     0.9208710626198134,
+     0.8327006529167673
+    ],
+    "mean": 0.8566052923688838,
+    "sd": 0.0717139814313085,
+    "complete": true,
+    "folds": 10
    }
   },
   "enhancers": {
@@ -2480,6 +2756,24 @@
     "sd": 0.006917429621371849,
     "complete": true,
     "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.46596107622662064,
+     0.47860074167107974,
+     0.4767794121034054,
+     0.4755068411814297,
+     0.4732117899805455,
+     0.47851243037726676,
+     0.4712181159109077,
+     0.4698898003353058,
+     0.4839394807172303,
+     0.45965682011747055
+    ],
+    "mean": 0.4733276508621262,
+    "sd": 0.007003192106277618,
+    "complete": true,
+    "folds": 10
    }
   },
   "enhancers_types": {
@@ -2624,6 +2918,24 @@
     ],
     "mean": 0.46490373281186037,
     "sd": 0.007674168535096084,
+    "complete": true,
+    "folds": 10
+   },
+   "hyenadna-small-3.3m-standard": {
+    "values": [
+     0.4414547048945705,
+     0.4357745288527817,
+     0.4243474408754299,
+     0.4432960439168398,
+     0.4453110533452995,
+     0.43282838582614896,
+     0.4420698230202232,
+     0.43601434164173075,
+     0.4388896284737147,
+     0.4319447526343177
+    ],
+    "mean": 0.4371930703481057,
+    "sd": 0.006350657508541293,
     "complete": true,
     "folds": 10
    }
@@ -17535,7 +17847,9 @@
      "task-folds": 180,
      "LCP drop": -0.009106273162214264,
      "Caduceus drop": -0.008041554108591536,
-     "HyenaDNA drop": -0.005509087314181725,
+     "HyenaDNA-tiny drop": -0.005509087314181725,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0010647190536227289,
       "interval": [
@@ -17544,20 +17858,24 @@
       ],
       "LCP loses less": 80
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0035971858480325393,
       "interval": [
        -0.005307715613335683,
        -0.002026723028942581
       ],
       "LCP loses less": 60
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.00618403731391389,
      "Caduceus drop": -0.0056928563281894795,
-     "HyenaDNA drop": -0.002544197128093843,
+     "HyenaDNA-tiny drop": -0.002544197128093843,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.000491180985724411,
       "interval": [
@@ -17566,61 +17884,99 @@
       ],
       "LCP loses less": 47
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0036398401858200474,
       "interval": [
        -0.005412903266913834,
        -0.0018211209307543302
       ],
       "LCP loses less": 32
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.006641880848922769,
      "Caduceus drop": -0.007765928465551142,
-     "HyenaDNA drop": -0.0028723353189619347,
+     "HyenaDNA-tiny drop": -0.0028723353189619347,
+     "HyenaDNA-small (lr 3e-4) drop": 0.0006814209482344939,
+     "HyenaDNA-small (lr 1e-3) drop": -0.002806584145853856,
      "LCP - Caduceus": {
       "mean": 0.0011240476166283727,
       "interval": null,
       "LCP loses less": 16
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0037695455299608343,
       "interval": null,
       "LCP loses less": 13
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.007323301797157263,
+      "interval": null,
+      "LCP loses less": 9
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.003835296703068913,
+      "interval": null,
+      "LCP loses less": 11
      }
     },
     "splice": {
      "task-folds": 30,
      "LCP drop": -0.02547907340356013,
      "Caduceus drop": -0.018762371935810786,
-     "HyenaDNA drop": -0.02055245366823601,
+     "HyenaDNA-tiny drop": -0.02055245366823601,
+     "HyenaDNA-small (lr 3e-4) drop": -0.028379727084523597,
+     "HyenaDNA-small (lr 1e-3) drop": -0.020081383000204962,
      "LCP - Caduceus": {
       "mean": -0.006716701467749342,
       "interval": null,
       "LCP loses less": 6
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.004926619735324119,
       "interval": null,
       "LCP loses less": 7
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.0029006536809634683,
+      "interval": null,
+      "LCP loses less": 18
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.005397690403355167,
+      "interval": null,
+      "LCP loses less": 8
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.0028548405116345793,
      "Caduceus drop": -0.004117254734333528,
-     "HyenaDNA drop": -0.0017236167063693936,
+     "HyenaDNA-tiny drop": -0.0017236167063693936,
+     "HyenaDNA-small (lr 3e-4) drop": -0.0037087194587288957,
+     "HyenaDNA-small (lr 1e-3) drop": -0.00039927790795095673,
      "LCP - Caduceus": {
       "mean": 0.0012624142226989488,
       "interval": null,
       "LCP loses less": 11
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0011312238052651857,
       "interval": null,
       "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.0008538789470943165,
+      "interval": null,
+      "LCP loses less": 12
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0024555626036836227,
+      "interval": null,
+      "LCP loses less": 6
      }
     }
    },
@@ -17629,7 +17985,9 @@
      "task-folds": 180,
      "LCP drop": -0.0265918119990404,
      "Caduceus drop": -0.023644667793525694,
-     "HyenaDNA drop": -0.0213440004642098,
+     "HyenaDNA-tiny drop": -0.0213440004642098,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.002947144205514706,
       "interval": [
@@ -17638,20 +17996,24 @@
       ],
       "LCP loses less": 80
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.005247811534830597,
       "interval": [
        -0.009597410288704523,
        -0.0009915318385623944
       ],
       "LCP loses less": 62
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.019901845147981552,
      "Caduceus drop": -0.017195100693281066,
-     "HyenaDNA drop": -0.011670160039959524,
+     "HyenaDNA-tiny drop": -0.011670160039959524,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0027067444547004865,
       "interval": [
@@ -17660,61 +18022,99 @@
       ],
       "LCP loses less": 45
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.00823168510802203,
       "interval": [
        -0.01337990851898102,
        -0.002925592364668289
       ],
       "LCP loses less": 28
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.009820358548419469,
      "Caduceus drop": -0.020079928438779978,
-     "HyenaDNA drop": -0.015100295798670707,
+     "HyenaDNA-tiny drop": -0.015100295798670707,
+     "HyenaDNA-small (lr 3e-4) drop": -0.004464585597666145,
+     "HyenaDNA-small (lr 1e-3) drop": -0.010698480154632614,
      "LCP - Caduceus": {
       "mean": 0.010259569890360509,
       "interval": null,
       "LCP loses less": 22
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": 0.005279937250251239,
       "interval": null,
       "LCP loses less": 20
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.005355772950753323,
+      "interval": null,
+      "LCP loses less": 15
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": 0.0008781216062131447,
+      "interval": null,
+      "LCP loses less": 19
      }
     },
     "splice": {
      "task-folds": 30,
      "LCP drop": -0.07593859329673643,
      "Caduceus drop": -0.0582888743596617,
-     "HyenaDNA drop": -0.06932335474002452,
+     "HyenaDNA-tiny drop": -0.06932335474002452,
+     "HyenaDNA-small (lr 3e-4) drop": -0.0940715493465714,
+     "HyenaDNA-small (lr 1e-3) drop": -0.05968043719200146,
      "LCP - Caduceus": {
       "mean": -0.01764971893707473,
       "interval": null,
       "LCP loses less": 5
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.006615238556711914,
       "interval": null,
       "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.01813295604983498,
+      "interval": null,
+      "LCP loses less": 22
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.01625815610473497,
+      "interval": null,
+      "LCP loses less": 9
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.011178654483721979,
      "Caduceus drop": -0.009273302477663387,
-     "HyenaDNA drop": -0.007109728170047766,
+     "HyenaDNA-tiny drop": -0.007109728170047766,
+     "HyenaDNA-small (lr 3e-4) drop": -0.010851744080186793,
+     "HyenaDNA-small (lr 1e-3) drop": -0.004422156788367423,
      "LCP - Caduceus": {
       "mean": -0.0019053520060585915,
       "interval": null,
       "LCP loses less": 8
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.004068926313674212,
       "interval": null,
       "LCP loses less": 6
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.00032691040353518554,
+      "interval": null,
+      "LCP loses less": 10
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0067564976953545545,
+      "interval": null,
+      "LCP loses less": 3
      }
     }
    },
@@ -17723,7 +18123,9 @@
      "task-folds": 180,
      "LCP drop": -0.034909824569994106,
      "Caduceus drop": -0.03076022850936239,
-     "HyenaDNA drop": -0.027767520371575632,
+     "HyenaDNA-tiny drop": -0.027767520371575632,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.00414959606063172,
       "interval": [
@@ -17732,20 +18134,24 @@
       ],
       "LCP loses less": 79
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.007142304198418478,
       "interval": [
        -0.010898868402383926,
        -0.0035184863415084065
       ],
       "LCP loses less": 52
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.024655548403827356,
      "Caduceus drop": -0.02172595899432922,
-     "HyenaDNA drop": -0.016311773699318653,
+     "HyenaDNA-tiny drop": -0.016311773699318653,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0029295894094981357,
       "interval": [
@@ -17754,61 +18160,99 @@
       ],
       "LCP loses less": 38
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.008343774704508703,
       "interval": [
        -0.012691639948074379,
        -0.004283323946574597
       ],
       "LCP loses less": 22
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.01691974103158066,
      "Caduceus drop": -0.026810013307126054,
-     "HyenaDNA drop": -0.01270620725586733,
+     "HyenaDNA-tiny drop": -0.01270620725586733,
+     "HyenaDNA-small (lr 3e-4) drop": -0.008039607106966199,
+     "HyenaDNA-small (lr 1e-3) drop": -0.013026950418627082,
      "LCP - Caduceus": {
       "mean": 0.009890272275545394,
       "interval": null,
       "LCP loses less": 24
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.00421353377571333,
       "interval": null,
       "LCP loses less": 15
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.00888013392461446,
+      "interval": null,
+      "LCP loses less": 10
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0038927906129535782,
+      "interval": null,
+      "LCP loses less": 14
      }
     },
     "splice": {
      "task-folds": 30,
      "LCP drop": -0.10169665776893333,
      "Caduceus drop": -0.0763917258120471,
-     "HyenaDNA drop": -0.0919308144020013,
+     "HyenaDNA-tiny drop": -0.0919308144020013,
+     "HyenaDNA-small (lr 3e-4) drop": -0.11664993298687112,
+     "HyenaDNA-small (lr 1e-3) drop": -0.07730795044292384,
      "LCP - Caduceus": {
       "mean": -0.02530493195688622,
       "interval": null,
       "LCP loses less": 6
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.009765843366932021,
       "interval": null,
       "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.01495327521793779,
+      "interval": null,
+      "LCP loses less": 24
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.024388707326009496,
+      "interval": null,
+      "LCP loses less": 9
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.012986080910039213,
      "Caduceus drop": -0.013409652933855645,
-     "HyenaDNA drop": -0.011393282360784452,
+     "HyenaDNA-tiny drop": -0.011393282360784452,
+     "HyenaDNA-small (lr 3e-4) drop": -0.012990198402015976,
+     "HyenaDNA-small (lr 1e-3) drop": -0.00924084107078341,
      "LCP - Caduceus": {
       "mean": 0.000423572023816432,
       "interval": null,
       "LCP loses less": 11
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.001592798549254762,
       "interval": null,
       "LCP loses less": 7
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 4.1174919767628104e-06,
+      "interval": null,
+      "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0037452398392558038,
+      "interval": null,
+      "LCP loses less": 2
      }
     }
    },
@@ -17817,7 +18261,9 @@
      "task-folds": 180,
      "LCP drop": -0.031147631320680647,
      "Caduceus drop": -0.02822096422994683,
-     "HyenaDNA drop": -0.02221387442202971,
+     "HyenaDNA-tiny drop": -0.02221387442202971,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.002926667090733819,
       "interval": [
@@ -17826,20 +18272,24 @@
       ],
       "LCP loses less": 72
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.008933756898650936,
       "interval": [
        -0.013577828073574362,
        -0.0041630196010186546
       ],
       "LCP loses less": 50
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.02991066305358485,
      "Caduceus drop": -0.026081575551506073,
-     "HyenaDNA drop": -0.018891891523610913,
+     "HyenaDNA-tiny drop": -0.018891891523610913,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0038290875020787745,
       "interval": [
@@ -17848,61 +18298,99 @@
       ],
       "LCP loses less": 37
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.011018771529973935,
       "interval": [
        -0.017277352781452503,
        -0.004865074973799863
       ],
       "LCP loses less": 24
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.020645861523671292,
      "Caduceus drop": -0.017424079229308352,
-     "HyenaDNA drop": -0.015461309375227668,
+     "HyenaDNA-tiny drop": -0.015461309375227668,
+     "HyenaDNA-small (lr 3e-4) drop": -0.00844554890717933,
+     "HyenaDNA-small (lr 1e-3) drop": -0.015165837730239818,
      "LCP - Caduceus": {
       "mean": -0.0032217822943629367,
       "interval": null,
       "LCP loses less": 12
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.005184552148443622,
       "interval": null,
       "LCP loses less": 16
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.01220031261649196,
+      "interval": null,
+      "LCP loses less": 12
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.005480023793431473,
+      "interval": null,
+      "LCP loses less": 14
      }
     },
     "splice": {
      "task-folds": 30,
      "LCP drop": -0.057378713958249714,
      "Caduceus drop": -0.057371512629053566,
-     "HyenaDNA drop": -0.04860898653314381,
+     "HyenaDNA-tiny drop": -0.04860898653314381,
+     "HyenaDNA-small (lr 3e-4) drop": -0.05246918667004511,
+     "HyenaDNA-small (lr 1e-3) drop": -0.03873940177319095,
      "LCP - Caduceus": {
       "mean": -7.201329196152942e-06,
       "interval": null,
       "LCP loses less": 16
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.00876972742510591,
       "interval": null,
       "LCP loses less": 3
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.004909527288204607,
+      "interval": null,
+      "LCP loses less": 7
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.018639312185058765,
+      "interval": null,
+      "LCP loses less": 1
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.01373850339532009,
      "Caduceus drop": -0.011387412524448226,
-     "HyenaDNA drop": -0.009359968317655634,
+     "HyenaDNA-tiny drop": -0.009359968317655634,
+     "HyenaDNA-small (lr 3e-4) drop": -0.011804291326525823,
+     "HyenaDNA-small (lr 1e-3) drop": -0.00571974559921985,
      "LCP - Caduceus": {
       "mean": -0.0023510908708718635,
       "interval": null,
       "LCP loses less": 7
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.004378535077664456,
       "interval": null,
       "LCP loses less": 7
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.0019342120687942665,
+      "interval": null,
+      "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.00801875779610024,
+      "interval": null,
+      "LCP loses less": 3
      }
     }
    },
@@ -17911,7 +18399,9 @@
      "task-folds": 180,
      "LCP drop": -0.00953096461741797,
      "Caduceus drop": -0.008095702047063011,
-     "HyenaDNA drop": -0.005830564529607506,
+     "HyenaDNA-tiny drop": -0.005830564529607506,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.00143526257035496,
       "interval": [
@@ -17920,20 +18410,24 @@
       ],
       "LCP loses less": 81
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0037004000878104646,
       "interval": [
        -0.005801769680382653,
        -0.0017009310646011794
       ],
       "LCP loses less": 58
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.009001399775591492,
      "Caduceus drop": -0.007392106156465511,
-     "HyenaDNA drop": -0.004389093439975037,
+     "HyenaDNA-tiny drop": -0.004389093439975037,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.00160929361912598,
       "interval": [
@@ -17942,61 +18436,99 @@
       ],
       "LCP loses less": 45
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.004612306335616455,
       "interval": [
        -0.007103481313089837,
        -0.0018824820207583727
       ],
       "LCP loses less": 32
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.0053694844622858935,
      "Caduceus drop": -0.003625170451777641,
-     "HyenaDNA drop": -0.0028012351027531484,
+     "HyenaDNA-tiny drop": -0.0028012351027531484,
+     "HyenaDNA-small (lr 3e-4) drop": 0.0009940031402165446,
+     "HyenaDNA-small (lr 1e-3) drop": -0.0037535736600354213,
      "LCP - Caduceus": {
       "mean": -0.001744314010508252,
       "interval": null,
       "LCP loses less": 14
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0025682493595327446,
       "interval": null,
       "LCP loses less": 14
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.006363487602502438,
+      "interval": null,
+      "LCP loses less": 12
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0016159108022504717,
+      "interval": null,
+      "LCP loses less": 20
      }
     },
     "splice": {
      "task-folds": 30,
      "LCP drop": -0.018908886612434887,
      "Caduceus drop": -0.018076205600631928,
-     "HyenaDNA drop": -0.015849068516406474,
+     "HyenaDNA-tiny drop": -0.015849068516406474,
+     "HyenaDNA-small (lr 3e-4) drop": -0.01679536591787649,
+     "HyenaDNA-small (lr 1e-3) drop": -0.012518798631072525,
      "LCP - Caduceus": {
       "mean": -0.0008326810118029603,
       "interval": null,
       "LCP loses less": 13
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.003059818096028414,
       "interval": null,
       "LCP loses less": 4
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.002113520694558398,
+      "interval": null,
+      "LCP loses less": 6
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.006390087981362361,
+      "interval": null,
+      "LCP loses less": 1
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.004354126066723108,
      "Caduceus drop": -0.003348723562625186,
-     "HyenaDNA drop": -0.002554158137852938,
+     "HyenaDNA-tiny drop": -0.002554158137852938,
+     "HyenaDNA-small (lr 3e-4) drop": -0.005152712640199189,
+     "HyenaDNA-small (lr 1e-3) drop": -0.0012804702586432875,
      "LCP - Caduceus": {
       "mean": -0.0010054025040979215,
       "interval": null,
       "LCP loses less": 9
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0017999679288701691,
       "interval": null,
       "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.0007985865734760816,
+      "interval": null,
+      "LCP loses less": 10
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.00307365580807982,
+      "interval": null,
+      "LCP loses less": 6
      }
     }
    }
@@ -18007,7 +18539,9 @@
      "task-folds": 180,
      "LCP drop": -0.011256766275001927,
      "Caduceus drop": -0.00914047261644064,
-     "HyenaDNA drop": -0.008641659271918317,
+     "HyenaDNA-tiny drop": -0.008641659271918317,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.002116293658561287,
       "interval": [
@@ -18016,20 +18550,24 @@
       ],
       "LCP loses less": 70
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0026151070030836087,
       "interval": [
        -0.005320047570485134,
        -0.0003333586114685141
       ],
       "LCP loses less": 73
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.005005254441288924,
      "Caduceus drop": -0.00396200947372922,
-     "HyenaDNA drop": -0.003253512650304523,
+     "HyenaDNA-tiny drop": -0.003253512650304523,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0010432449675597045,
       "interval": [
@@ -18038,61 +18576,99 @@
       ],
       "LCP loses less": 38
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0017517417909844008,
       "interval": [
        -0.0040836563161986755,
        0.000563878006722936
       ],
       "LCP loses less": 41
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.008190076338478628,
      "Caduceus drop": -0.005273726599953391,
-     "HyenaDNA drop": -0.002468914575988897,
+     "HyenaDNA-tiny drop": -0.002468914575988897,
+     "HyenaDNA-small (lr 3e-4) drop": -0.00032088157351939004,
+     "HyenaDNA-small (lr 1e-3) drop": -0.005066660193313485,
      "LCP - Caduceus": {
       "mean": -0.002916349738525237,
       "interval": null,
       "LCP loses less": 14
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.005721161762489731,
       "interval": null,
       "LCP loses less": 12
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.007869194764959238,
+      "interval": null,
+      "LCP loses less": 11
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0031234161451651437,
+      "interval": null,
+      "LCP loses less": 14
      }
     },
     "splice": {
      "task-folds": 30,
      "LCP drop": -0.04081723031506138,
      "Caduceus drop": -0.034581681026547434,
-     "HyenaDNA drop": -0.035732090293599666,
+     "HyenaDNA-tiny drop": -0.035732090293599666,
+     "HyenaDNA-small (lr 3e-4) drop": -0.04728631234679239,
+     "HyenaDNA-small (lr 1e-3) drop": -0.03281675883285165,
      "LCP - Caduceus": {
       "mean": -0.00623554928851395,
       "interval": null,
       "LCP loses less": 9
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.005085140021461721,
       "interval": null,
       "LCP loses less": 8
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.006469082031731003,
+      "interval": null,
+      "LCP loses less": 23
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.008000471482209733,
+      "interval": null,
+      "LCP loses less": 10
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.002773664288262698,
      "Caduceus drop": -0.0026710947395684166,
-     "HyenaDNA drop": -0.004205862891359399,
+     "HyenaDNA-tiny drop": -0.004205862891359399,
+     "HyenaDNA-small (lr 3e-4) drop": -0.0034231244763662074,
+     "HyenaDNA-small (lr 1e-3) drop": 0.00014677319138346468,
      "LCP - Caduceus": {
       "mean": -0.00010256954869428125,
       "interval": null,
       "LCP loses less": 9
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": 0.0014321986030967015,
       "interval": null,
       "LCP loses less": 12
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.0006494601881035095,
+      "interval": null,
+      "LCP loses less": 10
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.0029204374796461623,
+      "interval": null,
+      "LCP loses less": 6
      }
     }
    },
@@ -18101,7 +18677,9 @@
      "task-folds": 180,
      "LCP drop": -0.017226798579201407,
      "Caduceus drop": -0.014761488445931002,
-     "HyenaDNA drop": -0.014539552503814147,
+     "HyenaDNA-tiny drop": -0.014539552503814147,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0024653101332704048,
       "interval": [
@@ -18110,20 +18688,24 @@
       ],
       "LCP loses less": 75
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0026872460753872584,
       "interval": [
        -0.00686187390622465,
        0.0007787375358106332
       ],
       "LCP loses less": 76
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "histone": {
      "task-folds": 100,
      "LCP drop": -0.007382954972931668,
      "Caduceus drop": -0.006624908328125099,
-     "HyenaDNA drop": -0.005829452319522458,
+     "HyenaDNA-tiny drop": -0.005829452319522458,
+     "HyenaDNA-small (lr 3e-4) drop": null,
+     "HyenaDNA-small (lr 1e-3) drop": null,
      "LCP - Caduceus": {
       "mean": -0.0007580466448065698,
       "interval": [
@@ -18132,27 +18714,41 @@
       ],
       "LCP loses less": 46
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0015535026534092106,
       "interval": [
        -0.004608825552659521,
        0.0015270639641281492
       ],
       "LCP loses less": 45
-     }
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": null,
+     "LCP - HyenaDNA-small (lr 1e-3)": null
     },
     "promoter": {
      "task-folds": 30,
      "LCP drop": -0.01493914498120977,
      "Caduceus drop": -0.01053227919834378,
-     "HyenaDNA drop": -0.004306047136953728,
+     "HyenaDNA-tiny drop": -0.004306047136953728,
+     "HyenaDNA-small (lr 3e-4) drop": -0.0021208183562636653,
+     "HyenaDNA-small (lr 1e-3) drop": -0.00669953793682753,
      "LCP - Caduceus": {
       "mean": -0.004406865782865991,
       "interval": null,
       "LCP loses less": 12
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.010633097844256041,
+      "interval": null,
+      "LCP loses less": 11
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": -0.012818326624946105,
+      "interval": null,
+      "LCP loses less": 9
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.008239607044382239,
       "interval": null,
       "LCP loses less": 11
      }
@@ -18161,32 +18757,56 @@
      "task-folds": 30,
      "LCP drop": -0.05981859316140279,
      "Caduceus drop": -0.05267015434393709,
-     "HyenaDNA drop": -0.05886593741897093,
+     "HyenaDNA-tiny drop": -0.05886593741897093,
+     "HyenaDNA-small (lr 3e-4) drop": -0.07796353626326806,
+     "HyenaDNA-small (lr 1e-3) drop": -0.05242199644509227,
      "LCP - Caduceus": {
       "mean": -0.007148438817465704,
       "interval": null,
       "LCP loses less": 9
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": -0.0009526557424318664,
       "interval": null,
       "LCP loses less": 10
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.018144943101865263,
+      "interval": null,
+      "LCP loses less": 24
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.007396596716310526,
+      "interval": null,
+      "LCP loses less": 11
      }
     },
     "enhancer": {
      "task-folds": 20,
      "LCP drop": -0.005989805134235471,
      "Caduceus drop": -0.0049252040593322196,
-     "HyenaDNA drop": -0.00695073410282806,
+     "HyenaDNA-tiny drop": -0.00695073410282806,
+     "HyenaDNA-small (lr 3e-4) drop": -0.00641643983636139,
+     "HyenaDNA-small (lr 1e-3) drop": -0.0030414437279817656,
      "LCP - Caduceus": {
       "mean": -0.0010646010749032514,
       "interval": null,
       "LCP loses less": 8
      },
-     "LCP - HyenaDNA": {
+     "LCP - HyenaDNA-tiny": {
       "mean": 0.0009609289685925893,
       "interval": null,
       "LCP loses less": 10
+     },
+     "LCP - HyenaDNA-small (lr 3e-4)": {
+      "mean": 0.00042663470212591926,
+      "interval": null,
+      "LCP loses less": 12
+     },
+     "LCP - HyenaDNA-small (lr 1e-3)": {
+      "mean": -0.002948361406253705,
+      "interval": null,
+      "LCP loses less": 6
      }
     }
    }
@@ -18199,7 +18819,9 @@
     "BPE": "results/tokenizer_study/bpe/nt18",
     "fixed": "results/tokenizer_study/fixed/nt18",
     "Caduceus": "results/single_nucleotide/caduceus-ps-1.9m/nt18",
-    "HyenaDNA": "results/single_nucleotide/hyenadna-tiny-0.44m/nt18"
+    "HyenaDNA-tiny": "results/single_nucleotide/hyenadna-tiny-0.44m/nt18",
+    "HyenaDNA-small (lr 3e-4)": "results/single_nucleotide/hyenadna-small-3.3m/nt18",
+    "HyenaDNA-small (lr 1e-3)": "results/single_nucleotide/hyenadna-small-3.3m-standard/nt18"
    },
    "reference set": "clean",
    "resamples": 2000,
@@ -18244,11 +18866,25 @@
          -0.0171995200996522
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.02055245366823601,
         "ci95": [
          -0.022237962964217737,
          -0.018883903185887282
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.028379727084523614,
+        "ci95": [
+         -0.030563755854932678,
+         -0.02638037252379937
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.02008138300020497,
+        "ci95": [
+         -0.02182210117171458,
+         -0.018344735340344594
         ]
        },
        "LCP - BPE": {
@@ -18275,11 +18911,27 @@
         ],
         "share > 0": 0.0
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.0049266197353241455,
         "ci95": [
          -0.006896315452616451,
          -0.003030061797552513
+        ],
+        "share > 0": 0.0
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": 0.002900653680963459,
+        "ci95": [
+         0.0009689476615357366,
+         0.004774312830412848
+        ],
+        "share > 0": 0.9965
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.005397690403355186,
+        "ci95": [
+         -0.007608020657953394,
+         -0.003230844469933863
         ],
         "share > 0": 0.0
        }
@@ -18313,11 +18965,25 @@
          -0.05540245388977586
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.06932335474002449,
         "ci95": [
          -0.07270023496860296,
          -0.06583401198410091
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.09407154934657141,
+        "ci95": [
+         -0.09823067665498866,
+         -0.09000272691077077
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.059680437192001445,
+        "ci95": [
+         -0.06279965907010332,
+         -0.056540218245985006
         ]
        },
        "LCP - BPE": {
@@ -18344,11 +19010,27 @@
         ],
         "share > 0": 0.0
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.0066152385567119915,
         "ci95": [
          -0.009762451882723447,
          -0.003393052012901288
+        ],
+        "share > 0": 0.0
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": 0.018132956049834933,
+        "ci95": [
+         0.014954485373446472,
+         0.021344327516065388
+        ],
+        "share > 0": 1.0
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.016258156104735036,
+        "ci95": [
+         -0.01983562957613347,
+         -0.012834917826644504
         ],
         "share > 0": 0.0
        }
@@ -18382,11 +19064,25 @@
          -0.07315243530410259
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.0919308144020013,
         "ci95": [
          -0.09553576122928288,
          -0.08842264209830131
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.11664993298687112,
+        "ci95": [
+         -0.12068707565901148,
+         -0.11283822671311212
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.07730795044292384,
+        "ci95": [
+         -0.08036809480897208,
+         -0.07430515947278492
         ]
        },
        "LCP - BPE": {
@@ -18413,11 +19109,27 @@
         ],
         "share > 0": 0.0
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.009765843366932009,
         "ci95": [
          -0.0127658502777134,
          -0.006647678947130269
+        ],
+        "share > 0": 0.0
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": 0.014953275217937809,
+        "ci95": [
+         0.011928539404647226,
+         0.017842978317675177
+        ],
+        "share > 0": 1.0
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.02438870732600948,
+        "ci95": [
+         -0.027751661689026177,
+         -0.020918368042385803
         ],
         "share > 0": 0.0
        }
@@ -18451,11 +19163,25 @@
          -0.054683354571503036
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.048608986533143786,
         "ci95": [
          -0.05125612423158129,
          -0.04612336132937859
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.05246918667004509,
+        "ci95": [
+         -0.055049144830066114,
+         -0.05008148795472902
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.03873940177319094,
+        "ci95": [
+         -0.0411178895423718,
+         -0.03642404999061969
         ]
        },
        "LCP - BPE": {
@@ -18482,11 +19208,27 @@
         ],
         "share > 0": 0.5
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.008769727425105907,
         "ci95": [
          -0.011275301456034566,
          -0.006345431356451107
+        ],
+        "share > 0": 0.0
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.004909527288204603,
+        "ci95": [
+         -0.007087530318883807,
+         -0.002689287152427902
+        ],
+        "share > 0": 0.0
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.01863931218505875,
+        "ci95": [
+         -0.021630801355260933,
+         -0.015664192439702268
         ],
         "share > 0": 0.0
        }
@@ -18520,11 +19262,25 @@
          -0.006851281566372926
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.01707315961558675,
         "ci95": [
          -0.018897992339899784,
          -0.01518453033690198
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.029872781218837914,
+        "ci95": [
+         -0.032488697164551515,
+         -0.027341032881952484
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.021933338370913175,
+        "ci95": [
+         -0.023865856494205195,
+         -0.019971892053317057
         ]
        },
        "LCP - BPE": {
@@ -18551,13 +19307,29 @@
         ],
         "share > 0": 0.0
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.0022710796464500693,
         "ci95": [
          -0.00454679122087351,
          -6.881093885846337e-05
         ],
         "share > 0": 0.0205
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": 0.010528541956801096,
+        "ci95": [
+         0.008118082611093867,
+         0.013029312615296934
+        ],
+        "share > 0": 1.0
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": 0.002589099108876357,
+        "ci95": [
+         0.00015508725496312327,
+         0.00494137678062859
+        ],
+        "share > 0": 0.98
        }
       }
      }
@@ -18600,11 +19372,25 @@
          -0.0033168499595188777
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.0028723353189619234,
         "ci95": [
          -0.0058809533203915375,
          -0.0001072681042764889
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": 0.0006814209482344864,
+        "ci95": [
+         -0.0030242369900800262,
+         0.004417676976383628
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.0028065841458538594,
+        "ci95": [
+         -0.006231464679900066,
+         0.0003942666940841985
         ]
        },
        "LCP - BPE": {
@@ -18631,13 +19417,29 @@
         ],
         "share > 0": 0.6865
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.0037695455299608387,
         "ci95": [
          -0.008457311638467501,
          0.0006824831973754008
         ],
         "share > 0": 0.0495
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.007323301797157249,
+        "ci95": [
+         -0.012905641840708658,
+         -0.002117356754557333
+        ],
+        "share > 0": 0.003
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.0038352967030689028,
+        "ci95": [
+         -0.008758579229126736,
+         0.0008527384601286561
+        ],
+        "share > 0": 0.057
        }
       },
       "ont3": {
@@ -18669,11 +19471,25 @@
          -0.012705792057709327
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.015100295798670697,
         "ci95": [
          -0.02079101929404508,
          -0.009335606305431557
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.0044645855976661415,
+        "ci95": [
+         -0.010866645069018082,
+         0.0023064957995597934
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.010698480154632628,
+        "ci95": [
+         -0.016105212106198235,
+         -0.005532203717245165
         ]
        },
        "LCP - BPE": {
@@ -18700,13 +19516,29 @@
         ],
         "share > 0": 0.995
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": 0.005279937250251207,
         "ci95": [
          -0.0021973377875164324,
          0.013197185654369357
         ],
         "share > 0": 0.921
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.005355772950753348,
+        "ci95": [
+         -0.013521933762703242,
+         0.0027160237019869657
+        ],
+        "share > 0": 0.1025
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": 0.0008781216062131378,
+        "ci95": [
+         -0.006223649728407249,
+         0.008213012381238895
+        ],
+        "share > 0": 0.598
        }
       },
       "pbsim97": {
@@ -18738,11 +19570,25 @@
          -0.019100724412916308
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.012706207255867349,
         "ci95": [
          -0.017870463671851317,
          -0.0077035219421533584
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.008039607106966195,
+        "ci95": [
+         -0.013647645595684895,
+         -0.0021072930916325476
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.013026950418627078,
+        "ci95": [
+         -0.01742870553316958,
+         -0.008520852113982388
         ]
        },
        "LCP - BPE": {
@@ -18769,13 +19615,29 @@
         ],
         "share > 0": 0.994
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.004213533775713322,
         "ci95": [
          -0.010255502767601045,
          0.0018581671421591228
         ],
         "share > 0": 0.089
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.008880133924614475,
+        "ci95": [
+         -0.015446142133024055,
+         -0.0023208645110006135
+        ],
+        "share > 0": 0.0055
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.0038927906129535925,
+        "ci95": [
+         -0.009807186496873125,
+         0.002247333961974438
+        ],
+        "share > 0": 0.1075
        }
       },
       "sub3": {
@@ -18807,11 +19669,25 @@
          -0.01094162370917389
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.015461309375227657,
         "ci95": [
          -0.02154361653502827,
          -0.009167736972144064
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.008445548907179324,
+        "ci95": [
+         -0.014643337716933326,
+         -0.0015898604884021642
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.01516583773023981,
+        "ci95": [
+         -0.020975842437358862,
+         -0.009232869261740531
         ]
        },
        "LCP - BPE": {
@@ -18838,13 +19714,29 @@
         ],
         "share > 0": 0.202
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.005184552148443641,
         "ci95": [
          -0.013878581344603125,
          0.0033365766973397237
         ],
         "share > 0": 0.1125
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.012200312616491975,
+        "ci95": [
+         -0.021393872934602085,
+         -0.0034539659370372657
+        ],
+        "share > 0": 0.004
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.0054800237934314894,
+        "ci95": [
+         -0.01417183363914046,
+         0.0031717847304037696
+        ],
+        "share > 0": 0.1005
        }
       }
      }
@@ -18857,7 +19749,9 @@
     "BPE": "results/real_reads/bpe/nt18",
     "fixed": "results/real_reads/fixed/nt18",
     "Caduceus": "results/real_reads/caduceus-ps-1.9m/nt18",
-    "HyenaDNA": "results/real_reads/hyenadna-tiny-0.44m/nt18"
+    "HyenaDNA-tiny": "results/real_reads/hyenadna-tiny-0.44m/nt18",
+    "HyenaDNA-small (lr 3e-4)": "results/real_reads/hyenadna-small-3.3m/nt18",
+    "HyenaDNA-small (lr 1e-3)": "results/real_reads/hyenadna-small-3.3m-standard/nt18"
    },
    "reference set": "realref",
    "resamples": 2000,
@@ -18902,11 +19796,25 @@
          -0.03211583992982709
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.03573209029359967,
         "ci95": [
          -0.038162247747312826,
          -0.0331744340245999
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.047286312346792383,
+        "ci95": [
+         -0.05036300638261909,
+         -0.04447111745464064
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.03281675883285164,
+        "ci95": [
+         -0.035109461334232234,
+         -0.030564173772812196
         ]
        },
        "LCP - BPE": {
@@ -18933,11 +19841,27 @@
         ],
         "share > 0": 0.0
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.005085140021461716,
         "ci95": [
          -0.007577128784763759,
          -0.0027626129239272617
+        ],
+        "share > 0": 0.0
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": 0.006469082031730994,
+        "ci95": [
+         0.0038894517937060925,
+         0.008980784535517256
+        ],
+        "share > 0": 1.0
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.008000471482209746,
+        "ci95": [
+         -0.010773464798193085,
+         -0.0052848778437932925
         ],
         "share > 0": 0.0
        }
@@ -18971,11 +19895,25 @@
          -0.0495857597126073
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.058865937418970914,
         "ci95": [
          -0.06209986973485593,
          -0.0555112527699047
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.07796353626326805,
+        "ci95": [
+         -0.08182607135907682,
+         -0.07422001576674508
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.05242199644509228,
+        "ci95": [
+         -0.05562021948460417,
+         -0.049465082791949444
         ]
        },
        "LCP - BPE": {
@@ -19002,13 +19940,29 @@
         ],
         "share > 0": 0.0
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.0009526557424318696,
         "ci95": [
          -0.004077232227723617,
          0.0019709781066615125
         ],
         "share > 0": 0.291
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": 0.018144943101865263,
+        "ci95": [
+         0.014995661975572994,
+         0.021373066441651586
+        ],
+        "share > 0": 1.0
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.007396596716310502,
+        "ci95": [
+         -0.010797377913960843,
+         -0.004008370159626727
+        ],
+        "share > 0": 0.0
        }
       }
      }
@@ -19051,11 +20005,25 @@
          0.0011767186272495596
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.0024689145759889007,
         "ci95": [
          -0.006325291570120214,
          0.001315633621485259
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.0003208815735194122,
+        "ci95": [
+         -0.00517635357002024,
+         0.0048885009966177055
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.005066660193313488,
+        "ci95": [
+         -0.008997386191775182,
+         -0.0010714209330610154
         ]
        },
        "LCP - BPE": {
@@ -19082,13 +20050,29 @@
         ],
         "share > 0": 0.2065
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.005721161762489757,
         "ci95": [
          -0.012050353498215857,
          0.0006353653975273543
         ],
         "share > 0": 0.0355
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.007869194764959245,
+        "ci95": [
+         -0.014660561534286904,
+         -0.0013120837989759656
+        ],
+        "share > 0": 0.0135
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.0031234161451651693,
+        "ci95": [
+         -0.009560450039809817,
+         0.003365025496777837
+        ],
+        "share > 0": 0.1655
        }
       },
       "realhac": {
@@ -19120,11 +20104,25 @@
          -0.0027345226758852073
         ]
        },
-       "HyenaDNA drop": {
+       "HyenaDNA-tiny drop": {
         "value": -0.004306047136953739,
         "ci95": [
          -0.009352590235904004,
          0.0008854283951184191
+        ]
+       },
+       "HyenaDNA-small (lr 3e-4) drop": {
+        "value": -0.0021208183562636835,
+        "ci95": [
+         -0.00850902876839457,
+         0.004497534085681646
+        ]
+       },
+       "HyenaDNA-small (lr 1e-3) drop": {
+        "value": -0.006699537936827541,
+        "ci95": [
+         -0.012108652237129643,
+         -0.0015598795120973076
         ]
        },
        "LCP - BPE": {
@@ -19151,13 +20149,29 @@
         ],
         "share > 0": 0.131
        },
-       "LCP - HyenaDNA": {
+       "LCP - HyenaDNA-tiny": {
         "value": -0.010633097844256038,
         "ci95": [
          -0.018037974157305223,
          -0.0033017161339064143
         ],
         "share > 0": 0.002
+       },
+       "LCP - HyenaDNA-small (lr 3e-4)": {
+        "value": -0.012818326624946093,
+        "ci95": [
+         -0.020924878548606564,
+         -0.00512277587393383
+        ],
+        "share > 0": 0.0005
+       },
+       "LCP - HyenaDNA-small (lr 1e-3)": {
+        "value": -0.008239607044382235,
+        "ci95": [
+         -0.015965090059347226,
+         9.319740525499689e-05
+        ],
+        "share > 0": 0.0265
        }
       }
      }

@@ -65,7 +65,7 @@ recipes (`locus/finetune/baselines.py`, `scripts/finetune_baseline.py`, `configs
   halves' logits.
 - **Dropout:** 0.1 in every dropout layer of the encoder and before the classifier (Caduceus's own fine-tuning uses none).
 - **Optimizer:** Caduceus-PS 1.9M and HyenaDNA-tiny: the LoCUS-2M recipe (learning rate 1e-3, 1% warm-up); HyenaDNA-small:
-  learning rate 3e-4, 10% warm-up; batch 128, 20 epochs, cosine decay to 0.1x, AdamW with weight decay 0.1 on
+  learning rate 3e-4, 10% warm-up, and also the LoCUS-2M recipe (`hyenadna-small-3.3m-standard`); batch 128, 20 epochs, cosine decay to 0.1x, AdamW with weight decay 0.1 on
   every parameter with two or more dimensions. This includes Mamba's `A_log`, which Mamba marks to be excluded from weight
   decay (`_no_weight_decay`); `D`, also marked, has one dimension and is not decayed.
 - **Precision:** float32 (LoCUS fine-tunes in bf16); the baselines' kernels were not stable in bf16.

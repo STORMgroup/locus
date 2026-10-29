@@ -51,12 +51,12 @@ progress, `--dry-run` prints the commands without running them, and a plan name 
 |---|---|---|---|
 | `nt18` | LoCUS-0.5M and LoCUS-2M on the revised NT benchmark (18 tasks, 10 folds) | 360 | about 13 / 17 min per fold |
 | `random-init` | pretraining ablation: LoCUS-2M fine-tuned from random weights | 180 | about 17 min per fold |
-| `baselines` | Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and HyenaDNA-small 3.3M on NT18, same protocol | 540 | about 71 / 12 / 29 min per fold |
+| `baselines` | Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and HyenaDNA-small 3.3M on NT18, same protocol; HyenaDNA-small with two recipes | 720 | about 71 / 12 / 29 min per fold |
 | `genomic-benchmarks` | LoCUS-0.5M and LoCUS-2M on the Genomic Benchmarks (9 tasks, 3 folds) | 54 | |
 | `tokenizer-study` | the three 2M twins (LCP, BPE, fixed segments) on NT18, then scored on the test sets with errors | 1,080 | about 17 min per fold, 6 min per scoring |
 | `gue-splice` | the same study on GUE splice sites, on all test sequences and on those sharing no splice site with NT18 | 90 | |
 | `real-reads` | the twins scored on real HG002 nanopore reads of the NT18 test windows (needs network; extraction about 25 min) | 1,080 (540 shared with `tokenizer-study`) | |
-| `single-nucleotide` | Caduceus-PS 1.9M and HyenaDNA-tiny 0.44M scored on the same error sets and real reads | 1,080 (360 shared with `baselines`) | |
+| `single-nucleotide` | the baselines scored on the same error sets and real reads | 2,160 (720 shared with `baselines`) | |
 | `intervals` | confidence intervals from resampling test windows (CPU) | 3 | minutes |
 | `heldout` | LoCUS-2M and its random-init control tested on chromosomes that pretraining never saw | 108 | about 17 min per fold |
 | `long-range` | frozen embeddings on the eQTL and bulk RNA tasks of the long-range benchmark | 9 | |
@@ -110,17 +110,18 @@ during pretraining: the final checkpoint is the model. Each run is 359,466 steps
 
 ## Pretrained models
 
-The four models are on the Hugging Face Hub as `<huggingface-organization>/<model>`, for example
-`<huggingface-organization>/locus-2m`. Each repository has `config.json` and `model.safetensors`.
+The four models are in one Hugging Face Hub repository,
+[`STORMResearch/locus`](https://huggingface.co/STORMResearch/locus), one folder per model (`locus-0.5m/`, `locus-2m/`,
+`twin-fixed-2m/`, `twin-bpe-2m/`). Each folder has `config.json` and `model.safetensors`.
 
 - **By name:** `locus.load(...)`, `scripts/finetune.py --pretrained ...` and the benchmark scripts accept the model name
   and download the files the first time.
 - **Ahead of time:** `python scripts/download_models.py`.
-- **Offline:** point `LOCUS_HUB_DIR` to a directory with one sub-directory per model.
+- **Offline:** point `LOCUS_HUB_DIR` to a directory with the same folders.
 - **Your own checkpoints:** anywhere a model name works, you can also pass a `checkpoints/final.pt` from
   `scripts/pretrain.py`.
 - **Publishing (authors only):** `scripts/upload_to_hub.py` converts pretraining checkpoints to this layout and, with
-  `--upload`, pushes them to the Hub.
+  `--upload`, pushes each one to its folder of the repository.
 
 ## Baseline models
 
@@ -133,12 +134,18 @@ are pinned to the revisions used in the paper.
 | `caduceus-ps-1.9m` | kuleshov-group/caduceus-ps_seqlen-1k_d_model-256_n_layer-4_lr-8e-3 | 2de3650 | LoCUS-2M recipe, float32 |
 | `hyenadna-tiny-0.44m` | LongSafari/hyenadna-tiny-1k-seqlen-hf | e8c1eff | LoCUS-2M recipe, float32 |
 | `hyenadna-small-3.3m` | LongSafari/hyenadna-small-32k-seqlen-hf | 8fe770c | learning rate 3e-4, 10% warm-up, float32 |
+| `hyenadna-small-3.3m-standard` | the same model and revision | 8fe770c | LoCUS-2M recipe, float32 |
 
 ```bash
 bash install.sh --baselines                       # mamba-ssm and causal-conv1d (Caduceus), and the three models
 python scripts/finetune_baseline.py --baseline hyenadna-tiny-0.44m --data-root data/benchmarks/nt18 \
     --task H3K27ac_revised --fold 0 --output results/hyenadna-tiny-0.44m/nt18/H3K27ac_revised/fold-00.json
 ```
+
+HyenaDNA-small is reported with two recipes: its own (learning rate 3e-4 with 10% warm-up, which our larger models needed)
+and, as `hyenadna-small-3.3m-standard`, the recipe of the other baselines (`--recipe
+configs/finetune/hyenadna-small-3.3m-standard.yaml`). With the higher learning rate it is clearly worse on the splice-site
+tasks.
 
 The `baselines` plan adds `--save-best`, which keeps the selected weights (`fold-XX.best.pt`) next to each result, so
 `benchmarks/noisy_reads/score.py` can score them on the error sets just like the twins.
@@ -325,8 +332,8 @@ This writes each table of the paper that `results/` has results for to `results/
   interval from a bootstrap over tasks (4,000 resamples). The folds of a task stay together because they share its test
   set. The held-out-chromosome table adds the pretraining gain (LoCUS-2M minus random init) on both test sets, with the
   same kind of interval for their difference.
-- The single-nucleotide table puts LCP's drops next to those of Caduceus-PS 1.9M and HyenaDNA-tiny 0.44M, whose tokens
-  are single nucleotides, on the same task-folds.
+- The single-nucleotide table puts LCP's drops next to those of the baselines (Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and
+  HyenaDNA-small 3.3M with both recipes), whose tokens are single nucleotides, on the same task-folds.
 - The interval tables (plan `intervals`) resample test windows instead of tasks: each replicate draws the windows of a
   task group with replacement, with the same weights for every model, fold, set and draw. The reference tables have these
   intervals for the splice and promoter tasks, whose twin predictions were saved for the paper.

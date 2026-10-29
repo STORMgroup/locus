@@ -1,8 +1,9 @@
 """Publish pretrained LoCUS models to the Hugging Face Hub (for the authors). Each checkpoint of scripts/pretrain.py is
-written in the Hub layout (config.json, model.safetensors, a model card) and, with --upload, pushed to
-<organization>/<model name>. Without --upload the files are only written to --staging, for inspection.
+written in the Hub layout (config.json, model.safetensors, a model card) and, with --upload, pushed to the folder
+<model name> of one repository (--repository, e.g. ORG/locus). Without --upload the files are only written to --staging,
+for inspection.
 
-    python scripts/upload_to_hub.py --checkpoint locus-2m=runs/locus-2m/checkpoints/final.pt [...] --organization ORG [--upload]
+    python scripts/upload_to_hub.py --checkpoint locus-2m=runs/locus-2m/checkpoints/final.pt [...] --repository ORG/locus [--upload]
 
 Uploading needs a Hugging Face token with write access (huggingface-cli login)."""
 import argparse
@@ -19,7 +20,7 @@ from locus.config import config_from_dict  # noqa: E402
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--checkpoint", action="append", required=True, metavar="NAME=PATH")
-    parser.add_argument("--organization", required=True)
+    parser.add_argument("--repository", required=True, help="Hub repository of all models, e.g. ORG/locus")
     parser.add_argument("--staging", type=Path, default=Path("runs/hub"))
     parser.add_argument("--upload", action="store_true")
     parser.add_argument("--private", action="store_true", help="create the repositories as private")
@@ -36,10 +37,9 @@ def main() -> None:
             from huggingface_hub import HfApi
 
             api = HfApi()
-            repo = f"{arguments.organization}/{name}"
-            api.create_repo(repo, exist_ok=True, private=arguments.private)
-            api.upload_folder(repo_id=repo, folder_path=str(directory), commit_message=f"Release {name}")
-            print(f"{name}: uploaded to https://huggingface.co/{repo}", flush=True)
+            api.create_repo(arguments.repository, exist_ok=True, private=arguments.private)
+            api.upload_folder(repo_id=arguments.repository, folder_path=str(directory), path_in_repo=name, commit_message=f"Release {name}")
+            print(f"{name}: uploaded to https://huggingface.co/{arguments.repository}/tree/main/{name}", flush=True)
 
 
 if __name__ == "__main__":

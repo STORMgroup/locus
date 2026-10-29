@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Optional
 
 MODELS = ["locus-0.5m", "locus-2m"]
-BASELINES = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m", "hyenadna-small-3.3m"]
+BASELINES = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m", "hyenadna-small-3.3m", "hyenadna-small-3.3m-standard"]
 TWINS = {"locus-2m": "lcp", "twin-fixed-2m": "fixed", "twin-bpe-2m": "bpe"}
 FROZEN_LABELS = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "tss": "no sequence: tissue + TSS distance"}
 BEND_ORDER = ["locus-0.5m", "locus-2m", "twin-fixed-2m", "twin-bpe-2m"]
@@ -61,7 +61,10 @@ REAL_GROUPS = NT18_GROUPS
 REAL_DRAWS = 10  # reads per window (benchmarks/noisy_reads/real_reads.py); a task-fold counts only with all of them scored
 NOISY_DRAWS = 10  # error draws per noisy set (benchmarks/noisy_reads/noisy_sets.py), required in the single-nucleotide comparison
 # single-nucleotide models (scripts/reproduce.py plan single-nucleotide): no nucleotides merged into tokens
-SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m"), ("HyenaDNA", "hyenadna-tiny-0.44m")]
+SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m"), ("HyenaDNA-tiny", "hyenadna-tiny-0.44m"), ("HyenaDNA-small (lr 3e-4)", "hyenadna-small-3.3m"),
+                     ("HyenaDNA-small (lr 1e-3)", "hyenadna-small-3.3m-standard")]
+# bootstrap seeds of the single-nucleotide intervals use the label a model had when its intervals were first published
+SEED_LABEL = {"HyenaDNA-tiny": "HyenaDNA"}
 WARNINGS = []  # model / task cells with fewer folds than expected, printed at the end
 
 
@@ -160,7 +163,9 @@ def nt18_table(results: Path, numbers: dict) -> str:
              if "twin-fixed-2m" in models or "twin-bpe-2m" in models else "")
     notes += ("locus-2m-random-init: the LoCUS-2M architecture fine-tuned from random initialization (no pretraining), same recipe and seeds. "
               if "locus-2m-random-init" in models else "")
-    notes += "Baselines (caduceus-ps-1.9m, hyenadna-*): fine-tuned with the same protocol (scripts/finetune_baseline.py)." if set(models) & set(BASELINES) else ""
+    notes += "Baselines (caduceus-ps-1.9m, hyenadna-*): fine-tuned with the same protocol (scripts/finetune_baseline.py). " if set(models) & set(BASELINES) else ""
+    notes += ("hyenadna-small-3.3m: its own recipe (learning rate 3e-4, 10% warm-up); hyenadna-small-3.3m-standard: the recipe of the other "
+              "baselines (1e-3, 1% warm-up)." if "hyenadna-small-3.3m-standard" in models else "")
     return markdown("Nucleotide Transformer benchmark, revised (test MCC)", ["group", "task"] + models, rows, notes)
 
 
@@ -745,23 +750,36 @@ def single_nucleotide_table(results: Path, numbers: dict) -> str:
         table, values = [], {}
         for label, key in sets:
             for scope, tasks in [("all 18", all_tasks)] + NT18_GROUPS:
-                pairs = [(t, f) for t in tasks for f in range(NT18_FOLDS) if all(
-                    reference in rows[name, t].get(f, {}) and rows[name, t][f].get(f"{key} draws") == NOISY_DRAWS for name in names)]
-                if scope == "all 18" and len(pairs) < len(all_tasks) * NT18_FOLDS:
-                    WARNINGS.append(f"single-nucleotide models, {title.split(' (')[0]}, {label}: {len(pairs)} of {len(all_tasks) * NT18_FOLDS} task-folds")
+                full = [(t, f) for t in tasks for f in range(NT18_FOLDS)]
+                scored = {name: [(t, f) for t, f in full if reference in rows[name, t].get(f, {})
+                                 and rows[name, t][f].get(f"{key} draws") == NOISY_DRAWS] for name in names}
+                # a model enters a row once it has every task-fold of the row, so the rows of the other models do not change while
+                # its runs come in; without LCP and one complete model, the row uses the task-folds scored for every model
+                present = [name for name in names if len(scored[name]) == len(full)]
+                if "LCP" not in present or len(present) < 2:
+                    present = names
+                pairs = [p for p in full if all(p in scored[name] for name in present)]
+                missing = [name for name in names if name not in present]
+                if scope == "all 18" and (len(pairs) < len(full) or missing):
+                    WARNINGS.append(f"single-nucleotide models, {title.split(' (')[0]}, {label}: {len(pairs)} of {len(full)} task-folds"
+                                    + (f"; not complete: {', '.join(f'{name} ({len(scored[name])})' for name in missing)}" if missing else ""))
                 if not pairs:
                     continue
-                drop = {name: [rows[name, t][f][key] - rows[name, t][f][reference] for t, f in pairs] for name in names}
-                entry = {"task-folds": len(pairs), **{f"{name} drop": statistics.mean(drop[name]) for name in names}}
+                drop = {name: [rows[name, t][f][key] - rows[name, t][f][reference] for t, f in pairs] for name in present}
+                entry = {"task-folds": len(pairs), **{f"{name} drop": statistics.mean(drop[name]) if name in present else None for name in names}}
                 cells = []
                 for name in names[1:]:
+                    if name not in present:
+                        entry[f"LCP - {name}"] = None
+                        cells += [f"n/a ({len(scored[name])} of {len(full)} task-folds)", "", ""]
+                        continue
                     differences = [a - b for a, b in zip(drop["LCP"], drop[name])]
-                    interval = bootstrap_interval(pairs, differences, random.Random(f"single-nucleotide {key} {scope} {name}"))
+                    interval = bootstrap_interval(pairs, differences, random.Random(f"single-nucleotide {key} {scope} {SEED_LABEL.get(name, name)}"))
                     entry[f"LCP - {name}"] = {"mean": statistics.mean(differences), "interval": None if interval is None else list(interval),
                                               "LCP loses less": sum(d > 0 for d in differences)}
                     cells += [number(statistics.mean(differences), True), interval_text(interval), f"{sum(d > 0 for d in differences)}/{len(differences)}"]
                 values.setdefault(label, {})[scope] = entry
-                table.append([label, scope, len(pairs)] + [number(entry[f"{name} drop"], True) for name in names] + cells)
+                table.append([label, scope, len(pairs)] + [number(entry[f"{name} drop"], True) if name in present else "n/a" for name in names] + cells)
         numbers["single_nucleotide"][title] = values
         header = ["test set", "tasks", "task-folds"] + [f"{name} drop" for name in names] + [
             x for name in names[1:] for x in (f"LCP - {name}", f"LCP - {name} 95% CI", f"LCP loses less than {name}")]
@@ -769,7 +787,7 @@ def single_nucleotide_table(results: Path, numbers: dict) -> str:
                             "Single-nucleotide models: " + ", ".join(f"{name} ({directory})" for name, directory in models) + ", fine-tuned "
                             "like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any "
                             "merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean "
-                            "over its 10 draws); LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows "
+                            "over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows "
                             "with at least 5 tasks only."))
     return "\n".join(out)
 

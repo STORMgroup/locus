@@ -13,8 +13,9 @@ Plans:
     pretrain            the four pretraining runs (one GPU each); then use them with --models-from runs
     nt18                LoCUS-0.5M and LoCUS-2M on the 18 NT18 tasks, 10 folds each (--nt18-folds: fewer)
     random-init         the pretraining ablation: the LoCUS-2M architecture fine-tuned on NT18 from random initialization
-    baselines           Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and HyenaDNA-small 3.3M on NT18, same protocol
-                        (needs bash install.sh --baselines)
+    baselines           Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and HyenaDNA-small 3.3M on NT18, same protocol; HyenaDNA-small with
+                        two recipes, its own (learning rate 3e-4) and that of the other baselines (1e-3; run
+                        hyenadna-small-3.3m-standard) (needs bash install.sh --baselines)
     genomic-benchmarks  LoCUS-0.5M and LoCUS-2M on the 9 Genomic Benchmarks tasks, 3 folds each
     tokenizer-study     the 2M twins (LoCUS-2M, twin-fixed-2m, twin-bpe-2m) on NT18, then scored on the modified test
                         sets (errors at 1% / 3%, controls, PBSIM3 reads; needs make pbsim3), each in 10 independent error draws
@@ -23,9 +24,8 @@ Plans:
                         test sets, also without the test rows that share a splice site with NT18 (benchmarks/gue/independent_sets.py)
     real-reads          the tokenizer study's NT18 folds scored on real HG002 nanopore reads of their test windows
                         (benchmarks/noisy_reads/real_reads.py; streams the public CRAM files, needs network)
-    single-nucleotide   Caduceus-PS 1.9M and HyenaDNA-tiny 0.44M (single nucleotides, folds of the baselines plan) scored on the
-                        same modified test sets and real reads: the loss that errors cause without a tokenizer (needs bash
-                        install.sh --baselines)
+    single-nucleotide   the baselines' runs (single nucleotides, folds of the baselines plan) scored on the same modified test sets
+                        and real reads: the loss that errors cause without a tokenizer (needs bash install.sh --baselines)
     intervals           intervals from resampling test windows for the drops of the twins and the single-nucleotide models
                         (benchmarks/noisy_reads/window_intervals.py; after tokenizer-study, gue-splice, real-reads, single-nucleotide;
                         CPU)
@@ -78,9 +78,13 @@ FOLDS = 3  # Genomic Benchmarks and the held-out-chromosome check
 NT18_FOLDS = 10  # NT18 plans and gue-splice (--nt18-folds)
 LOCUS = ["locus-0.5m", "locus-2m"]
 TWINS = {"lcp": "locus-2m", "fixed": "twin-fixed-2m", "bpe": "twin-bpe-2m"}
-BASELINES = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m", "hyenadna-small-3.3m"]
-SINGLE_NUCLEOTIDE = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m"]  # single-nucleotide models scored on the modified test sets and real reads
-SINGLE_NUCLEOTIDE_LABELS = {"caduceus-ps-1.9m": "Caduceus", "hyenadna-tiny-0.44m": "HyenaDNA"}
+BASELINES = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m", "hyenadna-small-3.3m", "hyenadna-small-3.3m-standard"]
+# baseline runs with a recipe other than the model's own (configs/finetune/<run>.yaml): HyenaDNA-small with the recipe of the other
+# baselines (learning rate 1e-3, 1% warm-up) next to its own (3e-4, 10%)
+BASELINE_MODEL = {"hyenadna-small-3.3m-standard": "hyenadna-small-3.3m"}
+SINGLE_NUCLEOTIDE = BASELINES  # single-nucleotide models scored on the modified test sets and real reads
+SINGLE_NUCLEOTIDE_LABELS = {"caduceus-ps-1.9m": "Caduceus", "hyenadna-tiny-0.44m": "HyenaDNA-tiny", "hyenadna-small-3.3m": "HyenaDNA-small (lr 3e-4)",
+                            "hyenadna-small-3.3m-standard": "HyenaDNA-small (lr 1e-3)"}
 RECIPE = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "twin-fixed-2m": "locus-2m", "twin-bpe-2m": "locus-2m"}
 # Micro-batches of the reported runs (gradient accumulation; the update is that of the full batch, only memory changes):
 # per model, times 4 for the two Genomic Benchmarks tasks with long sequences.
@@ -187,8 +191,10 @@ def build_plans(arguments) -> dict:
                    command + (["--save-best"] if save_best else []) + (["--random-init"] if random_init else []), output)
 
     def baseline(name, task, fold, output, save_best=False) -> Job:
-        return Job(f"{name}.nt18.{task}.fold{fold}", script("scripts/finetune_baseline.py", "--baseline", name, "--data-root", nt18, "--task", task,
-                                                             "--fold", fold, "--output", output, *(["--save-best"] if save_best else [])), output)
+        recipe = ["--recipe", ROOT / "configs/finetune" / f"{name}.yaml"] if name in BASELINE_MODEL else []
+        return Job(f"{name}.nt18.{task}.fold{fold}", script("scripts/finetune_baseline.py", "--baseline", BASELINE_MODEL.get(name, name), "--data-root", nt18,
+                                                             "--task", task, "--fold", fold, "--output", output, *recipe,
+                                                             *(["--save-best"] if save_best else [])), output)
 
     def twin_job(twin, task, fold) -> Job:
         model = TWINS[twin]
@@ -335,7 +341,7 @@ def build_plans(arguments) -> dict:
              speed, done=lambda: speed_complete(speed))]])
     timing = [finetune(model, nt18, f"{task}_revised", 0, results / "timing" / model / "nt18" / f"{task}_revised" / "fold-00.json", MICRO_BATCHES[model])
               for model in LOCUS for task in NT18_TASKS]
-    timing += [baseline(name, f"{task}_revised", 0, results / "timing" / name / "nt18" / f"{task}_revised" / "fold-00.json") for name in BASELINES for task in NT18_TASKS]
+    timing += [baseline(name, f"{task}_revised", 0, results / "timing" / name / "nt18" / f"{task}_revised" / "fold-00.json") for name in BASELINES if name not in BASELINE_MODEL for task in NT18_TASKS]
     for job in timing:
         job.name = "timing." + job.name
     plans["timing"] = Plan("timing", ["nt18"], [timing], exclusive=True)

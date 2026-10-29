@@ -66,8 +66,8 @@ def test_jobs_have_distinct_outputs(tmp_path):
     outputs = [job.output for job in jobs.values() if job.name != "bend.analyze"]
     assert len(outputs) == len(set(outputs))
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in plans(tmp_path).items()}
-    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 540, "genomic-benchmarks": 54, "tokenizer-study": 1080, "gue-splice": 90,
-                      "real-reads": 1080, "single-nucleotide": 1080, "intervals": 3, "heldout": 108, "long-range": 9, "parsing": 2, "stability": 1, "bend": 5, "efficiency": 2, "timing": 90}
+    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 720, "genomic-benchmarks": 54, "tokenizer-study": 1080, "gue-splice": 90,
+                      "real-reads": 1080, "single-nucleotide": 2160, "intervals": 3, "heldout": 108, "long-range": 9, "parsing": 2, "stability": 1, "bend": 5, "efficiency": 2, "timing": 90}
 
 
 def test_nt18_folds(tmp_path):
@@ -75,5 +75,5 @@ def test_nt18_folds(tmp_path):
     to folds 0-2 of the split (default: all 10) and leaves the other plans unchanged."""
     arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, nt18_folds=3)
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in reproduce.build_plans(arguments).items()}
-    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 162, "genomic-benchmarks": 54, "tokenizer-study": 324, "gue-splice": 27,
-                      "real-reads": 324, "single-nucleotide": 324, "intervals": 3, "heldout": 108, "long-range": 9, "parsing": 2, "stability": 1, "bend": 5, "efficiency": 2, "timing": 90}
+    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 216, "genomic-benchmarks": 54, "tokenizer-study": 324, "gue-splice": 27,
+                      "real-reads": 324, "single-nucleotide": 648, "intervals": 3, "heldout": 108, "long-range": 9, "parsing": 2, "stability": 1, "bend": 5, "efficiency": 2, "timing": 90}

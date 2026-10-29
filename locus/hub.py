@@ -1,11 +1,11 @@
 """Pretrained LoCUS models on the Hugging Face Hub.
 
-Each model is one Hub repository holding `config.json` (the pretraining configuration and step) and `model.safetensors`
-(the weights, including the masked-base head). `download` fetches a model into the local Hugging Face cache and returns
-its directory; `export` writes that layout from a checkpoint of scripts/pretrain.py.
+All models are in one Hub repository, one folder per model, each holding `config.json` (the pretraining configuration
+and step) and `model.safetensors` (the weights, including the masked-base head). `download` fetches a model's folder into
+the local Hugging Face cache and returns its directory; `export` writes that layout from a checkpoint of scripts/pretrain.py.
 
-The Hub organization is set in HUB_ORGANIZATION (or the environment variable LOCUS_HUB_ORGANIZATION). LOCUS_HUB_DIR
-points to a local directory with one sub-directory per model in the same layout, for use without network access."""
+The repository is set in HUB_REPOSITORY (or the environment variable LOCUS_HUB_REPOSITORY). LOCUS_HUB_DIR points to a
+local directory with the same folders, for use without network access."""
 import hashlib
 import json
 import os
@@ -19,29 +19,26 @@ MODELS = {
     "twin-fixed-2m": "Tokenizer study: LoCUS-2M with fixed 10 bp segments every 5 bp",
     "twin-bpe-2m": "Tokenizer study: LoCUS-2M with BPE tokens (vocabulary 4,096) as segments",
 }
-HUB_ORGANIZATION = os.environ.get("LOCUS_HUB_ORGANIZATION", "<huggingface-organization>")
-
-
-def repository(name: str) -> str:
-    if name not in MODELS:
-        raise ValueError(f"Unknown model {name!r}; choose one of: {', '.join(MODELS)}")
-    return f"{HUB_ORGANIZATION}/{name}"
+HUB_REPOSITORY = os.environ.get("LOCUS_HUB_REPOSITORY", "STORMResearch/locus")
 
 
 def download(name: str, revision: str = None) -> Path:
     """Local directory of model `name` (config.json and model.safetensors), downloaded on first use."""
+    if name not in MODELS:
+        raise ValueError(f"Unknown model {name!r}; choose one of: {', '.join(MODELS)}")
     local = os.environ.get("LOCUS_HUB_DIR")
     if local:
         directory = Path(local) / name
         if not (directory / "model.safetensors").is_file():
             raise FileNotFoundError(f"{directory} has no model.safetensors")
         return directory
-    if HUB_ORGANIZATION.startswith("<"):
-        raise RuntimeError("Set the Hugging Face organization of the LoCUS models (locus/hub.py HUB_ORGANIZATION or "
-                           "LOCUS_HUB_ORGANIZATION), or point LOCUS_HUB_DIR to a local copy")
+    if HUB_REPOSITORY.startswith("<"):
+        raise RuntimeError("Set the Hugging Face repository of the LoCUS models (locus/hub.py HUB_REPOSITORY or "
+                           "LOCUS_HUB_REPOSITORY), or point LOCUS_HUB_DIR to a local copy")
     from huggingface_hub import snapshot_download
 
-    return Path(snapshot_download(repository(name), revision=revision, allow_patterns=["config.json", "model.safetensors", "README.md"]))
+    files = [f"{name}/{file}" for file in ("config.json", "model.safetensors", "README.md")]
+    return Path(snapshot_download(HUB_REPOSITORY, revision=revision, allow_patterns=files)) / name
 
 
 def export(checkpoint_path: Path, output_directory: Path, name: str) -> Path:
