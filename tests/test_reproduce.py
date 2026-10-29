@@ -66,14 +66,14 @@ def test_jobs_have_distinct_outputs(tmp_path):
     outputs = [job.output for job in jobs.values() if job.name != "bend.analyze"]
     assert len(outputs) == len(set(outputs))
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in plans(tmp_path).items()}
-    assert counts == {"pretrain": 6, "nt18": 162, "random-init": 54, "baselines": 162, "genomic-benchmarks": 81, "tokenizer-study": 324, "heldout": 108, "context": 18,
-                      "long-range": 19, "parsing": 1, "bend": 6, "efficiency": 1, "timing": 108}
+    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 540, "genomic-benchmarks": 54, "tokenizer-study": 1080, "gue-splice": 90,
+                      "real-reads": 1080, "single-nucleotide": 1080, "intervals": 3, "heldout": 108, "long-range": 9, "parsing": 2, "stability": 1, "bend": 5, "efficiency": 2, "timing": 90}
 
 
 def test_nt18_folds(tmp_path):
-    """--nt18-folds 10 extends the NT18 plans (LoCUS, random init, baselines, tokenizer study) to the 10 folds of the split and
-    leaves the other plans, the held-out-chromosome check included, at 3 folds."""
-    arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, nt18_folds=10)
+    """--nt18-folds 3 restricts the NT18 plans (LoCUS, random init, baselines, tokenizer study, real reads) and the GUE splice study
+    to folds 0-2 of the split (default: all 10) and leaves the other plans unchanged."""
+    arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, nt18_folds=3)
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in reproduce.build_plans(arguments).items()}
-    assert counts == {"pretrain": 6, "nt18": 540, "random-init": 180, "baselines": 540, "genomic-benchmarks": 81, "tokenizer-study": 1080, "heldout": 108, "context": 18,
-                      "long-range": 19, "parsing": 1, "bend": 6, "efficiency": 1, "timing": 108}
+    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 162, "genomic-benchmarks": 54, "tokenizer-study": 324, "gue-splice": 27,
+                      "real-reads": 324, "single-nucleotide": 324, "intervals": 3, "heldout": 108, "long-range": 9, "parsing": 2, "stability": 1, "bend": 5, "efficiency": 2, "timing": 90}

@@ -11,10 +11,11 @@ homopolymer choice, three random bases for an insertion and a substitute base. A
 applied, so the events at 1% are a subset of those at 3%, and both controls place their events at the same positions.
 A deletion that would reach into the protected window is not applied.
 
-Protected windows are the positions whose base carries more than three times the background mutual information with
-the label on the training set, plus a margin: [200, 400) for the splice-site tasks (600 bp, site at position 300) and
-[0, 160) for promoter_tata (300 bp, information concentrated in the first 150 bp). The other tasks show no localized
-label information; their window is the central third of the sequence.
+The protected windows are fixed (PROTECTED_WINDOWS): [200, 400) for the NT18 splice-site tasks (600 bp, the junction
+at the centre, so no edit falls within 100 bp of it) and [100, 300) for gue_splice (400 bp, junction between positions 199
+and 200; the same 100 bp on each side). The other tasks have no annotated label position; promoter_tata gets [0, 160)
+and the rest the central third of the sequence, and only the splice-site windows enter the result tables
+(scripts/collect_results.py).
 
     python benchmarks/noisy_reads/make_controls.py
 
@@ -30,7 +31,7 @@ import random
 import sys
 from pathlib import Path
 
-from noisy_sets import (DEFAULT_DATA_ROOT, DRAWS, EVENT_MIX, HOMOPOLYMER_PROBABILITY, INDEL_LENGTHS, ROOT, clean_task, draw_tag, pick,
+from noisy_sets import (DEFAULT_DATA_ROOT, DRAWS, OTHER_TASKS, EVENT_MIX, HOMOPOLYMER_PROBABILITY, INDEL_LENGTHS, ROOT, clean_task, draw_tag, pick,
                         rate_tag, variant_task)
 
 sys.path.insert(0, str(ROOT))
@@ -41,7 +42,7 @@ _CENTRAL_THIRD = {**{task: (333, 667) for task in ("H2AFZ", "H3K27ac", "H3K27me3
                                                    "H3K9ac", "H3K9me3", "H4K20me1")},
                   "enhancers": (133, 267), "enhancers_types": (133, 267), "promoter_all": (100, 200), "promoter_no_tata": (100, 200)}
 PROTECTED_WINDOWS = {"splice_sites_acceptors": (200, 400), "splice_sites_all": (200, 400), "splice_sites_donors": (200, 400),
-                     "promoter_tata": (0, 160), **_CENTRAL_THIRD}
+                     "promoter_tata": (0, 160), "gue_splice": (100, 300), **_CENTRAL_THIRD}
 CONTROLS = ("sub", "ontw")
 
 
@@ -116,8 +117,8 @@ def main() -> None:
     parser.add_argument("--controls", nargs="+", choices=CONTROLS, default=list(CONTROLS))
     parser.add_argument("--rates", type=float, nargs="+", default=[1.0, 3.0], help="error rates in percent per base")
     parser.add_argument("--draws", type=int, default=DRAWS, help=f"independent error draws per set (default {DRAWS})")
-    parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS, default=NT18_TASKS, metavar="TASK",
-                        help="NT18 tasks without the _revised suffix (default: all 18)")
+    parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS + list(OTHER_TASKS), default=NT18_TASKS, metavar="TASK",
+                        help="NT18 tasks without the _revised suffix, or gue_splice (default: the 18 NT18 tasks)")
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT, help="directory of the clean task directories")
     parser.add_argument("--output-root", type=Path, help="directory for the new test sets (default: --data-root)")
     arguments = parser.parse_args()

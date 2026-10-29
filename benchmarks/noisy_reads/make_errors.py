@@ -20,7 +20,7 @@ import random
 import sys
 from pathlib import Path
 
-from noisy_sets import (DEFAULT_DATA_ROOT, DRAWS, EVENT_MIX, HOMOPOLYMER_PROBABILITY, INDEL_LENGTHS, ROOT, clean_task, draw_tag,
+from noisy_sets import (DEFAULT_DATA_ROOT, DRAWS, OTHER_TASKS, EVENT_MIX, HOMOPOLYMER_PROBABILITY, INDEL_LENGTHS, ROOT, clean_task, draw_tag,
                         pick, rate_tag, variant_task)
 
 sys.path.insert(0, str(ROOT))
@@ -85,8 +85,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--rates", type=float, nargs="+", default=[1.0, 3.0], help="error rates in percent per base")
     parser.add_argument("--draws", type=int, default=DRAWS, help=f"independent error draws per set (default {DRAWS})")
-    parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS, default=NT18_TASKS, metavar="TASK",
-                        help="NT18 tasks without the _revised suffix (default: all 18)")
+    parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS + list(OTHER_TASKS), default=NT18_TASKS, metavar="TASK",
+                        help="NT18 tasks without the _revised suffix, or gue_splice (default: the 18 NT18 tasks)")
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT, help="directory of the clean task directories")
     parser.add_argument("--output-root", type=Path, help="directory for the new test sets (default: --data-root)")
     arguments = parser.parse_args()

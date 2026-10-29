@@ -87,7 +87,8 @@ def main() -> None:
         fingerprint_extra={"baseline": baseline.repository, "revision": baseline.revision,
                            "train_sha256": sha256_file(task_dir / "train.jsonl.gz")},
         test_every_epoch=recipe.get("test_every_epoch", True), learning_rate_schedule=recipe.get("learning_rate_schedule", "cosine"))
-    resources = {"wall_seconds": time.time() - start, "resumed": bool(report["resumed_at_steps"]), "node": socket.gethostname()}
+    resources = {"wall_seconds": time.time() - start, "resumed": bool(report["resumed_at_steps"]), "node": socket.gethostname(),
+                 "segmentation_seconds": sum(cache.seconds for cache in (train_cache, test_cache, *extra.values()))}
     if device.type == "cuda":
         resources.update(gpu=torch.cuda.get_device_name(device), peak_gpu_memory_allocated_gb=torch.cuda.max_memory_allocated(device) / 1e9)
     chance_loss = math.log(task.classes)

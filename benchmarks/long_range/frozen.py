@@ -14,8 +14,8 @@ MLP's hidden width is twice the input embedding dimension.
 
 Choices where the benchmark paper is silent: features are standardized with training-fold statistics; Adam (lr 1e-3),
 batch 256, ReLU, at most 100 epochs, stopping after 10 epochs without a lower validation loss; embeddings are averaged
-over both strands; inputs are the benchmark loader's windows at 4 kb and 16 kb, and an item whose window contains an N
-or runs off the chromosome is dropped (counts in rows.json.gz). Model "tss" (eqtl only) is the sequence-free reference:
+over both strands; inputs are the benchmark loader's 4 kb windows. An item is kept only when both its 4,096 bp and its
+16,384 bp window lie on the chromosome and contain no N, the item set of the paper's runs (counts in rows.json.gz). Model "tss" (eqtl only) is the sequence-free reference:
 one-hot tissue and log distance to the TSS. Fits on several CPU threads (--threads, default 4) can differ in the last digits
 between repeated runs; --threads 1 is reproducible.
 
@@ -23,8 +23,8 @@ between repeated runs; --threads 1 is reproducible.
     python benchmarks/long_range/frozen.py embed --task eqtl --length 4096 --pretrained locus-2m --name locus-2m
     python benchmarks/long_range/frozen.py fit --task eqtl --length 4096 --name locus-2m
 
-prepare writes <data>/lrb_<task>_<4k|16k>/{ref,alt|seq}.jsonl.gz and rows.json.gz; embed writes
-<results>/emb_<name>_lrb_<task>_<4k|16k>.npz; fit writes <results>/fit_<name>_lrb_<task>_<4k|16k>.json."""
+prepare writes <data>/lrb_<task>_4k/{ref,alt|seq}.jsonl.gz and rows.json.gz; embed writes
+<results>/emb_<name>_lrb_<task>_4k.npz; fit writes <results>/fit_<name>_lrb_<task>_4k.json."""
 import argparse
 import csv
 import gzip
@@ -32,6 +32,7 @@ import hashlib
 import io
 import json
 import random
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -39,20 +40,44 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(ROOT), str(Path(__file__).resolve().parent)]
+sys.path.insert(0, str(ROOT))
 
 from locus.alphabet import reverse_complement  # noqa: E402
 from locus.finetune.collate import Collator, SegmentCache  # noqa: E402
 from locus.finetune.data import SequenceRecord, load_records, write_records  # noqa: E402
-from prepare_enhancer import REPOSITORY, REVISION, benchmark_url, grch38_chromosomes  # noqa: E402
 
-LENGTHS = (4096, 16384)
+REPOSITORY = "InstaDeepAI/genomics-long-range-benchmark"
+REVISION = "b56f68ee30c01daf8f80a8d0b8a47f84199de08e"
+REFSEQ_HEADER = re.compile(r"^>(\S+) .*chromosome (\w+), GRCh38\.p14 Primary Assembly")
+LENGTHS = (4096,)  # model input
+ITEM_LENGTHS = (4096, 16384)  # windows that must lie on the chromosome and be N-free for an item to be kept
 SEED, FOLDS = 42, 5
 DISTANCE_BINS = (("<3k", 0, 3_000), ("3k-12k", 3_000, 12_000), ("12k-35k", 12_000, 35_000), (">35k", 35_000, float("inf")))
 ALLELES = {"eqtl": ("ref", "alt"), "bulk_rna": ("seq",)}
 HG19_URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz"
 HG19_MD5 = "806c02398f5ac5da8ffd6da2d1d5d1a9"  # UCSC md5sum.txt; the file used for the paper
 BASES_PER_BATCH = 131_072
+
+
+def benchmark_url(path: str) -> str:
+    return f"https://huggingface.co/datasets/{REPOSITORY}/resolve/{REVISION}/{path}"
+
+
+def grch38_chromosomes(fasta: Path, wanted: set):
+    """(chrN, upper-case sequence) of the GRCh38.p14 primary chromosomes in `wanted`, one at a time, in file order."""
+    name, parts = None, []
+    with gzip.open(fasta, "rt") as handle:
+        for line in handle:
+            if line.startswith(">"):
+                if name in wanted:
+                    yield name, "".join(parts).upper()
+                match = REFSEQ_HEADER.match(line)
+                name = f"chr{match.group(2)}" if match else None
+                parts = []
+            elif name in wanted:
+                parts.append(line.rstrip())
+    if name in wanted:
+        yield name, "".join(parts).upper()
 
 
 class OnDemandSegments(SegmentCache):
@@ -127,7 +152,7 @@ def prepare(arguments) -> None:
     for chromosome, sequence in genome:
         for key in by_chromosome[chromosome]:
             # positions are 1-based
-            cuts = {length: cut(sequence, key[1] - 1, length) for length in LENGTHS}
+            cuts = {length: cut(sequence, key[1] - 1, length) for length in ITEM_LENGTHS}
             if any(window is None for window in cuts.values()):
                 dropped["off_chromosome"] += 1
             elif any(set(window) - set("ACGT") for window in cuts.values()):

@@ -15,6 +15,9 @@ Every noisy set is drawn DRAWS times with independent random seeds, because one 
 (promoter_tata has 212 sequences) can by chance hit or spare the bases that carry the label. Draw 0 is the set itself
 (H3K27ac_ont3_revised), draw k > 0 the set H3K27ac_ont3-d<k>_revised; the score of a fold on a set is the mean over its
 draws (scripts/collect_results.py).
+
+The GUE splice task (benchmarks/gue/prepare.py) has the same sets, named without the suffix: gue_splice_ont3,
+gue_splice_ont3-d1, ...
 """
 from pathlib import Path
 
@@ -22,6 +25,8 @@ EVENT_MIX = (("substitution", 0.40), ("deletion", 0.35), ("insertion", 0.25))
 INDEL_LENGTHS = ((1, 0.75), (2, 0.1875), (3, 0.0625))
 HOMOPOLYMER_PROBABILITY = 0.5
 DRAWS = 10
+# tasks outside NT18 with noisy sets; their names carry no _revised suffix (gue_splice -> gue_splice_ont3)
+OTHER_TASKS = ("gue_splice",)
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_ROOT = ROOT / "data/benchmarks/nt18"
@@ -48,8 +53,8 @@ def draw_tag(tag: str, draw: int) -> str:
 
 
 def clean_task(task: str) -> str:
-    return f"{task}_revised"
+    return task if task in OTHER_TASKS else f"{task}_revised"
 
 
 def variant_task(task: str, tag: str) -> str:
-    return f"{task}_{tag}_revised"
+    return f"{task}_{tag}" if task in OTHER_TASKS else f"{task}_{tag}_revised"

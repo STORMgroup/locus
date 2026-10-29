@@ -10,11 +10,9 @@
 # as DATA_DIR/GRCh38.p14.fasta.gz. build/split_fasta then cuts every sequence into consecutive, non-overlapping windows
 # that contain only A, C, G and T (an N or any other symbol ends the current window; incomplete windows are dropped):
 #
-#     DATA_DIR/GRCh38.p14.acgt.w4096.s4096      4,096 bp windows
-#                                               (LoCUS-0.5M, LoCUS-2M, LoCUS-7M, twin-fixed-2m, twin-bpe-2m)
-#     DATA_DIR/GRCh38.p14.acgt.w16384.s16384    16,384 bp windows (LoCUS-2M-16k)
+#     DATA_DIR/GRCh38.p14.acgt.w4096.s4096      4,096 bp windows (LoCUS-0.5M, LoCUS-2M, twin-fixed-2m, twin-bpe-2m)
 #
-# Each directory holds gzipped FASTA shards, manifests/reads.tsv and manifests/shards.tsv, dataset.json and reports of
+# The directory holds gzipped FASTA shards, manifests/reads.tsv and manifests/shards.tsv, dataset.json and reports of
 # the rejected bases and discarded window tails. A directory that is already complete (it has a _SUCCESS marker) is left
 # unchanged.
 set -euo pipefail
@@ -58,7 +56,7 @@ if [[ $DOWNLOAD_ONLY == 1 ]]; then
     exit 0
 fi
 
-for WINDOW in 4096 16384; do
+for WINDOW in 4096; do
     OUTPUT="$DATA_DIR/GRCh38.p14.acgt.w${WINDOW}.s${WINDOW}"
     if [[ -f "$OUTPUT/_SUCCESS" ]]; then
         echo "$OUTPUT is complete"

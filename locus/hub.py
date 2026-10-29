@@ -16,8 +16,6 @@ import torch
 MODELS = {
     "locus-0.5m": "LoCUS-0.5M: width 64, 4 kb context",
     "locus-2m": "LoCUS-2M: width 128, 4 kb context",
-    "locus-7m": "LoCUS-7M: width 256, 4 kb context",
-    "locus-2m-16k": "LoCUS-2M-16k: LoCUS-2M pretrained on 16 kb windows (context-length ablation)",
     "twin-fixed-2m": "Tokenizer study: LoCUS-2M with fixed 10 bp segments every 5 bp",
     "twin-bpe-2m": "Tokenizer study: LoCUS-2M with BPE tokens (vocabulary 4,096) as segments",
 }

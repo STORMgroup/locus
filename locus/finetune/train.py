@@ -54,16 +54,25 @@ def predict(model, cache: SegmentCache, indices: list, orientation: str, batch_s
     return np.concatenate(logits), np.concatenate(labels)
 
 
-def evaluate(model, cache: SegmentCache, indices: list, batch_size: int, device, autocast_dtype) -> tuple[dict, float]:
-    """(metrics, mean cross-entropy) of the strand-averaged logits."""
+def strand_averaged_logits(model, cache: SegmentCache, indices: list, batch_size: int, device, autocast_dtype) -> tuple:
+    """(logits averaged over both strands, labels)."""
     logits, labels = predict(model, cache, indices, "forward", batch_size, device, autocast_dtype)
     reverse_logits, reverse_labels = predict(model, cache, indices, "reverse", batch_size, device, autocast_dtype)
     if not np.array_equal(labels, reverse_labels):
         raise RuntimeError("Forward and reverse evaluation labels are misaligned")
-    logits = 0.5 * (logits + reverse_logits)
+    return 0.5 * (logits + reverse_logits), labels
+
+
+def scores(logits: np.ndarray, labels: np.ndarray) -> tuple[dict, float]:
+    """(metrics, mean cross-entropy) of logits."""
     shifted = logits - logits.max(axis=1, keepdims=True)
     log_probabilities = shifted - np.log(np.exp(shifted).sum(axis=1, keepdims=True))
     return classification_metrics(labels, logits), float(-log_probabilities[np.arange(len(labels)), labels].mean())
+
+
+def evaluate(model, cache: SegmentCache, indices: list, batch_size: int, device, autocast_dtype) -> tuple[dict, float]:
+    """(metrics, mean cross-entropy) of the strand-averaged logits."""
+    return scores(*strand_averaged_logits(model, cache, indices, batch_size, device, autocast_dtype))
 
 
 def effective_autocast_dtype(name: str, device) -> torch.dtype:

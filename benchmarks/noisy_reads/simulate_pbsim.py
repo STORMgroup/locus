@@ -13,8 +13,10 @@ commit 35ce0de, the one of the reported sets); the executable is src/pbsim and t
 data/ERRHMM-ONT-HQ.model. The script reads
 <data-root>/<task>_revised/test.jsonl.gz and writes <output-root>/<task>_pbsim<ACCURACY>_revised/test.jsonl.gz and
 metadata.json (PBSIM3 commit, command, seed, realized read accuracy), and the further error draws
-<task>_pbsim<ACCURACY>-d<k>_revised, k = 1 .. --draws - 1 (noisy_sets.py). The seed of a set is
-42 + 1000 * ACCURACY + the index of the task in the alphabetical order of the 18 NT18 tasks, plus 1,000,000 * k for draw k.
+<task>_pbsim<ACCURACY>-d<k>_revised, k = 1 .. --draws - 1 (noisy_sets.py; for gue_splice the same names without the
+_revised suffix). The seed of a set is
+42 + 1000 * ACCURACY + the index of the task in the alphabetical order of the 18 NT18 tasks (18 for gue_splice), plus
+1,000,000 * k for draw k.
 """
 import argparse
 import gzip
@@ -25,7 +27,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from noisy_sets import DEFAULT_DATA_ROOT, DRAWS, ROOT, clean_task, draw_tag, variant_task
+from noisy_sets import DEFAULT_DATA_ROOT, DRAWS, OTHER_TASKS, ROOT, clean_task, draw_tag, variant_task
 
 sys.path.insert(0, str(ROOT))
 
@@ -36,7 +38,8 @@ ERROR_MODEL = "data/ERRHMM-ONT-HQ.model"
 
 
 def pbsim_seed(task: str, accuracy_percent: int, draw: int = 0) -> int:
-    return 42 + 1000 * accuracy_percent + sorted(NT18_TASKS).index(task) + 1_000_000 * draw
+    index = sorted(NT18_TASKS).index(task) if task in NT18_TASKS else len(NT18_TASKS) + OTHER_TASKS.index(task)
+    return 42 + 1000 * accuracy_percent + index + 1_000_000 * draw
 
 
 def pbsim_commit(pbsim_dir: Path) -> Optional[str]:
@@ -100,8 +103,8 @@ def main() -> None:
     parser.add_argument("--pbsim-dir", type=Path, default=ROOT / "build/pbsim3", help="built PBSIM3 checkout (default: make pbsim3)")
     parser.add_argument("--accuracies", type=int, nargs="+", default=[97, 99], help="mean read accuracies in percent")
     parser.add_argument("--draws", type=int, default=DRAWS, help=f"independent error draws per set (default {DRAWS})")
-    parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS, default=NT18_TASKS, metavar="TASK",
-                        help="NT18 tasks without the _revised suffix (default: all 18)")
+    parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS + list(OTHER_TASKS), default=NT18_TASKS, metavar="TASK",
+                        help="NT18 tasks without the _revised suffix, or gue_splice (default: the 18 NT18 tasks)")
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT, help="directory of the clean task directories")
     parser.add_argument("--output-root", type=Path, help="directory for the new test sets (default: --data-root)")
     parser.add_argument("--work-dir", type=Path, help="parent directory of the temporary PBSIM3 files (default: system temp)")

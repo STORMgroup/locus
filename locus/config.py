@@ -4,8 +4,8 @@ from pathlib import Path
 
 import yaml
 
-# GRCh38.p14 RefSeq accessions of chromosomes 1-22: chromosomes 3-22 train, chromosome 2 is held out for validation and
-# chromosome 1 for testing. Unplaced scaffolds, alternate loci, X, Y and the mitochondrial genome are not used.
+# GRCh38.p14 RefSeq accessions of chromosomes 1-22. Pretraining uses chromosomes 3-22; chromosomes 1 and 2, unplaced
+# scaffolds, alternate loci, X, Y and the mitochondrial genome are not used.
 GRCH38_CHROMOSOMES = {
     "1": "NC_000001.11", "2": "NC_000002.12", "3": "NC_000003.12", "4": "NC_000004.12", "5": "NC_000005.10",
     "6": "NC_000006.12", "7": "NC_000007.14", "8": "NC_000008.11", "9": "NC_000009.12", "10": "NC_000010.11",
@@ -43,6 +43,8 @@ class DataConfig:
     # Crops per window and pass: crop 0 is read on the forward strand and crop 1 on the reverse strand.
     crops_per_read: int = 2
     train_sources: tuple = tuple(GRCH38_CHROMOSOMES[str(c)] for c in range(3, 23))
+    # Recorded in every configuration (and in the released models' config.json, so they stay readable) but not used:
+    # pretraining has no validation or test pass; chromosomes 1 and 2 (and X, Y) are simply not among train_sources.
     validation_sources: tuple = (GRCH38_CHROMOSOMES["2"],)
     test_sources: tuple = (GRCH38_CHROMOSOMES["1"],)
     # Bases this close to either crop end are never prediction targets.

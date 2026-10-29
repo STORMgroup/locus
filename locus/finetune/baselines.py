@@ -14,9 +14,10 @@ config.max_seq_len positions (1,026 for HyenaDNA-tiny); a longer input keeps its
 by its tokenizer would. Clean NT18 sequences (at most 1,000 bp) are never truncated; only reads lengthened by simulated
 insertions can be (benchmarks/noisy_reads).
 
-Fine-tuning recipe (scripts/finetune_baseline.py, configs/finetune/<baseline>.yaml): the LoCUS recipe of the nearest model
-size (Caduceus-PS 1.9M and HyenaDNA-tiny 0.44M: the LoCUS-2M recipe; HyenaDNA-small 3.3M: the LoCUS-7M recipe), in
-float32 (no autocast) and with micro-batches of 32 sequences (the update is that of the full batch)."""
+Fine-tuning recipe (scripts/finetune_baseline.py, configs/finetune/<baseline>.yaml): Caduceus-PS 1.9M and HyenaDNA-tiny
+0.44M use the LoCUS-2M recipe; HyenaDNA-small 3.3M uses learning rate 3e-4 with 10% warmup, the recipe of the larger models in
+our development runs. All baselines run in float32 (no autocast) with micro-batches of 32 sequences (the update is that of
+the full batch)."""
 from dataclasses import dataclass
 from typing import Optional
 

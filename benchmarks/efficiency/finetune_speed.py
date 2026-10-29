@@ -34,7 +34,7 @@ sys.path.insert(0, str(ROOT))
 from locus.finetune.data import get_task, load_records  # noqa: E402
 
 TASK = "splice_sites_all_revised"
-LOCUS = {"LoCUS-0.5M": "locus-0.5m", "LoCUS-2M": "locus-2m", "LoCUS-7M": "locus-7m"}
+LOCUS = {"LoCUS-0.5M": "locus-0.5m", "LoCUS-2M": "locus-2m"}
 BASELINES = {"Caduceus-PS 1.9M": "caduceus-ps-1.9m", "HyenaDNA-tiny 0.44M": "hyenadna-tiny-0.44m", "HyenaDNA-small 3.3M": "hyenadna-small-3.3m"}
 
 

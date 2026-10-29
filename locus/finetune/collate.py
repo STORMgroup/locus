@@ -1,5 +1,6 @@
 """Fine-tuning batches: segment boundaries per record and strand, padded model inputs, and the epoch order."""
 import random
+import time
 from dataclasses import dataclass, fields
 from typing import Sequence
 
@@ -30,16 +31,19 @@ class SegmentCache:
         self.records = records
         self.segmenter = segmenter
         self._bounds = {}
+        self.seconds = 0.0  # time spent segmenting (the dataset creation of fine-tuning; inside its wall clock)
 
     def sequence(self, index: int, orientation: str) -> str:
         sequence = self.records[index].sequence
         return sequence if orientation == "forward" else reverse_complement(sequence)
 
     def bounds(self, index: int, orientation: str) -> np.ndarray:
-        """[segments, 2] start / end array (int32, so long inputs keep a small cache: about 25 kB per 16 kb record and strand)."""
+        """[segments, 2] start / end array (int32, so long inputs keep a small cache: about 6 kB per 4 kb record and strand)."""
         key = (index, orientation)
         if key not in self._bounds:
+            started = time.perf_counter()
             self._bounds[key] = np.asarray(self.segmenter.bounds(self.sequence(index, orientation)), dtype=np.int32).reshape(-1, 2)
+            self.seconds += time.perf_counter() - started
         return self._bounds[key]
 
 

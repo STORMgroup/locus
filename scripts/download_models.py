@@ -1,8 +1,8 @@
 """Download pretrained models into the local Hugging Face cache: the LoCUS models and, with --baselines, the public models
 fine-tuned as same-protocol baselines (at the revisions pinned in locus/finetune/baselines.py).
 
-    python scripts/download_models.py                  # the six LoCUS models (same as --locus)
-    python scripts/download_models.py locus-2m locus-7m
+    python scripts/download_models.py                  # the four LoCUS models (same as --locus)
+    python scripts/download_models.py locus-0.5m locus-2m
     python scripts/download_models.py --baselines      # the three baselines
     python scripts/download_models.py --locus --baselines
 
@@ -29,7 +29,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("models", nargs="*", metavar="MODEL",
                         help=f"models to download (default: all of {', '.join(MODELS)}; baselines: {', '.join(BASELINES)})")
-    parser.add_argument("--locus", action="store_true", help="all six LoCUS models")
+    parser.add_argument("--locus", action="store_true", help="all four LoCUS models")
     parser.add_argument("--baselines", action="store_true", help="all three baselines")
     arguments = parser.parse_args()
     unknown = [name for name in arguments.models if name not in MODELS and name not in BASELINES]

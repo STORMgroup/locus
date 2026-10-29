@@ -78,8 +78,8 @@ for _name in NT18_TASKS:
 for _name in GB_TASKS:
     _task = f"gb_{_name}"
     TASKS[_task] = Task(_task, "genomic_benchmarks", 3 if _task in _THREE_CLASS else 2, "accuracy")
-for _length in ("4k", "16k"):
-    TASKS[f"lrb_enhancer_{_length}"] = Task(f"lrb_enhancer_{_length}", "long_range", 2, "roc_auc")
+# GUE splice-site task (DNABERT-2), the second splice benchmark of the tokenizer study (benchmarks/gue/prepare.py)
+TASKS["gue_splice"] = Task("gue_splice", "gue", 3, "mcc")
 
 
 def get_task(name: str) -> Task:

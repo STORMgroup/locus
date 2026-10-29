@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-benchmarks = ["pyarrow", "transformers", "scikit-learn"]
+benchmarks = ["pyarrow", "transformers", "pysam"]
 test = ["pytest"]
 
 [tool.setuptools.packages.find]

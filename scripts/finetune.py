@@ -1,7 +1,10 @@
 """Fine-tune a pretrained LoCUS model on one validation fold of a benchmark task and score the test set.
 
-    python scripts/finetune.py --pretrained checkpoints/locus-2m.pt --recipe configs/finetune/locus-2m.yaml \\
+    python scripts/finetune.py --pretrained locus-2m --recipe configs/finetune/locus-2m.yaml \\
         --data-root data/benchmarks/nt18 --task H3K27ac_revised --fold 0 --output results/locus-2m/nt18/H3K27ac_revised/fold-00.json
+
+--pretrained takes a released model name (downloaded on first use, locus/hub.py), a directory in that layout, or a
+checkpoint of scripts/pretrain.py (runs/<model>/checkpoints/final.pt).
 
 The task directory holds train.jsonl.gz and test.jsonl.gz (benchmarks/nt18/prepare.py, benchmarks/genomic_benchmarks/prepare.py).
 Fold k validates on fold k of a stratified 10-fold split of the training set (seed 42) and trains with seed 42 + k.
@@ -90,7 +93,8 @@ def main() -> None:
         fingerprint_extra={"pretrained_sha256": checkpoint_sha256, "train_sha256": sha256_file(task_dir / "train.jsonl.gz"),
                            **({"random_init": True} if arguments.random_init else {})},
         test_every_epoch=recipe.get("test_every_epoch", True), learning_rate_schedule=recipe.get("learning_rate_schedule", "cosine"))
-    resources = {"wall_seconds": time.time() - start, "resumed": bool(report["resumed_at_steps"]), "node": socket.gethostname()}
+    resources = {"wall_seconds": time.time() - start, "resumed": bool(report["resumed_at_steps"]), "node": socket.gethostname(),
+                 "segmentation_seconds": sum(cache.seconds for cache in (train_cache, test_cache, *extra.values()))}
     if device.type == "cuda":
         resources.update(gpu=torch.cuda.get_device_name(device), peak_gpu_memory_allocated_gb=torch.cuda.max_memory_allocated(device) / 1e9)
     chance_loss = math.log(task.classes)

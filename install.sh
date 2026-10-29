@@ -3,7 +3,7 @@
 # tests. Options add what only some experiments need:
 #
 #     bash install.sh                  # environment in .venv, build, tests
-#     bash install.sh --models         # also download the six pretrained LoCUS models into the Hugging Face cache
+#     bash install.sh --models         # also download the four pretrained LoCUS models into the Hugging Face cache
 #     bash install.sh --baselines      # also the baselines: mamba-ssm and causal-conv1d (Caduceus) and the three models
 #     bash install.sh --pbsim3         # also build PBSIM3 (the simulated nanopore reads of the tokenizer study)
 #     bash install.sh --all            # all of the above

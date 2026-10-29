@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_parameter_counts():
-    expected = {"locus-0.5m": 471_556, "locus-2m": 1_737_604, "locus-7m": 6_653_572}
+    expected = {"locus-0.5m": 471_556, "locus-2m": 1_737_604}
     for name, count in expected.items():
         assert parameter_count(LoCUSModel(load_config(ROOT / f"configs/pretrain/{name}.yaml").model)) == count
 

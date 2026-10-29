@@ -1,4 +1,5 @@
-# Fine-tuning recipe of the HyenaDNA-small 3.3M baseline (scripts/finetune_baseline.py): the LoCUS-7M recipe, in float32
+# Fine-tuning recipe of the HyenaDNA-small 3.3M baseline (scripts/finetune_baseline.py): learning rate 3e-4 with 10% warmup, the
+# recipe of the larger models in our development runs (learning rate 1e-3 was unstable above 2M parameters), in float32
 # (no autocast), each batch of 128 accumulated over 4 micro-batches of 32 (the update is that of the full batch).
 epochs: 20
 batch_size: 128

@@ -40,7 +40,7 @@ HELD_OUT = {"chr1", "chr2", "chrX", "chrY"}  # chromosomes not used for pretrain
 BED_URL = "https://sid.erda.dk/share_redirect/aNQa0Oz2lY/data/variant_effects/variant_effects_{task}.bed"
 BED_SHA256 = {"expression": "c881ae2e7bc32e62f411893fc0e1de1524fd7e1accd20df9cc2c6bb0e9b8efca",
               "disease": "ea3ce8dcc0274e0f4f0412eecf47f4a9faec77ef6702f1ec85a7e7adc8371246"}
-LABELS = {"locus-0.5m": "LoCUS-0.5M", "locus-2m": "LoCUS-2M", "locus-7m": "LoCUS-7M", "locus-2m-16k": "LoCUS-2M-16k",
+LABELS = {"locus-0.5m": "LoCUS-0.5M", "locus-2m": "LoCUS-2M",
           "twin-fixed-2m": "fixed-segment twin (2M)", "twin-bpe-2m": "BPE twin (2M)"}
 # BEND Table 3: zero-shot AUROC over all variants
 PUBLISHED = {"expression": {"DNABERT": 0.60, "GROVER": 0.56, "ResNet-LM": 0.55, "NT-H": 0.55, "NT-MS": 0.54, "AWD-LSTM": 0.53,
