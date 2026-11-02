@@ -951,6 +951,7 @@ def split_tables(results: Path, numbers: dict) -> str:
     for group, tasks in NT18_GROUPS + [("all 18", all_tasks)]:
         rows.append(["**mean**", group] + [number(group_mean([cells[t, key] for t in tasks])) for name, _, _ in pairs
                                           for key in (f"{name} released", name)])
+    out["nt18"] = {task: {name: cells[task, name] for name, _, _ in pairs} for task in all_tasks}  # per task and fold, for compare_results
     header = ["group", "task"] + [x for _, label, _ in pairs for x in (f"{label}, released (chromosomes 3-22)", f"{label}, chromosomes 1-19 and 22")]
     sections = [markdown("Pretraining-split ablation: NT18 test MCC without the test chromosomes in pretraining", header, rows,
                          "NT18 tests on chromosomes 20 and 21, which the released models saw in pretraining (chromosomes 3-22) and the "
