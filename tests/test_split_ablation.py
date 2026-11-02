@@ -49,8 +49,12 @@ def test_split_plans(tmp_path):
     assert folds == sorted(folds)  # fold by fold
     setup = {job.name.split(".nt18.")[0]: (job.command[job.command.index("--pretrained") + 1], Path(job.command[job.command.index("--recipe") + 1]).name,
                                            job.command[job.command.index("--micro-batches") + 1], "--save-best" in job.command) for job in finetune}
-    assert setup == {name: (str(tmp_path / "runs" / name / "checkpoints/final.pt"), f"{reproduce.RECIPE[released]}.yaml",
+    assert setup == {name: (name, f"{reproduce.RECIPE[released]}.yaml",  # the released split models, by name
                             str(reproduce.MICRO_BATCHES[released]), True) for name, released in reproduce.SPLIT.items()}
+    # local checkpoints: --models-from DIR, or the --runs of a command that also pretrains them
+    for extra, directory in (({"models_from": tmp_path / "own"}, tmp_path / "own"), ({"plans": ["split-pretrain", "split-nt18"]}, tmp_path / "runs")):
+        local = reproduce.build_plans(argparse.Namespace(**{**vars(arguments), **extra}))["split-nt18"].stages[0]
+        assert {job.command[job.command.index("--pretrained") + 1] for job in local} == {str(directory / name / "checkpoints/final.pt") for name in reproduce.SPLIT}
     score = plans["split-score"]
     assert [len(stage) for stage in score.stages] == [len(reproduce.SPLIT_SCORED) * 180, len(reproduce.SPLIT_SCORED) * 180 * 2]
     assert {job.name.split(".")[0] for job in score.stages[1]} == set(reproduce.SPLIT_SCORED)

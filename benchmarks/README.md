@@ -59,7 +59,7 @@ resume from their last epoch, so after a crash you can run the same command agai
 | `timing` | wall clock of full fine-tunes, fold 0 of each NT18 task, one job per GPU; Caduceus-PS also in bf16, the precision of LoCUS (timing only) | 108 | |
 | `pretrain` | the four pretraining runs (not part of `all`) | 4 | 11-19 h per model |
 | `split-pretrain` | the pretraining-split ablation: the same four models pretrained without chromosomes 20 and 21 (not part of `all`) | 4 | 11-19 h per model |
-| `split-nt18` | those four models on NT18, 10 folds (needs `split-pretrain`; not part of `all`) | 720 | as `nt18` |
+| `split-nt18` | those four models on NT18, 10 folds: the released split models, or your own `split-pretrain` with `--models-from runs` (not part of `all`) | 720 | as `nt18` |
 | `split-score` | the three 2M ones scored on the error sets and real reads (not part of `all`) | 1,620 (540 shared with `split-nt18`) | 6 min per scoring |
 
 - **Folds.** Every fine-tuning plan runs all 10 folds, as in the paper. `--nt18-folds 3` runs folds 0-2 of the NT18 plans
@@ -71,10 +71,10 @@ resume from their last epoch, so after a crash you can run the same command agai
   `scripts/compare_results.py` reports how far a rerun is from them. Fine-tuning on a GPU is not bit-for-bit repeatable
   (see [Reproducibility](#reproducibility)), so expect 18-task means within about 0.01 of the paper, and larger
   differences on small tasks such as promoter_tata.
-- **The split ablation** has its own models, so it runs after their pretraining; its tables compare with the released
+- **The split ablation** has its own four models, released next to the others; its tables compare with the released
   models' runs of `nt18`, `tokenizer-study` and `real-reads`, so run those too:
-  `python scripts/reproduce.py split-pretrain split-nt18 split-score --gpus 0,1,2,3` (see
-  [The pretraining-split ablation](#the-pretraining-split-ablation)).
+  `python scripts/reproduce.py split-nt18 split-score --gpus 0,1,2,3` (see
+  [The pretraining-split ablation](#the-pretraining-split-ablation)), after `split-pretrain` for your own pretraining.
 - **Your own pretraining.** To pretrain the models as well and run every experiment on them:
 
   ```bash
@@ -280,13 +280,18 @@ ablation pretrains the four released models again on chromosomes 1-19 and 22, wi
 compares them with the released models on the same task-folds.
 
 ```bash
-python scripts/reproduce.py split-pretrain --gpus 0,1,2,3     # runs/<model>-no-chr20-21/checkpoints/final.pt, 11-19 h each
-python scripts/reproduce.py split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3
+python scripts/reproduce.py split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3   # from the released split models
+# or pretrain them yourself first (runs/<model>-no-chr20-21/checkpoints/final.pt, 11-19 h each):
+python scripts/reproduce.py split-pretrain --gpus 0,1,2,3
+python scripts/reproduce.py split-nt18 split-score --models-from runs --gpus 0,1,2,3 --jobs-per-gpu 3
 ```
 
+The released split models are `locus-0.5m-no-chr20-21`, `locus-2m-no-chr20-21`, `twin-fixed-2m-no-chr20-21` and
+`twin-bpe-2m-no-chr20-21` (`python scripts/download_models.py --split`).
+
 - **Fine-tuning.** Each model is fine-tuned on NT18 (10 folds) with the recipe, micro-batches, folds and seeds of its
-  released counterpart, and its selected weights are kept. A fine-tune starts only from a `final.pt` of the full schedule
-  and the model's own configuration. Results: `results/<model>-no-chr20-21/nt18/`.
+  released counterpart, and its selected weights are kept. A fine-tune from your own pretraining starts only from a
+  `final.pt` of the full schedule and the model's own configuration. Results: `results/<model>-no-chr20-21/nt18/`.
 - **Comparison.** The tables give the paired difference (model without chromosomes 20 and 21 minus the released model's run
   of the same task and fold) of the test MCC and of the lowest validation loss. The validation folds never contain
   chromosomes 20 and 21 (about 18% of their records lie on chromosomes 1 and 2, which only the new models saw), so a test

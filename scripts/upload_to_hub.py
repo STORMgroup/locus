@@ -4,8 +4,11 @@ written in the Hub layout (config.json, model.safetensors, a model card) and, wi
 for inspection.
 
     python scripts/upload_to_hub.py --checkpoint locus-2m=runs/locus-2m/checkpoints/final.pt [...] --repository ORG/locus [--upload]
+    python scripts/upload_to_hub.py --checkpoint locus-2m-no-chr20-21=runs/locus-2m-no-chr20-21/checkpoints/final.pt \
+        --repository ORG/locus --staging runs/hub          # the split-ablation models, written for inspection only
 
-Uploading needs a Hugging Face token with write access (huggingface-cli login)."""
+Uploading needs a Hugging Face token with write access: the environment variable HF_TOKEN (kept only in the shell) or
+huggingface-cli login (which stores the token)."""
 import argparse
 import sys
 from pathlib import Path

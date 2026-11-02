@@ -52,11 +52,12 @@ Plans:
                         22, without the NT18 test chromosomes 20 and 21 (configs/pretrain/<model>-no-chr20-21.yaml), one GPU each;
                         the BPE twin's tokenizer is data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json (retrained by the data
                         step only if it is missing, about 64 GB of RAM)
-    split-nt18          NT18 for the four models of split-pretrain (runs/<model>/checkpoints/final.pt), 10 folds, with the recipe and
-                        micro-batches of their released counterparts; the tables compare them with the released models' runs
-                        (plans nt18 and tokenizer-study)
+    split-nt18          NT18 for the four split-ablation models, 10 folds, with the recipe and micro-batches of their released
+                        counterparts: the released split models (locus/hub.py, downloaded by name), or the checkpoints of your own
+                        split-pretrain (--models-from runs, or in the same command as split-pretrain); the tables compare them
+                        with the released models' runs (plans nt18 and tokenizer-study)
     split-score         the three 2M models of split-nt18 scored on the tokenizer study's modified test sets and real reads
-    all                 every plan except pretrain and the split-ablation plans (which need split-pretrain)
+    all                 every plan except pretrain and the split-ablation plans
 
 The released models are downloaded by name; --models-from DIR uses DIR/<name>/checkpoints/final.pt instead (the output
 of the pretrain plan). Data preparation runs first, for the data a plan needs that does not exist yet. A job whose result
@@ -417,6 +418,10 @@ def build_plans(arguments) -> dict:
     plans["timing"] = Plan("timing", ["nt18"], [timing], exclusive=True)
     # the pretraining-split ablation: one pretraining per GPU; then NT18 for the four models, fold by fold, with the recipe and
     # micro-batches of the released counterpart and the selected weights kept; then the 2M models' scoring, as for the twins
+    # the split models: the released ones (downloaded by name), or local checkpoints: --models-from DIR, or the --runs of a
+    # command that also runs split-pretrain
+    local = split_source(arguments)
+    split_pretrained = lambda name: local / name / "checkpoints/final.pt" if local else name
     plans["split-pretrain"] = Plan("split-pretrain", ["genome-windows", "bpe-no-chr20-21"], [[
         Job(f"pretrain.{name}", script("scripts/pretrain.py", "--config", ROOT / "configs/pretrain" / f"{name}.yaml", "--output-dir", arguments.runs / name,
                                        "--resume", "--set", f"data.genome_windows={data / 'GRCh38.p14.acgt.w4096.s4096'}"),
@@ -425,7 +430,7 @@ def build_plans(arguments) -> dict:
     def split_job(name, task, fold) -> Job:
         output = results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json"
         return Job(f"{name}.nt18.{task}_revised.fold{fold}",
-                   script("scripts/finetune.py", "--pretrained", arguments.runs / name / "checkpoints/final.pt", "--recipe",
+                   script("scripts/finetune.py", "--pretrained", split_pretrained(name), "--recipe",
                           ROOT / "configs/finetune" / f"{RECIPE[SPLIT[name]]}.yaml", "--data-root", nt18, "--task", f"{task}_revised", "--fold", fold,
                           "--output", output, "--micro-batches", MICRO_BATCHES[SPLIT[name]], "--save-best"), output)
 
@@ -446,6 +451,13 @@ def build_plans(arguments) -> dict:
         + [split_score_job(name, task, fold, data / "benchmarks/real_reads", REAL_SETS, "real_reads")
            for name in SPLIT_SCORED for task in REAL_TASKS for fold in nt18_folds]])
     return plans
+
+
+def split_source(arguments):
+    """Directory of the split models' checkpoints (DIR/<model>/checkpoints/final.pt), or None for the released models."""
+    if arguments.models_from:
+        return arguments.models_from
+    return arguments.runs if "split-pretrain" in (getattr(arguments, "plans", None) or []) else None
 
 
 def split_models_needed(plans: dict, names: list, only=None) -> list:
@@ -579,10 +591,11 @@ def main() -> None:
     unknown = [n for n in names if n not in plans]
     if unknown:
         parser.error(f"unknown plan(s) {', '.join(unknown)}; choose from {', '.join(PLANS + SPLIT_PLANS)}, all, tables")
-    if not arguments.dry_run:  # split-pretrain writes the missing checkpoints of its models and skips the existing ones: those are checked
+    local = split_source(arguments)
+    if local and not arguments.dry_run:  # split-pretrain writes the missing checkpoints of its models and skips the existing ones: those are checked
         written = split_models_needed(plans, ["split-pretrain"], arguments.only) if "split-pretrain" in names else []
-        check_split_checkpoints(arguments.runs, [name for name in split_models_needed(plans, names, arguments.only)
-                                                 if name not in written or (arguments.runs / name / "checkpoints/final.pt").is_file()])
+        check_split_checkpoints(local, [name for name in split_models_needed(plans, names, arguments.only)
+                                        if name not in written or (local / name / "checkpoints/final.pt").is_file()])
     if arguments.gpus is not None:
         gpus = [g for g in arguments.gpus.split(",") if g]
     else:

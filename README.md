@@ -88,11 +88,12 @@ Pretraining runs on one GPU and takes 11 to 19 hours per model on an RTX A5000. 
 All four are pretrained on the human genome (GRCh38, chromosomes 3 to 22) with 4 kb inputs, about 12.5 billion bases
 each. `twin-fixed-2m` and `twin-bpe-2m` are LoCUS-2M with another tokenizer; the paper uses them to compare tokenizers.
 For the paper's pretraining-split ablation, the same four models are pretrained again without chromosomes 20 and 21
-(`configs/pretrain/<model>-no-chr20-21.yaml`, plan `split-pretrain` below).
+(`configs/pretrain/<model>-no-chr20-21.yaml`); they are released as `locus-0.5m-no-chr20-21`, `locus-2m-no-chr20-21`,
+`twin-fixed-2m-no-chr20-21` and `twin-bpe-2m-no-chr20-21`.
 
 The models are in the Hugging Face repository [`STORMResearch/locus`](https://huggingface.co/STORMResearch/locus), one
-folder per model. They are downloaded the first time you use them; `python scripts/download_models.py` downloads all of
-them ahead of time. To work offline, set `LOCUS_HUB_DIR` to a directory with the same folders.
+folder per model. They are downloaded the first time you use them; `python scripts/download_models.py` downloads the
+four above ahead of time (`--split` the four split-ablation models). To work offline, set `LOCUS_HUB_DIR` to a directory with the same folders.
 
 ## How LoCUS works
 
@@ -113,7 +114,7 @@ Every table in the paper can be regenerated with the scripts in this repository:
 bash install.sh --all                                     # also installs the baseline models and PBSIM3
 source .venv/bin/activate
 python scripts/reproduce.py all --gpus 0,1,2,3 --jobs-per-gpu 3
-python scripts/reproduce.py split-pretrain split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3   # the split ablation
+python scripts/reproduce.py split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3   # the split ablation (released split models)
 python scripts/compare_results.py                         # how far your numbers are from the paper's
 ```
 

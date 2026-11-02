@@ -1,11 +1,13 @@
 """Hugging Face Hub layout: export, loading by name from a local copy, weights identity, and embeddings."""
+import json
+
 import numpy as np
 import torch
 
 import locus
-from locus.config import Config, DataConfig, ModelConfig
+from locus.config import GRCH38_CHROMOSOMES, Config, DataConfig, ModelConfig
 from locus.finetune.model import load_pretrained
-from locus.hub import export, weights_sha256
+from locus.hub import MODELS, SPLIT_MODELS, export, weights_sha256
 from locus.models.locus_model import LoCUSModel
 
 
@@ -41,3 +43,16 @@ def test_embed(tmp_path, monkeypatch):
     np.testing.assert_allclose(per_base[0].mean(axis=0), vectors[0], rtol=1e-5, atol=1e-6)
     forward = model.embed(sequences, both_strands=False)
     assert not np.allclose(forward, vectors)
+
+
+def test_export_records_repository_paths_and_chromosomes(tmp_path):
+    """A model exported from a checkpoint trained elsewhere carries repository-relative paths and its own chromosomes."""
+    checkpoint = _checkpoint(tmp_path)
+    state = torch.load(checkpoint, weights_only=False)
+    state["config"]["data"].update(genome_windows=str(tmp_path / "shared/data/GRCh38.p14.acgt.w4096.s4096"),
+                                   train_sources=[GRCH38_CHROMOSOMES[str(c)] for c in list(range(1, 20)) + [22]])
+    torch.save(state, checkpoint)
+    directory = export(checkpoint, tmp_path / "hub" / "locus-2m-no-chr20-21", "locus-2m-no-chr20-21")
+    assert json.loads((directory / "config.json").read_text())["config"]["data"]["genome_windows"] == "data/GRCh38.p14.acgt.w4096.s4096"
+    assert "chromosomes 1-19 and 22" in (directory / "README.md").read_text()
+    assert set(SPLIT_MODELS) <= set(MODELS)
