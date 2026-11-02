@@ -1,0 +1,30 @@
+# Caduceus-PS 1.9M with Caduceus's own fine-tuning settings (caduceus-ps-1.9m-authors.yaml) in bfloat16 instead of fp16: used
+# only for the folds whose fp16 training overflowed (skipped non-finite steps or a non-finite validation loss in some epoch;
+# scripts/reproduce.py plan baselines-authors-bf16). bfloat16 has the range of float32, so it does not overflow; Caduceus's
+# config notes bf16 as its choice on GPUs that support it ("precision: 16  # bf16 only a100"). Everything else is identical.
+epochs: 20
+batch_size: 128
+learning_rate: 1.0e-3
+warmup_fraction: 0.01
+weight_decay: 0.1
+min_learning_rate_ratio: 0.1
+gradient_clip: 1.0
+dropout: 0.0
+autocast: bfloat16
+micro_batches: 4
+validation_folds: 10
+seed: 42
+optimizer_groups: caduceus
+train_orientation: forward
+evaluation_orientation: forward
+# Per task, the values Caduceus-PS used in its paper (Schiff et al. 2024, Table 6; learning rate 1e-3 and batch 128 unless listed),
+# matched by name to the original NT tasks; the histone marks of the revised benchmark without a namesake there (H2AFZ, H3K27ac,
+# H3K27me3, H3K9me3, H4K20me1) keep batch 128, its choice for 8 of its 10 histone tasks. A batch of 512 is accumulated over 16
+# micro-batches of 32.
+task_settings:
+  H3K4me2_revised: {batch_size: 512, micro_batches: 16}
+  H3K4me3_revised: {batch_size: 512, micro_batches: 16}
+  enhancers_revised: {batch_size: 512, micro_batches: 16}
+  enhancers_types_revised: {batch_size: 512, micro_batches: 16, learning_rate: 2.0e-3}
+  promoter_tata_revised: {batch_size: 512, micro_batches: 16}
+  splice_sites_all_revised: {batch_size: 512, micro_batches: 16}

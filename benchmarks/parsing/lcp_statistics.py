@@ -2,8 +2,8 @@
 
     segmentation   level-1 cores and level-2 segments (the LoCUS segments) of genome windows of the pretraining chromosomes
                    (every k-th window, --windows-used): level-1 core types and lengths, level-1 start spacing, and for the
-                   segments their length, start spacing, how many segments cover each base, and how many bases at each end of
-                   a window no segment covers
+                   segments their length, start spacing and how many segments cover each base; for both levels, how many
+                   bases at each end of a window no core covers
     worst case     one edit at the centre of --sequences chromosome-1 sequences of 2,048 bp (held out of pretraining) and of as
                    many uniform random sequences: a substitution, or an insertion or deletion of 1, 2 or 3 bases. Per level
                    (1 and 2) and edit, the changed cores (benchmarks/parsing/locality.py: a clean core is changed when the
@@ -62,6 +62,8 @@ def segmentation(windows: list, library) -> dict:
                 by_type.setdefault(TYPES.get(kind, str(kind)), []).append(e - s)
             starts = sorted(s for s, _, _ in parsed)
             spacing += [b - a for a, b in zip(starts, starts[1:])]
+            left.append(min(starts))
+            right.append(len(sequence) - max(e for _, e, _ in parsed))
             if level == 2:
                 depth = [0] * (len(sequence) + 1)
                 for s, e, _ in parsed:
@@ -71,21 +73,18 @@ def segmentation(windows: list, library) -> dict:
                 for j in range(len(sequence)):
                     running += depth[j]
                     coverage[min(running, 4)] += 1
-                left.append(min(starts))
-                right.append(len(sequence) - max(e for _, e, _ in parsed))
         level_out = {"cores": count, "cores_per_kb": 1000 * count / out["bases"], "bases_per_core": out["bases"] / count,
                      "mean_length_bp": statistics.mean(lengths), "median_length_bp": statistics.median(lengths), "max_length_bp": max(lengths),
                      "mean_start_spacing_bp": statistics.mean(spacing),
                      "by_type": {kind: {"cores": len(v), "share": len(v) / count, "mean_length_bp": statistics.mean(v), "max_length_bp": max(v)}
-                                 for kind, v in sorted(by_type.items())}}
+                                 for kind, v in sorted(by_type.items())},
+                     "uncovered_bases_at_start_mean": statistics.mean(left), "uncovered_bases_at_end_mean": statistics.mean(right)}
         if level == 1:
             other = [x for kind, v in by_type.items() if kind != "run" for x in v]
             level_out["share_of_non_run_cores_with_3_bases"] = sum(x == 3 for x in other) / len(other)
         else:
             level_out["share_of_bases_covered_by"] = {("4 or more" if k == 4 else str(k)): coverage[k] / out["bases"] for k in range(5)}
             level_out["share_of_bases_in_2_or_more"] = sum(coverage[k] for k in (2, 3, 4)) / out["bases"]
-            level_out["uncovered_bases_at_start_mean"] = statistics.mean(left)
-            level_out["uncovered_bases_at_end_mean"] = statistics.mean(right)
         out[f"level {level}"] = level_out
     return out
 
@@ -156,7 +155,8 @@ def main() -> None:
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     arguments.output.write_text(json.dumps(result, indent=1) + "\n")
     level1, level2 = result["segmentation"]["level 1"], result["segmentation"]["level 2"]
-    print(f"level 1: a core every {level1['mean_start_spacing_bp']:.2f} bp; non-run cores of 3 bases {level1['share_of_non_run_cores_with_3_bases']:.4f}")
+    print(f"level 1: a core every {level1['mean_start_spacing_bp']:.2f} bp; non-run cores of 3 bases {level1['share_of_non_run_cores_with_3_bases']:.4f}, "
+          f"uncovered ends {level1['uncovered_bases_at_start_mean']:.1f} / {level1['uncovered_bases_at_end_mean']:.1f}")
     print(f"level 2: {level2['bases_per_core']:.2f} bp per segment, mean length {level2['mean_length_bp']:.2f} bp, in >= 2 segments "
           f"{level2['share_of_bases_in_2_or_more']:.3f}, uncovered ends {level2['uncovered_bases_at_start_mean']:.1f} / {level2['uncovered_bases_at_end_mean']:.1f}")
     for name, levels in result["worst_case"]["sets"].items():

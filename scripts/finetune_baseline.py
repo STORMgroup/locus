@@ -1,15 +1,19 @@
-"""Fine-tune a public pretrained baseline (Caduceus-PS, HyenaDNA; locus/finetune/baselines.py) with the LoCUS fine-tuning
-protocol on one validation fold of a benchmark task and score the test set.
+"""Fine-tune a public pretrained baseline (Caduceus-PS; locus/finetune/baselines.py) with the LoCUS fine-tuning protocol on
+one validation fold of a benchmark task and score the test set.
 
-    python scripts/finetune_baseline.py --baseline hyenadna-tiny-0.44m --data-root data/benchmarks/nt18 \\
-        --task H3K27ac_revised --fold 0 --output results/hyenadna-tiny-0.44m/nt18/H3K27ac_revised/fold-00.json
+    python scripts/finetune_baseline.py --baseline caduceus-ps-1.9m --data-root data/benchmarks/nt18 \\
+        --task H3K27ac_revised --fold 0 --output results/caduceus-ps-1.9m/nt18/H3K27ac_revised/fold-00.json
 
 Everything except the encoder is shared with scripts/finetune.py: the folds (fold k validates on fold k of a stratified
 10-fold split of the training set, seed 42, and trains with seed 42 + k), random-strand training, strand-averaged
 evaluation, the dropout 0.1 set in every dropout layer of the encoder and before the linear classifier, selection of the
-epoch with the lowest validation loss, and resuming. The recipe defaults to configs/finetune/<baseline>.yaml; its
-micro_batches entry (gradient accumulation) can be overridden with --micro-batches. --baseline-path loads a local copy
-of the baseline's Hugging Face repository instead of downloading it. Caduceus needs a GPU (mamba-ssm kernels)."""
+epoch with the lowest validation loss, and resuming. The recipe defaults to configs/finetune/<baseline>.yaml; with
+--recipe configs/finetune/<baseline>-authors.yaml the baseline is fine-tuned with its authors' settings instead (recipe
+entries optimizer_groups: their weight-decay groups; train_orientation and evaluation_orientation: the strand read in
+training and in validation and test, "forward" or the default random strand and average of both strands; task_settings:
+values for single tasks). The recipe's
+micro_batches entry (gradient accumulation) can be overridden with --micro-batches. --baseline-path loads a local copy of the baseline's Hugging Face repository instead
+of downloading it. Caduceus needs a GPU (mamba-ssm kernels)."""
 import argparse
 import json
 import math
@@ -24,7 +28,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from locus.finetune.baselines import BASELINES, WholeSequenceSegmenter, load_baseline  # noqa: E402
+from locus.finetune.baselines import BASELINES, NO_WEIGHT_DECAY, WholeSequenceSegmenter, load_baseline  # noqa: E402
 from locus.finetune.collate import SegmentCache  # noqa: E402
 from locus.finetune.data import complement_indices, get_task, load_records, sha256_file, stratified_folds  # noqa: E402
 from locus.finetune.model import SequenceClassifier, set_dropout  # noqa: E402
@@ -49,6 +53,7 @@ def main() -> None:
     baseline = BASELINES[arguments.baseline]
     recipe_path = arguments.recipe or ROOT / "configs/finetune" / f"{baseline.recipe}.yaml"
     recipe = yaml.safe_load(recipe_path.read_text())
+    recipe.update(recipe.pop("task_settings", {}).get(arguments.task, {}))  # per-task values of a recipe (the authors' settings)
     micro_batches = arguments.micro_batches or recipe.get("micro_batches", 1)
     task = get_task(arguments.task)
     task_dir = arguments.data_root / arguments.task
@@ -86,7 +91,9 @@ def main() -> None:
         best_state_path=Path(f"{stem}.best.pt") if arguments.save_best else None,
         fingerprint_extra={"baseline": baseline.repository, "revision": baseline.revision,
                            "train_sha256": sha256_file(task_dir / "train.jsonl.gz")},
-        test_every_epoch=recipe.get("test_every_epoch", True), learning_rate_schedule=recipe.get("learning_rate_schedule", "cosine"))
+        test_every_epoch=recipe.get("test_every_epoch", True), learning_rate_schedule=recipe.get("learning_rate_schedule", "cosine"),
+        no_weight_decay=NO_WEIGHT_DECAY[recipe["optimizer_groups"]](model) if recipe.get("optimizer_groups") else None,
+        train_orientation=recipe.get("train_orientation", "random"), evaluation_orientation=recipe.get("evaluation_orientation", "both"))
     resources = {"wall_seconds": time.time() - start, "resumed": bool(report["resumed_at_steps"]), "node": socket.gethostname(),
                  "segmentation_seconds": sum(cache.seconds for cache in (train_cache, test_cache, *extra.values()))}
     if device.type == "cuda":

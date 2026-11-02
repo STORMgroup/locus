@@ -3,7 +3,7 @@
 Recipe (per model size, see configs/finetune): AdamW (weight decay on matrices only), linear warm-up then cosine decay to
 `min_learning_rate_ratio` of the peak (or a constant learning rate after the warm-up), gradient clipping at 1, dropout 0.1
 in the encoder and before the classifier, bf16 autocast. Each training window is read on a random strand; validation and test average the logits of both
-strands. After every epoch the model is scored on the validation fold (and, unless switched off for long inputs, on the test
+strands (a baseline trained on the forward strand only, as its authors do, is also validated and tested on the forward strand only). After every epoch the model is scored on the validation fold (and, unless switched off for long inputs, on the test
 set); the reported checkpoint is the epoch with the lowest validation loss. The test set never influences training or selection.
 
 The training state is saved after every epoch, so a fold interrupted by a time limit resumes from its last finished
@@ -70,9 +70,18 @@ def scores(logits: np.ndarray, labels: np.ndarray) -> tuple[dict, float]:
     return classification_metrics(labels, logits), float(-log_probabilities[np.arange(len(labels)), labels].mean())
 
 
-def evaluate(model, cache: SegmentCache, indices: list, batch_size: int, device, autocast_dtype) -> tuple[dict, float]:
-    """(metrics, mean cross-entropy) of the strand-averaged logits."""
-    return scores(*strand_averaged_logits(model, cache, indices, batch_size, device, autocast_dtype))
+def evaluation_logits(model, cache: SegmentCache, indices: list, batch_size: int, device, autocast_dtype, orientation: str = "both") -> tuple:
+    """(logits, labels) averaged over both strands ("both"), or of the forward strand only ("forward")."""
+    if orientation == "both":
+        return strand_averaged_logits(model, cache, indices, batch_size, device, autocast_dtype)
+    if orientation == "forward":
+        return predict(model, cache, indices, "forward", batch_size, device, autocast_dtype)
+    raise ValueError(f"Unknown evaluation orientation: {orientation}")
+
+
+def evaluate(model, cache: SegmentCache, indices: list, batch_size: int, device, autocast_dtype, orientation: str = "both") -> tuple[dict, float]:
+    """(metrics, mean cross-entropy) of the strand-averaged (or forward-strand) logits."""
+    return scores(*evaluation_logits(model, cache, indices, batch_size, device, autocast_dtype, orientation))
 
 
 def effective_autocast_dtype(name: str, device) -> torch.dtype:
@@ -91,26 +100,32 @@ def train_fold(model, train_cache: SegmentCache, train_indices: torch.Tensor, va
                micro_batches: int = 1, autocast_dtype: str = "bfloat16", extra_test_caches: Optional[dict] = None,
                state_path: Optional[Path] = None, data_history_path: Optional[Path] = None,
                best_state_path: Optional[Path] = None, fingerprint_extra: Optional[dict] = None,
-               test_every_epoch: bool = True, learning_rate_schedule: str = "cosine") -> dict:
+               test_every_epoch: bool = True, learning_rate_schedule: str = "cosine",
+               no_weight_decay: Optional[set] = None, train_orientation: str = "random",
+               evaluation_orientation: str = "both") -> dict:
     seed_everything(seed)
     model.to(device)
     steps_per_epoch = math.ceil(len(train_indices) / batch_size)
     steps = epochs * steps_per_epoch
     warmup_steps = round(steps * warmup_fraction)
+    # weight decay on matrices only; or, with no_weight_decay (ids of parameters), on every parameter not in it (a baseline's
+    # own grouping, locus/finetune/baselines.py)
     groups = {}
     for _, parameter in model.named_parameters():
         if parameter.requires_grad:
-            groups.setdefault(parameter.ndim > 1, []).append(parameter)
+            groups.setdefault(parameter.ndim > 1 if no_weight_decay is None else id(parameter) not in no_weight_decay, []).append(parameter)
     optimizer = torch.optim.AdamW([{"params": groups[decays], "weight_decay": weight_decay if decays else 0.0, "lr": learning_rate}
                                    for decays in sorted(groups)], lr=learning_rate)
     amp_dtype = effective_autocast_dtype(autocast_dtype, device)
     scaler = torch.amp.GradScaler("cuda", enabled=device.type == "cuda" and amp_dtype == torch.float16)
     eval_batch_size = max(1, batch_size // micro_batches)
     train_list, validation_list = train_indices.tolist(), validation_indices.tolist()
-    collate = Collator(train_cache, "random", seed=seed)
+    collate = Collator(train_cache, train_orientation, seed=seed)  # "random": one strand per window and epoch
 
     if learning_rate_schedule not in {"cosine", "constant"}:
         raise ValueError(f"Unknown learning-rate schedule: {learning_rate_schedule}")
+    if evaluation_orientation not in {"both", "forward"}:
+        raise ValueError(f"Unknown evaluation orientation: {evaluation_orientation}")
 
     def learning_rate_factor(step: int) -> float:
         if warmup_steps > 0 and step <= warmup_steps:
@@ -128,6 +143,12 @@ def train_fold(model, train_cache: SegmentCache, train_indices: torch.Tensor, va
                    "weight_decay": weight_decay, "min_learning_rate_ratio": min_learning_rate_ratio, "seed": seed,
                    "micro_batches": micro_batches, "train_indices": digest(train_list), "validation_indices": digest(validation_list),
                    "parameters": digest(sorted((n, list(p.shape)) for n, p in model.named_parameters())), **(fingerprint_extra or {})}
+    if no_weight_decay is not None:
+        fingerprint["no_weight_decay"] = sorted(n for n, p in model.named_parameters() if id(p) in no_weight_decay)
+    if train_orientation != "random":
+        fingerprint["train_orientation"] = train_orientation
+    if evaluation_orientation != "both":  # selects the checkpoint
+        fingerprint["evaluation_orientation"] = evaluation_orientation
     best_loss, best_step, best_state, best_metrics = float("inf"), 0, None, None
     history, data_history, resumed_at = [], [], []
     interval_loss_sum, interval_examples, nonfinite_steps, interval_nonfinite = 0.0, 0, 0, 0
@@ -208,16 +229,18 @@ def train_fold(model, train_cache: SegmentCache, train_indices: torch.Tensor, va
             interval_nonfinite += 1
 
         if step % steps_per_epoch == 0 or step == steps:
-            validation_metrics, validation_loss = evaluate(model, train_cache, validation_list, eval_batch_size, device, amp_dtype)
+            validation_metrics, validation_loss = evaluate(model, train_cache, validation_list, eval_batch_size, device, amp_dtype,
+                                                           evaluation_orientation)
             entry = {"step": step, "epoch": epoch, "training_loss": interval_loss_sum / interval_examples if interval_examples else float("nan"),
                      "validation_loss": validation_loss, "validation_metrics": validation_metrics, "learning_rate": learning_rate * factor,
                      "nonfinite_steps": interval_nonfinite}
             if test_every_epoch:
                 # recorded for every epoch, never used for selection
                 entry["test_metrics"], entry["test_loss"] = evaluate(model, test_cache, list(range(len(test_cache.records))), eval_batch_size,
-                                                                     device, amp_dtype)
+                                                                     device, amp_dtype, evaluation_orientation)
             for name, cache in (extra_test_caches or {}).items():
-                metrics, extra_loss = evaluate(model, cache, list(range(len(cache.records))), eval_batch_size, device, amp_dtype)
+                metrics, extra_loss = evaluate(model, cache, list(range(len(cache.records))), eval_batch_size, device, amp_dtype,
+                                               evaluation_orientation)
                 entry.setdefault("extra_test_metrics", {})[name] = metrics
                 entry.setdefault("extra_test_loss", {})[name] = extra_loss
             history.append(entry)
@@ -244,14 +267,24 @@ def train_fold(model, train_cache: SegmentCache, train_indices: torch.Tensor, va
             if state_path is not None and step < steps:
                 save_state(step)
 
+    # no epoch had a finite validation loss (fp16 overflow in every evaluation): nothing can be selected, so the last weights
+    # are kept and the result is marked; scripts/reproduce.py runs such folds of the Caduceus own-settings runs again in bf16
+    no_finite_validation_loss = best_state is None
+    if no_finite_validation_loss:
+        print("no epoch has a finite validation loss: keeping the last weights (marked no_finite_validation_loss)", flush=True)
+        best_state = copy.deepcopy({name: value.detach().cpu() for name, value in model.state_dict().items()})
+        best_loss = float("nan")
+        best_step, best_metrics = (history[-1]["step"], history[-1]["validation_metrics"]) if history else (step, {})
     model.load_state_dict(best_state)
     if best_state_path is not None:
         torch.save({"model": best_state, "best_step": best_step, "validation_loss": best_loss, "seed": seed}, best_state_path)
-    test_metrics, test_loss = evaluate(model, test_cache, list(range(len(test_cache.records))), eval_batch_size, device, amp_dtype)
+    test_metrics, test_loss = evaluate(model, test_cache, list(range(len(test_cache.records))), eval_batch_size, device, amp_dtype,
+                                       evaluation_orientation)
     return {
         "best_step": best_step, "best_epoch": (best_step - 1) // steps_per_epoch + 1, "steps": steps, "steps_per_epoch": steps_per_epoch,
         "warmup_steps": warmup_steps, "validation_loss": best_loss, "validation_metrics": best_metrics, "test_loss": test_loss,
         "test_metrics": test_metrics, "history": history, "nonfinite_steps": nonfinite_steps, "resumed_at_steps": resumed_at,
         "data_history": [{k: v for k, v in record.items() if k not in ("indices", "orientations")} for record in data_history],
         "effective_autocast_dtype": str(amp_dtype).removeprefix("torch."), "diverged_at_step": diverged_at_step,
+        "no_finite_validation_loss": no_finite_validation_loss,
     }

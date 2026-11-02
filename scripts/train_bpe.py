@@ -1,6 +1,8 @@
 """Train the byte-pair-encoding tokenizer of the BPE twin model (twin-bpe-2m).
 
     python scripts/train_bpe.py --output runs/tokenizers/bpe-4096-1gb-seed42.json
+    python scripts/train_bpe.py --config configs/pretrain/twin-bpe-2m-no-chr20-21.yaml \
+        --output data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json     # the split ablation's BPE twin (chromosomes 1-19, 22)
 
 The training data are 244,140 windows of 4,096 bp (999,997,440 bases, about 1 Gb) drawn uniformly at random from the
 windows of chromosomes 3-22 in the genome window dataset (scripts/prepare_genome.sh): reservoir sampling over the read
@@ -14,7 +16,12 @@ The tokenizer used in the paper is distributed as data/tokenizers/bpe-4096-1gb-s
 7b25a22ea76967150c12fd1d008f8a5626aa4d5833e04dc66cb2e0896def6dd2). It was trained in this way with tokenizers 0.22.2
 on the sample with identifier digest e658f2c850d521d3280fa4226f06b1c088612565810ab3d46a786525463bc425. The trainer keeps
 every base of the sample in memory as a separate symbol: peak memory grows by about 64 bytes per training base, so the
-full sample needs roughly 64 GB of RAM (--windows trains on a smaller sample drawn the same way)."""
+full sample needs roughly 64 GB of RAM (--windows trains on a smaller sample drawn the same way).
+
+The pretraining-split ablation's BPE twin (configs/pretrain/twin-bpe-2m-no-chr20-21.yaml) has its own tokenizer, trained the
+same way with --config on windows of chromosomes 1-19 and 22: data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json (sha256
+9f12a6bae073f9a27b55cb6e2f6d97dcc745bdf8604d4bfc0c6c7d2bff607087), sample identifier digest
+47e53cb0995c492d655531d4ba125fe218fd2eff6e2d3d4bcdde339afafde24b, tokenizers 0.22.2."""
 import argparse
 import csv
 import hashlib
@@ -26,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from locus.config import DataConfig  # noqa: E402
+from locus.config import DataConfig, load_config  # noqa: E402
 from locus.data.genome import GenomeDataset  # noqa: E402
 from locus.finetune.data import sha256_file  # noqa: E402
 
@@ -84,11 +91,13 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--vocab-size", type=int, default=4096)
     parser.add_argument("--min-frequency", type=int, default=2)
+    parser.add_argument("--config", type=Path, help="pretraining configuration whose training chromosomes are sampled "
+                        "(default: chromosomes 3-22, the released models'; the split ablation's BPE twin samples chromosomes 1-19 and 22)")
     arguments = parser.parse_args()
 
     from tokenizers import __version__ as tokenizers_version
 
-    sources = DataConfig().train_sources
+    sources = load_config(arguments.config).data.train_sources if arguments.config else DataConfig().train_sources
     manifest = arguments.genome_windows / "manifests" / "reads.tsv"
     window_length = json.loads((arguments.genome_windows / "dataset.json").read_text())["window_length"]
     selected = select_windows(manifest, set(sources), arguments.windows, arguments.seed)

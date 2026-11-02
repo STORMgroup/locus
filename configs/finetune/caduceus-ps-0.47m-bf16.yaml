@@ -1,0 +1,15 @@
+# Timing only (scripts/reproduce.py plan timing): the shared recipe of the Caduceus-PS 0.47M baseline (caduceus-ps-0.47m.yaml) in
+# bfloat16 autocast, the precision LoCUS fine-tunes in, so that the wall clock compares the models at the same precision. The
+# accuracy tables use the float32 runs of caduceus-ps-0.47m.yaml (bf16 training at this learning rate failed for Caduceus-PS).
+epochs: 20
+batch_size: 128
+learning_rate: 1.0e-3
+warmup_fraction: 0.01
+weight_decay: 0.1
+min_learning_rate_ratio: 0.1
+gradient_clip: 1.0
+dropout: 0.1
+autocast: bfloat16
+micro_batches: 4
+validation_folds: 10
+seed: 42

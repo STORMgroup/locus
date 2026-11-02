@@ -1,4 +1,4 @@
-# Fine-tuning recipe of the HyenaDNA-tiny 0.44M baseline (scripts/finetune_baseline.py): the LoCUS-2M recipe, in float32
+# Fine-tuning recipe of the Caduceus-PS 0.47M baseline (scripts/finetune_baseline.py), the same as caduceus-ps-1.9m.yaml: the LoCUS-2M recipe, in float32
 # (no autocast), each batch of 128 accumulated over 4 micro-batches of 32 (the update is that of the full batch).
 epochs: 20
 batch_size: 128

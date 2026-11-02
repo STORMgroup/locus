@@ -4,18 +4,21 @@
 
 Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
     results/<model>/nt18/<task>/fold-XX.json                 NT18 revised, test MCC (LoCUS models, locus-2m-random-init, baselines)
+    results/caduceus-ps-<size>-authors[-bf16]/nt18/<task>/fold-XX.json   Caduceus-PS with its own settings (bf16: overflowed folds)
+    results/<model>-no-chr20-21/nt18/<task>/fold-XX.json (+ fold-XX.scored.json)   pretraining-split ablation
     results/<model>/genomic_benchmarks/<task>/fold-XX.json   Genomic Benchmarks, test accuracy
     results/tokenizer_study/<lcp|fixed|bpe>/nt18/<task>/fold-XX.json (+ fold-XX.scored.json)
     results/tokenizer_study/<lcp|fixed|bpe>/gue/gue_splice/fold-XX.json (+ fold-XX.scored.json)   GUE splice
     results/gue_independent/<lcp|fixed|bpe>/gue/gue_splice/fold-XX.scored.json   GUE splice, test rows independent of NT18
     results/real_reads/<lcp|fixed|bpe>/nt18/<task>/fold-XX.scored.json            real nanopore reads of the test windows
     results/single_nucleotide/<model>/nt18/<task>/fold-XX.scored.json   single-nucleotide baselines on the modified test sets
-    results/real_reads/<model>/nt18/<task>/fold-XX.scored.json          single-nucleotide baselines on the real reads
+    results/real_reads/<model>/nt18/<task>/fold-XX.scored.json          single-nucleotide baselines and split models on the real reads
     results/intervals/<nt18|real_reads|gue>.json             intervals from resampling test windows
     results/<locus-2m|locus-2m-random-init>/nt18_heldout/<task>/fold-XX.json   NT18 tested on chromosomes outside pretraining
     results/long_range/frozen/fit_<model>_lrb_<task>_4k.json             frozen-embedding long-range tasks
     results/parsing/locality.json                            parse-level edit locality and context independence
     results/parsing/lcp_statistics.json                      LCP segmentation statistics and worst-case edit locality
+    results/parsing/boundary_information.json                masked bases recovered from the segment boundaries (pretrained models)
     results/embedding/stability.json                         embedding stability after one edit (frozen 2M twins)
     results/bend/results.json                                BEND zero-shot variant effects
     results/efficiency/finetune_speed.json                   fine-tuning throughput
@@ -24,23 +27,33 @@ Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
 NT18 results of the 2M twins (LoCUS-2M, twin-fixed-2m, twin-bpe-2m) are the tokenizer study's runs (clean test set) when
 results/<model>/nt18 does not exist. Every fine-tuning
 score is the test metric at the epoch with the lowest validation loss, recorded during fine-tuning; cells are mean +-
-standard deviation over the folds (--nt18-folds, default 10, for NT18, the tokenizer study, GUE splice and the real reads; 3
-elsewhere); group means are means of the task means and appear only when every task of the group has all folds. A model and
+standard deviation over the folds (--nt18-folds, default 10, for NT18, the tokenizer study, GUE splice and the real reads;
+--other-folds, default 10, for the Genomic Benchmarks and the held-out check); group means are means of the task means and appear only when every task of the group has all folds. A model and
 task with fewer folds than expected are listed as warnings at the end of the run. In the tokenizer study, the score of a fold on a
 noisy test set is the mean over the set's error draws in fold-XX.scored.json (<set>, <set>-d1, ...;
 benchmarks/noisy_reads/noisy_sets.py); the tables state how many."""
 import argparse
 import json
+import math
 import random
 import statistics
 from pathlib import Path
 from typing import Optional
 
 MODELS = ["locus-0.5m", "locus-2m"]
-BASELINES = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m", "hyenadna-small-3.3m", "hyenadna-small-3.3m-standard"]
+BASELINES = ["caduceus-ps-1.9m"]
+# Caduceus-PS at the size of LoCUS-0.5M with the shared protocol, on NT18 only (not scored on the modified test sets)
+NT18_ONLY_BASELINES = ["caduceus-ps-0.47m"]
 TWINS = {"locus-2m": "lcp", "twin-fixed-2m": "fixed", "twin-bpe-2m": "bpe"}
+# Caduceus-PS 0.47M and 1.9M fine-tuned with Caduceus's own settings (scripts/reproduce.py plan baselines-authors; supplementary
+# table), next to LoCUS and Caduceus-PS 1.9M with the shared protocol
+AUTHORS_BASELINES = ["caduceus-ps-0.47m-authors", "caduceus-ps-1.9m-authors"]
+# folds whose fp16 training overflowed are run again in bfloat16 (scripts/reproduce.py plan baselines-authors-bf16)
+AUTHORS_BF16 = {run: f"{run}-bf16" for run in AUTHORS_BASELINES}
+# timing only: the Caduceus-PS recipes in bfloat16, the precision of LoCUS (scripts/reproduce.py plan timing)
+TIMING_BF16 = ["caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"]
 FROZEN_LABELS = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "tss": "no sequence: tissue + TSS distance"}
-BEND_ORDER = ["locus-0.5m", "locus-2m", "twin-fixed-2m", "twin-bpe-2m"]
+BEND_ORDER = ["locus-0.5m", "locus-2m"]
 # the work each model's fine-tuning data needs before training (benchmarks/efficiency/segmentation_time.py)
 SEGMENTER_OF = {"locus-0.5m": "lcp", "locus-2m": "lcp", "twin-fixed-2m": "fixed", "twin-bpe-2m": "bpe", "LoCUS-0.5M": "lcp", "LoCUS-2M": "lcp"}
 NT18_GROUPS = [("histone", ["H3K4me3", "H3K27ac", "H3K36me3", "H3K9me3", "H2AFZ", "H3K27me3", "H3K4me1", "H3K4me2", "H3K9ac", "H4K20me1"]),
@@ -50,10 +63,11 @@ NT18_GROUPS = [("histone", ["H3K4me3", "H3K27ac", "H3K36me3", "H3K9me3", "H2AFZ"
 GB_TASKS = ["demo_coding_vs_intergenomic_seqs", "demo_human_or_worm", "dummy_mouse_enhancers_ensembl", "human_enhancers_cohn",
             "human_enhancers_ensembl", "human_ensembl_regulatory", "human_nontata_promoters", "human_ocr_ensembl", "drosophila_enhancers_stark"]
 TOKENIZERS = [("LCP", "lcp"), ("BPE", "bpe"), ("fixed", "fixed")]
-# modified test sets of the paired drop tests: (label, set name); substitutions only = the error positions of a matched
-# schedule, every event one substitution
+# modified test sets of the paired drop tests: (label, set name); substitutions only = an independent draw of the error
+# schedule (benchmarks/noisy_reads/make_controls.py), every event one substitution
 STUDY_SETS = [("1%", "ont1"), ("3%", "ont3"), ("PBSIM3", "pbsim97"), ("3% subst. only", "sub3"), ("1% subst. only", "sub1")]
-FOLDS = 3  # Genomic Benchmarks and the held-out-chromosome check
+FOLDS = 10  # default fold count of a cell
+OTHER_FOLDS = 10  # Genomic Benchmarks and the held-out-chromosome check (--other-folds)
 NT18_FOLDS = 10  # NT18, the tokenizer study, GUE splice and the real reads (--nt18-folds)
 SPLICE = ["splice_sites_acceptors", "splice_sites_all", "splice_sites_donors"]
 # the tasks with real reads (benchmarks/noisy_reads/real_reads.py), by NT18 group
@@ -61,17 +75,21 @@ REAL_GROUPS = NT18_GROUPS
 REAL_DRAWS = 10  # reads per window (benchmarks/noisy_reads/real_reads.py); a task-fold counts only with all of them scored
 NOISY_DRAWS = 10  # error draws per noisy set (benchmarks/noisy_reads/noisy_sets.py), required in the single-nucleotide comparison
 # single-nucleotide models (scripts/reproduce.py plan single-nucleotide): no nucleotides merged into tokens
-SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m"), ("HyenaDNA-tiny", "hyenadna-tiny-0.44m"), ("HyenaDNA-small (lr 3e-4)", "hyenadna-small-3.3m"),
-                     ("HyenaDNA-small (lr 1e-3)", "hyenadna-small-3.3m-standard")]
-# bootstrap seeds of the single-nucleotide intervals use the label a model had when its intervals were first published
-SEED_LABEL = {"HyenaDNA-tiny": "HyenaDNA"}
+SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m")]  # (label, run); the label also seeds the model's bootstrap intervals
+# pretraining-split ablation (scripts/reproduce.py split-nt18, split-score): the model pretrained without chromosomes 20 and 21,
+# its label, and the paper runs of its released counterpart (relative to the results directory); the 2M ones are also scored
+SPLIT = [("locus-0.5m-no-chr20-21", "LoCUS-0.5M", "locus-0.5m/nt18"), ("locus-2m-no-chr20-21", "LoCUS-2M", "tokenizer_study/lcp/nt18"),
+         ("twin-fixed-2m-no-chr20-21", "fixed-segment twin", "tokenizer_study/fixed/nt18"), ("twin-bpe-2m-no-chr20-21", "BPE twin", "tokenizer_study/bpe/nt18")]
+SPLIT_REAL_READS = {"locus-2m-no-chr20-21": "lcp", "twin-fixed-2m-no-chr20-21": "fixed", "twin-bpe-2m-no-chr20-21": "bpe"}  # released twin's real-read folder
 WARNINGS = []  # model / task cells with fewer folds than expected, printed at the end
 
 
 def selected_entry(report: dict) -> dict:
-    """History entry of the selected epoch (lowest validation loss; ties: higher validation MCC)."""
+    """History entry of the selected epoch (lowest finite validation loss, as training selects it; ties: higher validation
+    MCC). Epochs whose validation loss is not finite (fp16 overflow) are never selected, unless no epoch has a finite one."""
     history = report["history"]
-    return history[min(range(len(history)), key=lambda i: (history[i]["validation_loss"], -history[i]["validation_metrics"]["mcc"]))]
+    finite = [i for i in range(len(history)) if math.isfinite(history[i]["validation_loss"])] or list(range(len(history)))
+    return history[min(finite, key=lambda i: (history[i]["validation_loss"], -history[i]["validation_metrics"]["mcc"]))]
 
 
 def fold_scores(directory: Path, metric: str, folds: int = FOLDS) -> list[float]:
@@ -84,6 +102,12 @@ def fold_scores(directory: Path, metric: str, folds: int = FOLDS) -> list[float]
             report = json.loads(path.read_text())
             scores.append(selected_entry(report).get("test_metrics", report["test_metrics"])[metric])
     return scores
+
+
+def last_epoch_selected(directory: Path, folds: int = FOLDS) -> tuple[int, int]:
+    """(finished folds whose selected epoch is their last epoch, finished folds)."""
+    reports = [json.loads(path.read_text()) for path in (directory / f"fold-{fold:02d}.json" for fold in range(folds)) if path.is_file()]
+    return sum(selected_entry(report) is report["history"][-1] for report in reports), len(reports)
 
 
 def study_folds(directory: Path, folds: int = FOLDS) -> dict[int, dict]:
@@ -149,7 +173,7 @@ def nt18_directory(results: Path, model: str) -> Path:
 
 
 def nt18_table(results: Path, numbers: dict) -> str:
-    models = [m for m in MODELS + ["twin-fixed-2m", "twin-bpe-2m", "locus-2m-random-init"] + BASELINES if nt18_directory(results, m).is_dir()]
+    models = [m for m in MODELS + ["twin-fixed-2m", "twin-bpe-2m", "locus-2m-random-init"] + NT18_ONLY_BASELINES + BASELINES if nt18_directory(results, m).is_dir()]
     rows, cells = [], {}
     for group, tasks in NT18_GROUPS:
         for task in tasks:
@@ -163,10 +187,65 @@ def nt18_table(results: Path, numbers: dict) -> str:
              if "twin-fixed-2m" in models or "twin-bpe-2m" in models else "")
     notes += ("locus-2m-random-init: the LoCUS-2M architecture fine-tuned from random initialization (no pretraining), same recipe and seeds. "
               if "locus-2m-random-init" in models else "")
-    notes += "Baselines (caduceus-ps-1.9m, hyenadna-*): fine-tuned with the same protocol (scripts/finetune_baseline.py). " if set(models) & set(BASELINES) else ""
-    notes += ("hyenadna-small-3.3m: its own recipe (learning rate 3e-4, 10% warm-up); hyenadna-small-3.3m-standard: the recipe of the other "
-              "baselines (1e-3, 1% warm-up)." if "hyenadna-small-3.3m-standard" in models else "")
+    if "locus-2m-random-init" in models:  # runs still improving at their last epoch may not have converged in the 20 epochs
+        last = {task: last_epoch_selected(nt18_directory(results, "locus-2m-random-init") / f"{task}_revised", NT18_FOLDS)
+                for _, tasks in NT18_GROUPS for task in tasks}
+        splice = dict(NT18_GROUPS)["splice"]
+        count = lambda tasks: (sum(last[t][0] for t in tasks), sum(last[t][1] for t in tasks))
+        numbers["nt18_random_init_last_epoch"] = {"all 18": count(list(last)), "splice": count(splice), "per task": last}
+        notes += "Its selected epoch is the last one in {} of {} runs ({} of {} on the splice tasks). ".format(*count(list(last)), *count(splice))
+    notes += ("Baselines (caduceus-ps-0.47m, caduceus-ps-1.9m): fine-tuned with the same protocol (scripts/finetune_baseline.py)."
+              if set(models) & set(BASELINES + NT18_ONLY_BASELINES) else "")
     return markdown("Nucleotide Transformer benchmark, revised (test MCC)", ["group", "task"] + models, rows, notes)
+
+
+def authors_scores(results: Path, model: str, task: str) -> tuple[list[float], int]:
+    """(test MCC of each finished fold, number of bf16 reruns used) of an own-settings run: a fold that was run again in
+    bfloat16 after its fp16 training overflowed counts with the bfloat16 run."""
+    own = nt18_directory(results, model) / f"{task}_revised"
+    rerun = results / AUTHORS_BF16[model] / "nt18" / f"{task}_revised" if model in AUTHORS_BF16 else None
+    scores, reruns = [], 0
+    for fold in range(NT18_FOLDS):
+        path = own / f"fold-{fold:02d}.json"
+        if rerun is not None and (rerun / path.name).is_file():
+            path, reruns = rerun / path.name, reruns + 1
+        if path.is_file():
+            report = json.loads(path.read_text())
+            scores.append(selected_entry(report).get("test_metrics", report["test_metrics"])["mcc"])
+    return scores, reruns
+
+
+def authors_table(results: Path, numbers: dict) -> str:
+    """NT18: Caduceus-PS fine-tuned with Caduceus's own settings next to LoCUS and the shared-protocol Caduceus-PS runs."""
+    if not any((results / m / "nt18").is_dir() for m in AUTHORS_BASELINES):
+        return ""
+    models = [m for m in MODELS + NT18_ONLY_BASELINES + BASELINES + AUTHORS_BASELINES if nt18_directory(results, m).is_dir()]
+    rows, cells, reruns = [], {}, 0
+    for group, tasks in NT18_GROUPS:
+        for task in tasks:
+            cells[task] = {}
+            for m in models:
+                if m in AUTHORS_BF16:
+                    scores, used = authors_scores(results, m, task)
+                    reruns += used
+                else:
+                    scores = fold_scores(nt18_directory(results, m) / f"{task}_revised", "mcc", NT18_FOLDS)
+                cells[task][m] = cell(scores, NT18_FOLDS)
+            WARNINGS.extend(f"NT18 {m} {task}: {len(c['values'])} of {NT18_FOLDS} folds"
+                            for m, c in cells[task].items() if m in AUTHORS_BASELINES and not c["complete"])
+            rows.append([group, task] + [text(cells[task][m]) for m in models])
+    for group, tasks in NT18_GROUPS + [("all 18", [t for _, ts in NT18_GROUPS for t in ts])]:
+        rows.append(["**mean**", group] + [number(group_mean([cells[t][m] for t in tasks])) for m in models])
+    numbers["nt18_authors"] = cells
+    numbers["nt18_authors_bf16_reruns"] = reruns
+    notes = ("caduceus-ps-<size>-authors: Caduceus-PS fine-tuned with Caduceus's own settings for the NT tasks "
+             "(configs/finetune/caduceus-ps-<size>-authors.yaml: per task the learning rate and batch size of its paper's Table 6, "
+             "its weight-decay groups, no dropout, the forward strand in training and evaluation); caduceus-ps-1.9m: the protocol shared with "
+             "LoCUS. The folds, seeds and epoch selection (lowest validation loss) are the same for every column. "
+             f"{reruns} folds whose fp16 training overflowed (non-finite steps or validation losses) are the bfloat16 reruns "
+             "(caduceus-ps-<size>-authors-bf16.yaml).")
+    return markdown("Nucleotide Transformer benchmark, Caduceus-PS with its own fine-tuning settings (test MCC)",
+                    ["group", "task"] + models, rows, notes)
 
 
 def heldout_table(results: Path, numbers: dict) -> str:
@@ -183,15 +262,15 @@ def heldout_table(results: Path, numbers: dict) -> str:
             cells[task] = {}
             for label, root in models:
                 heldout, official = [], []
-                for fold in range(FOLDS):
+                for fold in range(OTHER_FOLDS):
                     path = root / f"{task}_revised" / f"fold-{fold:02d}.json"
                     if path.is_file():
                         report = json.loads(path.read_text())
                         entry = selected_entry(report)
                         heldout.append(entry.get("test_metrics", report["test_metrics"])["mcc"])
                         official.append(entry["extra_test_metrics"]["official"]["mcc"])
-                cells[task].update({f"{label}: held-out chromosomes": cell(heldout), f"{label}: official test": cell(official),
-                                    f"{label}: held-out - official": cell([h - o for h, o in zip(heldout, official)])})
+                cells[task].update({f"{label}: held-out chromosomes": cell(heldout, OTHER_FOLDS), f"{label}: official test": cell(official, OTHER_FOLDS),
+                                    f"{label}: held-out - official": cell([h - o for h, o in zip(heldout, official)], OTHER_FOLDS)})
             rows.append([group, task] + [text(c) for c in cells[task].values()])
     for group, tasks in NT18_GROUPS + [("all 18", [t for _, ts in NT18_GROUPS for t in ts])]:
         rows.append(["**mean**", group] + [number(group_mean([cells[t][k] for t in tasks]), k.endswith("official")) for k in cells[tasks[0]]])
@@ -200,7 +279,7 @@ def heldout_table(results: Path, numbers: dict) -> str:
              "tested on those examples (seen neither in pretraining nor in fine-tuning); the official test set (chromosomes 20 and 21, "
              "part of the pretraining chromosomes) is scored at the same selected epoch. Random init: the same architecture without "
              "pretrained weights, so neither test set was seen before fine-tuning; its held-out - official gap measures how much harder "
-             "the held-out chromosomes are. Folds 0-2.")
+             f"the held-out chromosomes are. {OTHER_FOLDS} folds.")
     table = markdown("NT18 on chromosomes outside pretraining (test MCC)", ["group", "task"] + list(cells[NT18_GROUPS[0][1][0]]), rows, notes)
     if len(models) < 2:
         return table
@@ -226,18 +305,21 @@ def heldout_table(results: Path, numbers: dict) -> str:
     return table + "\n" + markdown(
         "NT18 on chromosomes outside pretraining: pretraining gain (LoCUS-2M - random init, test MCC)",
         ["tasks", "number", "gain, held-out chromosomes", "gain, official test", "official - held-out", "95% CI", "tasks with official - held-out > 0"], rows,
-        "Gain per task: mean over folds 0-2 of LoCUS-2M minus that of random init, on the same test set; > 0 in the official - held-out "
+        "Gain per task: mean over the folds of LoCUS-2M minus that of random init, on the same test set; > 0 in the official - held-out "
         "column would mean that seeing the official test chromosomes in pretraining helps. Interval: bootstrap over tasks (4,000 resamples).")
 
 
 def gb_table(results: Path, numbers: dict) -> str:
     models = [m for m in MODELS if (results / m / "genomic_benchmarks").is_dir()]
-    cells = {task: {m: cell(fold_scores(results / m / "genomic_benchmarks" / f"gb_{task}", "accuracy")) for m in models} for task in GB_TASKS}
+    cells = {task: {m: cell(fold_scores(results / m / "genomic_benchmarks" / f"gb_{task}", "accuracy", OTHER_FOLDS), OTHER_FOLDS) for m in models}
+             for task in GB_TASKS}
+    for task in GB_TASKS:
+        WARNINGS.extend(f"Genomic Benchmarks {m} {task}: {len(c['values'])} of {OTHER_FOLDS} folds" for m, c in cells[task].items() if not c["complete"])
     rows = [[task] + [text(cells[task][m]) for m in models] for task in GB_TASKS]
     rows.append(["**mean, 8 tasks (no drosophila)**"] + [number(group_mean([cells[t][m] for t in GB_TASKS[:-1]])) for m in models])
     rows.append(["**mean, all 9**"] + [number(group_mean([cells[t][m] for t in GB_TASKS])) for m in models])
     numbers["genomic_benchmarks"] = cells
-    return markdown("Genomic Benchmarks (test accuracy)", ["task"] + models, rows)
+    return markdown("Genomic Benchmarks (test accuracy)", ["task"] + models, rows, f"Mean ± SD over {OTHER_FOLDS} folds.")
 
 
 def frozen_fit(results: Path, model: str, task: str, length: str) -> dict:
@@ -304,7 +386,9 @@ def lcp_statistics_tables(results: Path, numbers: dict) -> str:
                      f"Level-1 cores other than runs with 3 bases: {level1['share_of_non_run_cores_with_3_bases']:.1%}. Bases covered by 0 / 1 / 2 / 3 / "
                      f"4 or more segments: " + " / ".join(f"{v:.1%}" for v in covered.values()) +
                      f" ({level2['share_of_bases_in_2_or_more']:.1%} in two or more). Bases at the window start / end covered by no segment: "
-                     f"{level2['uncovered_bases_at_start_mean']:.1f} / {level2['uncovered_bases_at_end_mean']:.1f} on average.")
+                     f"{level2['uncovered_bases_at_start_mean']:.1f} / {level2['uncovered_bases_at_end_mean']:.1f} on average" +
+                     (f" (by no level-1 core: {level1['uncovered_bases_at_start_mean']:.1f} / {level1['uncovered_bases_at_end_mean']:.1f})"
+                      if "uncovered_bases_at_start_mean" in level1 else "") + ".")
     worst = stats["worst_case"]
     rows = []
     for name, levels in worst["sets"].items():
@@ -319,6 +403,26 @@ def lcp_statistics_tables(results: Path, numbers: dict) -> str:
          "changed cores (max), no homopolymer of 6+ bp within 40 bp", "reach, max (bp), no homopolymer of 6+ bp within 40 bp"], rows,
         "Edits: a substitution, or an insertion or deletion of 1, 2 or 3 bases, each on every sequence. A core is changed when the edited parse "
         "has no core with the same bases at the same, shifted position; reach = largest distance from the edit to a base of a changed core.")
+
+
+def boundary_table(results: Path, numbers: dict) -> str:
+    path = results / "parsing/boundary_information.json"
+    if not path.is_file():
+        return ""
+    stats = json.loads(path.read_text())
+    numbers["boundary_information"] = stats
+    columns = [("mask", "hidden by MASK"), ("overlap_conflict", "overlap symbol"), ("random", "random bases"), ("unchanged", "left unchanged"),
+               ("all", "all targets")]
+    rows = [[name, set_name] + [f"{r[key]['accuracy']:.3f}" if r[key]["accuracy"] is not None else "-" for key, _ in columns]
+            + [f"{r['mask']['targets']:,}"]
+            for name, sets in stats["models"].items() for set_name, r in sets.items()]
+    return markdown(f"Segment boundaries and masked bases: accuracy of the pretrained models on the bases they have to predict ({stats['sequences_per_set']:,} "
+                    "sequences per set)", ["model", "sequences", *[label for _, label in columns], "bases hidden by MASK"], rows,
+                    "Crops, segmentation and masking as in pretraining (benchmarks/parsing/boundary_information.py): the clean crop is segmented and "
+                    "15% of its segments are hidden (MASK 80%, random bases 10%, unchanged 10%; the overlap symbol where two hidden segments disagree). "
+                    "random: uniform random sequences, whose context carries no information, so accuracy above chance (25%) on bases hidden by MASK "
+                    "comes from the segment boundaries; chromosome 1: windows held out of pretraining. twin-fixed-2m (boundaries independent of the bases) "
+                    "is the control.")
 
 
 def stability_table(results: Path, numbers: dict) -> str:
@@ -366,7 +470,7 @@ def bend_table(results: Path, numbers: dict) -> str:
     numbers["bend"] = values
     return markdown("BEND zero-shot noncoding variant effects (AUROC over all variants, no training)",
                     ["model", "expression", "disease", "mean of the 2", "expression, held-out chromosomes", "disease, held-out chromosomes"], rows,
-                    "Held-out chromosomes: 1, 2, X and Y, not used for pretraining.")
+                    "Held-out chromosomes: 1, 2, X and Y, not used for pretraining. Every model in float32.")
 
 
 def efficiency_table(results: Path, numbers: dict) -> str:
@@ -400,7 +504,7 @@ def timing_table(results: Path, numbers: dict) -> str:
     if not root.is_dir():
         return ""
     runs = {}
-    for model in MODELS + BASELINES:
+    for model in MODELS + NT18_ONLY_BASELINES + BASELINES + TIMING_BF16:
         for path in sorted((root / model / "nt18").glob("*/fold-00.json")):
             report = json.loads(path.read_text())
             if not report["resources"]["resumed"]:
@@ -448,7 +552,9 @@ def timing_table(results: Path, numbers: dict) -> str:
                     "time). Segmentation: the time to segment the task's training and test records on both strands, once per run "
                     "(resources.segmentation_seconds, or, for runs that segmented before the clock started, the measurement of the "
                     "segmentation table on the same data; \"included\": inside the fine-tuning time, not measured on its own); the "
-                    "single-base baselines segment nothing (their bases are encoded per batch, inside the fine-tuning time).")
+                    "single-base baselines segment nothing (their bases are encoded per batch, inside the fine-tuning time). LoCUS runs in "
+                    "bf16 and Caduceus-PS in float32, as in the accuracy runs; caduceus-ps-<size>-bf16: the same Caduceus-PS recipe in bf16, "
+                    "timed only, so the models can also be compared at the same precision.")
 
 
 # fewest tasks for an interval from resampling tasks: with 2 or 3 tasks, drawing one task for every slot is more likely than
@@ -587,7 +693,7 @@ def segmentation_table(results: Path, numbers: dict) -> str:
                      "ms per 600 bp sequence (one strand)"], rows,
                     "Every training and test record of each task, both strands (benchmarks/efficiency/segmentation_time.py): lcp = LCP "
                     "level 2 (LoCUS), bpe = BPE with 4,096 tokens (twin-bpe-2m), fixed = 10 bp every 5 bp (twin-fixed-2m), single-base = "
-                    f"base encoding (Caduceus, HyenaDNA). {measured.get('processor', '')}.")
+                    f"base encoding (Caduceus). {measured.get('processor', '')}.")
 
 
 def study_legend() -> str:
@@ -774,7 +880,7 @@ def single_nucleotide_table(results: Path, numbers: dict) -> str:
                         cells += [f"n/a ({len(scored[name])} of {len(full)} task-folds)", "", ""]
                         continue
                     differences = [a - b for a, b in zip(drop["LCP"], drop[name])]
-                    interval = bootstrap_interval(pairs, differences, random.Random(f"single-nucleotide {key} {scope} {SEED_LABEL.get(name, name)}"))
+                    interval = bootstrap_interval(pairs, differences, random.Random(f"single-nucleotide {key} {scope} {name}"))
                     entry[f"LCP - {name}"] = {"mean": statistics.mean(differences), "interval": None if interval is None else list(interval),
                                               "LCP loses less": sum(d > 0 for d in differences)}
                     cells += [number(statistics.mean(differences), True), interval_text(interval), f"{sum(d > 0 for d in differences)}/{len(differences)}"]
@@ -790,6 +896,116 @@ def single_nucleotide_table(results: Path, numbers: dict) -> str:
                             "over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows "
                             "with at least 5 tasks only."))
     return "\n".join(out)
+
+
+def split_interval(per_task: dict, seed: int = 0) -> list:
+    """95% bootstrap interval of the mean over task-folds, resampling tasks (the folds of a task stay together): 4,000
+    resamples with random.Random(seed).choices, as the split-ablation runs were first reported."""
+    tasks, generator, means = list(per_task), random.Random(seed), []
+    for _ in range(4000):
+        sample = [value for task in generator.choices(tasks, k=len(tasks)) for value in per_task[task]]
+        means.append(statistics.mean(sample))
+    means.sort()
+    return [means[int(0.025 * len(means))], means[int(0.975 * len(means)) - 1]]
+
+
+def split_paired_rows(label: str, values: dict, digits: int, numbers: dict) -> list:
+    """Rows of mean paired differences per NT18 group and over all 18 tasks; values: {(task, fold): difference}."""
+    rows, all_tasks = [], [t for _, ts in NT18_GROUPS for t in ts]
+    for group, tasks in NT18_GROUPS + [("all 18", all_tasks)]:
+        per_task = {t: [values[t, f] for f in range(NT18_FOLDS)] for t in tasks if all((t, f) in values for f in range(NT18_FOLDS))}
+        if len(per_task) < len(tasks):
+            rows.append([label, group, f"{len(per_task)} of {len(tasks)} tasks complete", "", ""])
+            continue
+        differences = [v for vs in per_task.values() for v in vs]
+        interval = split_interval(per_task) if len(tasks) >= MIN_BOOTSTRAP_TASKS else None
+        numbers[f"{label}/{group}"] = {"mean": statistics.mean(differences), "ci95": interval, "higher": sum(d > 0 for d in differences),
+                                       "n": len(differences)}
+        rows.append([label, group, f"{statistics.mean(differences):+.{digits}f}",
+                     f"[{interval[0]:+.{digits}f}, {interval[1]:+.{digits}f}]" if interval else "n/a (< 5 tasks)",
+                     f"{sum(d > 0 for d in differences)}/{len(differences)}"])
+    return rows
+
+
+def split_tables(results: Path, numbers: dict) -> str:
+    """The pretraining-split ablation: NT18 for the models pretrained without chromosomes 20 and 21 next to the released models'
+    paper runs (same recipe, task and fold), the paired differences of test MCC and of the lowest validation loss, and, for the 2M
+    models, the paired differences of the drops on the modified test sets and the real reads."""
+    pairs = [(name, label, results / released) for name, label, released in SPLIT if (results / name / "nt18").is_dir()]
+    if not pairs:
+        return ""
+    numbers["split_ablation"] = out = {"test_mcc": {}, "validation_loss": {}, "drops": {}}
+    all_tasks = [t for _, ts in NT18_GROUPS for t in ts]
+    reports = lambda directory: {(t, f): json.loads((directory / f"{t}_revised" / f"fold-{f:02d}.json").read_text())
+                                 for t in all_tasks for f in range(NT18_FOLDS) if (directory / f"{t}_revised" / f"fold-{f:02d}.json").is_file()}
+    loaded = {name: (reports(results / name / "nt18"), reports(released)) for name, _, released in pairs}
+    rows, cells = [], {}
+    for group, tasks in NT18_GROUPS:
+        for task in tasks:
+            for name, _, released in pairs:
+                cells[task, name] = cell(fold_scores(results / name / "nt18" / f"{task}_revised", "mcc", NT18_FOLDS), NT18_FOLDS)
+                cells[task, f"{name} released"] = cell(fold_scores(released / f"{task}_revised", "mcc", NT18_FOLDS), NT18_FOLDS)
+                WARNINGS.extend(f"split ablation {name} {task}: {len(cells[task, name]['values'])} of {NT18_FOLDS} folds"
+                                for _ in [0] if not cells[task, name]["complete"])
+            rows.append([group, task] + [text(cells[task, key]) for name, _, _ in pairs for key in (f"{name} released", name)])
+    for group, tasks in NT18_GROUPS + [("all 18", all_tasks)]:
+        rows.append(["**mean**", group] + [number(group_mean([cells[t, key] for t in tasks])) for name, _, _ in pairs
+                                          for key in (f"{name} released", name)])
+    header = ["group", "task"] + [x for _, label, _ in pairs for x in (f"{label}, released (chromosomes 3-22)", f"{label}, chromosomes 1-19 and 22")]
+    sections = [markdown("Pretraining-split ablation: NT18 test MCC without the test chromosomes in pretraining", header, rows,
+                         "NT18 tests on chromosomes 20 and 21, which the released models saw in pretraining (chromosomes 3-22) and the "
+                         "models of the split ablation did not (chromosomes 1-19 and 22; scripts/reproduce.py split-pretrain). Same "
+                         "recipe, micro-batches, folds and seeds as the released model's runs (plans nt18 and tokenizer-study); mean ± SD "
+                         "over the folds.")]
+    rows = []
+    for name, label, _ in pairs:
+        new, old = loaded[name]
+        mcc_of = lambda report: selected_entry(report).get("test_metrics", report["test_metrics"])["mcc"]
+        rows += split_paired_rows(label, {k: mcc_of(new[k]) - mcc_of(old[k]) for k in new if k in old}, 3, out["test_mcc"])
+    sections.append(markdown("Pretraining-split ablation: test MCC, without chromosomes 20 and 21 minus released (same task and fold)",
+                             ["model", "tasks", "mean difference", "95% CI (tasks resampled)", "task-folds higher"], rows,
+                             "> 0: the model that never saw the NT18 test chromosomes scores higher. Interval: bootstrap over tasks (4,000 "
+                             "resamples; the folds of a task stay together), for groups of at least 5 tasks."))
+    rows = []
+    for name, label, _ in pairs:
+        new, old = loaded[name]
+        rows += split_paired_rows(label, {k: new[k]["validation_loss"] - old[k]["validation_loss"] for k in new if k in old}, 4,
+                                  out["validation_loss"])
+    sections.append(markdown("Pretraining-split ablation: lowest validation loss, without chromosomes 20 and 21 minus released",
+                             ["model", "tasks", "mean difference", "95% CI (tasks resampled)", "task-folds higher"], rows,
+                             "> 0: the model without chromosomes 20 and 21 has the higher (worse) validation loss at its selected epoch. The "
+                             "validation folds come from the NT18 training sets (chromosomes 1-19, X and Y), never from chromosomes 20 and 21; "
+                             "about 18% of their records lie on chromosomes 1 and 2, which only the models without chromosomes 20 and 21 saw "
+                             "in pretraining. A test difference matched by a validation difference in the same direction is a difference "
+                             "between the pretraining runs; a test difference without one would point to the test chromosomes."))
+    scored = [(name, label, released) for name, label, released in pairs if name in SPLIT_REAL_READS]
+    rows = []
+    for name, label, released in scored:
+        new_sim, old_sim = ({t: study_folds(d / f"{t}_revised", NT18_FOLDS) for t in all_tasks} for d in (results / name / "nt18", released))
+        new_real, old_real = ({t: scored_folds(results / "real_reads" / d / "nt18" / f"{t}_revised", NT18_FOLDS) for t in all_tasks}
+                              for d in (name, SPLIT_REAL_READS[name]))
+        for set_label, key, reference, new_rows, old_rows, draws in (
+                [(lab, k, "clean", new_sim, old_sim, NOISY_DRAWS) for lab, k in STUDY_SETS]
+                + [("sup reads", "realsup", "realref", new_real, old_real, REAL_DRAWS), ("hac reads", "realhac", "realref", new_real, old_real, REAL_DRAWS)]):
+            values = {}
+            for t in all_tasks:
+                for f in range(NT18_FOLDS):
+                    a, b = new_rows[t].get(f, {}), old_rows[t].get(f, {})
+                    if a.get(f"{key} draws") == draws and b.get(f"{key} draws") == draws and reference in a and reference in b:
+                        values[t, f] = (a[key] - a[reference]) - (b[key] - b[reference])
+            if not values:
+                continue
+            out["drops"].setdefault(label, {})
+            group_rows = split_paired_rows(f"{label}, {set_label}", values, 3, out["drops"][label])
+            rows += [row for row in group_rows if row[1] in ("all 18", "splice")] if set_label not in ("1%", "3%") else group_rows
+    if rows:
+        sections.append(markdown("Pretraining-split ablation: drops on the modified test sets and real reads, without chromosomes 20 and 21 "
+                                 "minus released (same task and fold)",
+                                 ["model, test set", "tasks", "mean difference of drops", "95% CI (tasks resampled)", "task-folds higher"], rows,
+                                 "Drop = score on the set - score on the clean test set (real reads: on the reference sequences of the same "
+                                 "windows), each set the mean over its 10 draws, as in the tokenizer study; > 0: the model without chromosomes "
+                                 "20 and 21 loses less. Every NT18 group for the 1% and 3% sets, all 18 tasks and the splice sites for the others."))
+    return "\n".join(sections)
 
 
 INTERVAL_STUDIES = [("nt18", "NT18, simulated errors (drop = set - clean test set)"),
@@ -833,20 +1049,23 @@ def interval_tables(results: Path, numbers: dict) -> str:
 
 
 def main() -> None:
-    global NT18_FOLDS
+    global NT18_FOLDS, OTHER_FOLDS
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--results", type=Path, default=Path("results"))
     parser.add_argument("--output", type=Path, default=Path("results/tables"))
     parser.add_argument("--nt18-folds", type=int, default=NT18_FOLDS,
                         help=f"folds of the NT18, tokenizer-study, GUE splice and real-read runs (default {NT18_FOLDS}, the paper's)")
+    parser.add_argument("--other-folds", type=int, default=OTHER_FOLDS,
+                        help=f"folds of the Genomic Benchmarks and held-out-chromosome runs (default {OTHER_FOLDS}, the paper's)")
     arguments = parser.parse_args()
-    NT18_FOLDS = arguments.nt18_folds
+    NT18_FOLDS, OTHER_FOLDS = arguments.nt18_folds, arguments.other_folds
     numbers = {}
-    sections = [nt18_table(arguments.results, numbers), heldout_table(arguments.results, numbers), gb_table(arguments.results, numbers),
+    sections = [nt18_table(arguments.results, numbers), authors_table(arguments.results, numbers), heldout_table(arguments.results, numbers), gb_table(arguments.results, numbers),
                 frozen_table(arguments.results, numbers), segmentation_table(arguments.results, numbers),
                 efficiency_table(arguments.results, numbers), timing_table(arguments.results, numbers),
                 study_tables(arguments.results, numbers), gue_tables(arguments.results, numbers), real_reads_table(arguments.results, numbers), single_nucleotide_table(arguments.results, numbers), interval_tables(arguments.results, numbers), parsing_tables(arguments.results, numbers), lcp_statistics_tables(arguments.results, numbers),
-                stability_table(arguments.results, numbers), bend_table(arguments.results, numbers)]
+                boundary_table(arguments.results, numbers),
+                stability_table(arguments.results, numbers), bend_table(arguments.results, numbers), split_tables(arguments.results, numbers)]
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     Path(f"{arguments.output}.md").write_text("\n".join(s for s in sections if s))
     Path(f"{arguments.output}.json").write_text(json.dumps(numbers, indent=1) + "\n")

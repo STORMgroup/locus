@@ -58,8 +58,8 @@ The sequence vector is the mean over its bases. Both strands are embedded and av
 ```bash
 python benchmarks/nt18/prepare.py      # downloads the revised Nucleotide Transformer benchmark to data/benchmarks/nt18
 python scripts/finetune.py --pretrained locus-2m --recipe configs/finetune/locus-2m.yaml \
-    --data-root data/benchmarks/nt18 --task H3K27ac_revised --fold 0 \
-    --output results/locus-2m/nt18/H3K27ac_revised/fold-00.json
+    --data-root data/benchmarks/nt18 --task H3K27ac_revised --fold 0 --micro-batches 2 \
+    --output results/examples/locus-2m/H3K27ac_revised/fold-00.json
 ```
 
 The result file records every epoch and the test score of the epoch with the lowest validation loss. `--pretrained`
@@ -87,6 +87,8 @@ Pretraining runs on one GPU and takes 11 to 19 hours per model on an RTX A5000. 
 
 All four are pretrained on the human genome (GRCh38, chromosomes 3 to 22) with 4 kb inputs, about 12.5 billion bases
 each. `twin-fixed-2m` and `twin-bpe-2m` are LoCUS-2M with another tokenizer; the paper uses them to compare tokenizers.
+For the paper's pretraining-split ablation, the same four models are pretrained again without chromosomes 20 and 21
+(`configs/pretrain/<model>-no-chr20-21.yaml`, plan `split-pretrain` below).
 
 The models are in the Hugging Face repository [`STORMResearch/locus`](https://huggingface.co/STORMResearch/locus), one
 folder per model. They are downloaded the first time you use them; `python scripts/download_models.py` downloads all of
@@ -111,6 +113,7 @@ Every table in the paper can be regenerated with the scripts in this repository:
 bash install.sh --all                                     # also installs the baseline models and PBSIM3
 source .venv/bin/activate
 python scripts/reproduce.py all --gpus 0,1,2,3 --jobs-per-gpu 3
+python scripts/reproduce.py split-pretrain split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3   # the split ablation
 python scripts/compare_results.py                         # how far your numbers are from the paper's
 ```
 

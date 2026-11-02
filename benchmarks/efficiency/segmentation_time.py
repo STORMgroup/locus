@@ -3,7 +3,7 @@ the released segmenters, on one CPU core, as scripts/finetune.py does through Se
 then reused in every epoch).
 
 Segmenters: LCP level 2 (LoCUS), BPE with a vocabulary of 4,096 (twin-bpe-2m) and fixed 10 bp segments every 5 bp
-(twin-fixed-2m), each built from its pretraining configuration; and, for the single-base baselines (Caduceus, HyenaDNA),
+(twin-fixed-2m), each built from its pretraining configuration; and, for the single-base baselines (Caduceus-PS),
 the per-record work they need (base encoding of both strands), so that every model is charged the same way. Each
 segmenter runs over the 18 tasks in one pass after a warm-up on 200 records; the time is recorded per task and split.
 

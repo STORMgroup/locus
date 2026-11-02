@@ -13,10 +13,15 @@ Plans:
     pretrain            the four pretraining runs (one GPU each); then use them with --models-from runs
     nt18                LoCUS-0.5M and LoCUS-2M on the 18 NT18 tasks, 10 folds each (--nt18-folds: fewer)
     random-init         the pretraining ablation: the LoCUS-2M architecture fine-tuned on NT18 from random initialization
-    baselines           Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and HyenaDNA-small 3.3M on NT18, same protocol; HyenaDNA-small with
-                        two recipes, its own (learning rate 3e-4) and that of the other baselines (1e-3; run
-                        hyenadna-small-3.3m-standard) (needs bash install.sh --baselines)
-    genomic-benchmarks  LoCUS-0.5M and LoCUS-2M on the 9 Genomic Benchmarks tasks, 3 folds each
+    baselines           Caduceus-PS 1.9M and 0.47M (the sizes of LoCUS-2M and LoCUS-0.5M) on NT18 with the protocol of LoCUS
+                        (needs bash install.sh --baselines)
+    baselines-authors   Caduceus-PS 0.47M and 1.9M (the sizes of LoCUS-0.5M and LoCUS-2M) on NT18 with Caduceus's own fine-tuning
+                        settings (configs/finetune/caduceus-ps-<size>-authors.yaml; the supplementary table), 10 folds, fold by fold
+    baselines-authors-bf16
+                        the folds of Caduceus-PS (own settings) whose fp16 training overflowed (non-finite steps or
+                        validation losses), again in bfloat16 (configs/finetune/caduceus-ps-<size>-authors-bf16.yaml); after
+                        baselines-authors, which it reads; the table uses these runs for those folds
+    genomic-benchmarks  LoCUS-0.5M and LoCUS-2M on the 9 Genomic Benchmarks tasks, 10 folds each (--other-folds: fewer)
     tokenizer-study     the 2M twins (LoCUS-2M, twin-fixed-2m, twin-bpe-2m) on NT18, then scored on the modified test
                         sets (errors at 1% / 3%, controls, PBSIM3 reads; needs make pbsim3), each in 10 independent error draws
     gue-splice          the tokenizer study repeated on the GUE splice-site task (benchmarks/gue/prepare.py; needs make pbsim3): the 2M twins
@@ -24,24 +29,34 @@ Plans:
                         test sets, also without the test rows that share a splice site with NT18 (benchmarks/gue/independent_sets.py)
     real-reads          the tokenizer study's NT18 folds scored on real HG002 nanopore reads of their test windows
                         (benchmarks/noisy_reads/real_reads.py; streams the public CRAM files, needs network)
-    single-nucleotide   the baselines' runs (single nucleotides, folds of the baselines plan) scored on the same modified test sets
-                        and real reads: the loss that errors cause without a tokenizer (needs bash install.sh --baselines)
+    single-nucleotide   Caduceus-PS 1.9M's runs (single nucleotides, folds of the baselines plan) scored on the same modified test
+                        sets and real reads: the loss that errors cause without a tokenizer (needs bash install.sh --baselines)
     intervals           intervals from resampling test windows for the drops of the twins and the single-nucleotide models
                         (benchmarks/noisy_reads/window_intervals.py; after tokenizer-study, gue-splice, real-reads, single-nucleotide;
                         CPU)
     heldout             LoCUS-2M on NT18 tested on chromosomes outside the pretraining chromosomes (benchmarks/nt18/heldout_split.py),
                         with the official test set scored alongside, and the same with random initialization (a model that saw
-                        neither test set); folds 0-2
+                        neither test set); 10 folds (--other-folds: fewer)
     long-range          frozen embeddings on the eQTL and bulk RNA tasks of the long-range benchmark
-    parsing             parse-level tests of the three segmenters (edit locality, context independence) and the statistics
-                        of the LCP parse (segment lengths and coverage, worst-case edit locality at levels 1 and 2) (CPU)
+    parsing             parse-level tests of the three segmenters (edit locality, context independence), the statistics
+                        of the LCP parse (segment lengths and coverage, worst-case edit locality at levels 1 and 2), and how
+                        much the segment boundaries tell the pretrained models about masked bases (CPU)
     stability           embedding stability: how far one edit propagates through the frozen 2M twins (one GPU)
-    bend                BEND zero-shot variant effect prediction
-    efficiency          fine-tuning throughput of LoCUS and the baselines (needs bash install.sh --baselines), and the time to
+    bend                BEND zero-shot variant effect prediction (its two zero-shot tasks), LoCUS-0.5M and LoCUS-2M
+    efficiency          fine-tuning throughput of LoCUS and Caduceus-PS (needs bash install.sh --baselines), and the time to
                         segment every NT18 record with each segmenter (dataset creation, CPU)
-    timing              wall clock of full fine-tunes: fold 0 of every NT18 task, LoCUS and the baselines, always one
-                        job per GPU
-    all                 every plan except pretrain
+    timing              wall clock of full fine-tunes: fold 0 of every NT18 task, LoCUS and Caduceus-PS, always one
+                        job per GPU; Caduceus-PS also with its recipe in bfloat16, the precision of LoCUS
+                        (configs/finetune/caduceus-ps-<size>-bf16.yaml, timing only)
+    split-pretrain      the pretraining-split ablation: LoCUS-0.5M, LoCUS-2M and the two 2M twins pretrained on chromosomes 1-19 and
+                        22, without the NT18 test chromosomes 20 and 21 (configs/pretrain/<model>-no-chr20-21.yaml), one GPU each;
+                        the BPE twin's tokenizer is data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json (retrained by the data
+                        step only if it is missing, about 64 GB of RAM)
+    split-nt18          NT18 for the four models of split-pretrain (runs/<model>/checkpoints/final.pt), 10 folds, with the recipe and
+                        micro-batches of their released counterparts; the tables compare them with the released models' runs
+                        (plans nt18 and tokenizer-study)
+    split-score         the three 2M models of split-nt18 scored on the tokenizer study's modified test sets and real reads
+    all                 every plan except pretrain and the split-ablation plans (which need split-pretrain)
 
 The released models are downloaded by name; --models-from DIR uses DIR/<name>/checkpoints/final.pt instead (the output
 of the pretrain plan). Data preparation runs first, for the data a plan needs that does not exist yet. A job whose result
@@ -50,15 +65,16 @@ finished epoch. Jobs of a plan run in stages (for example embeddings before the 
 previous one has finished without failures. Logs: <results>/logs/<job>.log.
 
 LoCUS-2M's NT18 runs are those of the tokenizer study (same checkpoint, recipe and seeds), so the two plans share them.
---nt18-folds (default 10, as in the paper) sets the folds of the NT18 plans (nt18, random-init, baselines, tokenizer-study)
-and of gue-splice: fold k validates on fold k of a stratified 10-fold split of the training set and trains with seed
-42 + k. The other plans run folds 0-2. The paper's fine-tunes shared their GPU with up
+--nt18-folds (default 10, as in the paper) sets the folds of the NT18 plans (nt18, random-init, baselines, baselines-authors,
+tokenizer-study, real-reads, single-nucleotide, split-nt18, split-score) and of gue-splice: fold k validates on fold k of a
+stratified 10-fold split of the training set and trains with seed 42 + k. --other-folds (default 10) does the same for genomic-benchmarks and heldout. The paper's fine-tunes shared their GPU with up
 to two others (--jobs-per-gpu 3). Repeated runs on GPU differ slightly (floating-point atomics in the covering-segment
 mean), alone or sharing a GPU alike: about 0.013 MCC per task and fold on average, more on small tasks such as
 promoter_tata, and about 0.01 on 18-task means."""
 import argparse
 import fnmatch
 import json
+import math
 import os
 import shlex
 import subprocess
@@ -74,17 +90,27 @@ sys.path.insert(0, str(ROOT))
 from locus.finetune.data import GB_TASKS, NT18_TASKS  # noqa: E402
 
 PYTHON = sys.executable
-FOLDS = 3  # Genomic Benchmarks and the held-out-chromosome check
+OTHER_FOLDS = 10  # Genomic Benchmarks and the held-out-chromosome check (--other-folds)
 NT18_FOLDS = 10  # NT18 plans and gue-splice (--nt18-folds)
 LOCUS = ["locus-0.5m", "locus-2m"]
 TWINS = {"lcp": "locus-2m", "fixed": "twin-fixed-2m", "bpe": "twin-bpe-2m"}
-BASELINES = ["caduceus-ps-1.9m", "hyenadna-tiny-0.44m", "hyenadna-small-3.3m", "hyenadna-small-3.3m-standard"]
-# baseline runs with a recipe other than the model's own (configs/finetune/<run>.yaml): HyenaDNA-small with the recipe of the other
-# baselines (learning rate 1e-3, 1% warm-up) next to its own (3e-4, 10%)
-BASELINE_MODEL = {"hyenadna-small-3.3m-standard": "hyenadna-small-3.3m"}
+BASELINES = ["caduceus-ps-1.9m"]
+# baseline runs with a recipe other than the model's own (configs/finetune/<run>.yaml): run name -> baseline
+BASELINE_MODEL = {}
+# Caduceus-PS at the size of LoCUS-0.5M with the shared protocol, on NT18 only (plan baselines; not scored on the modified test sets)
+NT18_ONLY_BASELINES = ["caduceus-ps-0.47m"]
+# Caduceus-PS at the sizes of LoCUS-0.5M and LoCUS-2M with Caduceus's own fine-tuning settings (configs/finetune/<run>.yaml;
+# supplementary table)
+AUTHORS_BASELINES = ["caduceus-ps-0.47m-authors", "caduceus-ps-1.9m-authors"]
+BASELINE_MODEL.update({name: name.removesuffix("-authors") for name in AUTHORS_BASELINES})
+# folds of the own-settings runs whose fp16 training overflowed, run again in bfloat16 (plan baselines-authors-bf16)
+AUTHORS_BF16 = {run: f"{run}-bf16" for run in AUTHORS_BASELINES}
+BASELINE_MODEL.update({rerun: BASELINE_MODEL[run] for run, rerun in AUTHORS_BF16.items()})
+# timing only: the Caduceus-PS recipes in bfloat16, so the wall clock can also be compared at LoCUS's precision (plan timing)
+TIMING_BF16 = ["caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"]
+BASELINE_MODEL.update({name: name.removesuffix("-bf16") for name in TIMING_BF16})
 SINGLE_NUCLEOTIDE = BASELINES  # single-nucleotide models scored on the modified test sets and real reads
-SINGLE_NUCLEOTIDE_LABELS = {"caduceus-ps-1.9m": "Caduceus", "hyenadna-tiny-0.44m": "HyenaDNA-tiny", "hyenadna-small-3.3m": "HyenaDNA-small (lr 3e-4)",
-                            "hyenadna-small-3.3m-standard": "HyenaDNA-small (lr 1e-3)"}
+SINGLE_NUCLEOTIDE_LABELS = {"caduceus-ps-1.9m": "Caduceus"}
 RECIPE = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "twin-fixed-2m": "locus-2m", "twin-bpe-2m": "locus-2m"}
 # Micro-batches of the reported runs (gradient accumulation; the update is that of the full batch, only memory changes):
 # per model, times 4 for the two Genomic Benchmarks tasks with long sequences.
@@ -103,9 +129,17 @@ NOISY_SETS = drawn(["ont1", "ont3", "ontw1", "ontw3", "sub1", "sub3", "pbsim97"]
 REAL_TASKS = NT18_TASKS  # every NT18 test record names its window on chromosome 20 or 21
 REAL_SETS = ["realref"] + drawn(["realsup", "realhac"])
 FROZEN = [("eqtl", 4096, ["locus-0.5m", "locus-2m"]), ("bulk_rna", 4096, ["locus-0.5m", "locus-2m"])]
-BEND_MODELS = ["locus-0.5m", "locus-2m", "twin-fixed-2m", "twin-bpe-2m"]
+BEND_MODELS = ["locus-0.5m", "locus-2m"]
 PRETRAIN = ["locus-0.5m", "locus-2m", "twin-fixed-2m", "twin-bpe-2m"]
-PLANS = ["pretrain", "nt18", "random-init", "baselines", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "intervals", "heldout", "long-range", "parsing",
+# Pretraining-split ablation: the four models pretrained without chromosomes 20 and 21 (the NT18 test chromosomes), each
+# fine-tuned with the recipe and micro-batches of its released counterpart (model -> released model); the 2M ones are also
+# scored on the tokenizer study's modified test sets and real reads.
+SPLIT = {"locus-0.5m-no-chr20-21": "locus-0.5m", "locus-2m-no-chr20-21": "locus-2m", "twin-fixed-2m-no-chr20-21": "twin-fixed-2m",
+         "twin-bpe-2m-no-chr20-21": "twin-bpe-2m"}
+SPLIT_SCORED = ["locus-2m-no-chr20-21", "twin-fixed-2m-no-chr20-21", "twin-bpe-2m-no-chr20-21"]
+SPLIT_PLANS = ["split-pretrain", "split-nt18", "split-score"]
+SPLIT_TOKENIZER = ROOT / "data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json"
+PLANS = ["pretrain", "nt18", "random-init", "baselines", "baselines-authors", "baselines-authors-bf16", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "intervals", "heldout", "long-range", "parsing",
          "stability", "bend", "efficiency", "timing"]
 
 
@@ -143,6 +177,8 @@ def data_steps(data: Path) -> dict:
         "genome-fasta": ([data / "GRCh38.p14.fasta.gz"], [["bash", str(ROOT / "scripts/prepare_genome.sh"), "--download-only", str(data)]]),
         "genome-windows": ([data / "GRCh38.p14.acgt.w4096.s4096/_SUCCESS"],
                            [["bash", str(ROOT / "scripts/prepare_genome.sh"), str(data)]]),
+        "bpe-no-chr20-21": ([SPLIT_TOKENIZER], [script("scripts/train_bpe.py", "--config", ROOT / "configs/pretrain/twin-bpe-2m-no-chr20-21.yaml",
+                                                       "--genome-windows", data / "GRCh38.p14.acgt.w4096.s4096", "--output", SPLIT_TOKENIZER)]),
         "nt18": ([nt18 / f"{task}_revised/metadata.json" for task in NT18_TASKS], [script("benchmarks/nt18/prepare.py", "--out", nt18)]),
         "nt18-heldout": ([data / f"benchmarks/nt18_heldout/{task}_revised/metadata.json" for task in NT18_TASKS],
                          [script("benchmarks/nt18/heldout_split.py", "--data-root", nt18, "--out", data / "benchmarks/nt18_heldout")]),
@@ -173,8 +209,29 @@ def data_steps(data: Path) -> dict:
     }
 
 
-DATA_ORDER = ["genome-fasta", "genome-windows", "nt18", "nt18-heldout", "genomic-benchmarks", "error-sets", "control-sets", "pbsim-sets", "gue", "gue-sets",
+DATA_ORDER = ["genome-fasta", "genome-windows", "bpe-no-chr20-21", "nt18", "nt18-heldout", "genomic-benchmarks", "error-sets", "control-sets", "pbsim-sets", "gue", "gue-sets",
               "gue-independent", "real-reads", "long-range-frozen", "bend"]
+
+
+def fp16_overflowed(directory: Path, folds) -> list:
+    """(task, fold) of the finished fp16 runs in `directory` (<run>/nt18) that overflowed: a skipped non-finite training step,
+    or a non-finite validation loss in some epoch (no_finite_validation_loss: in every epoch), fold by fold."""
+    found = []
+    for fold in folds:
+        for task in NT18_TASKS:
+            path = directory / f"{task}_revised" / f"fold-{fold:02d}.json"
+            if path.is_file():
+                report = json.loads(path.read_text())
+                losses = [entry["validation_loss"] for entry in report.get("history", [])]
+                if report.get("nonfinite_steps") or report.get("no_finite_validation_loss") or not all(math.isfinite(x) for x in losses):
+                    found.append((task, fold))
+    return found
+
+
+def bend_analyzed(bend_dir: Path) -> bool:
+    """BEND's results.json is newer than the distances of every embedded model (analyze reruns after any new embedding)."""
+    results = bend_dir / "results.json"
+    return results.is_file() and all(path.stat().st_mtime <= results.stat().st_mtime for path in bend_dir.glob("dist_*.npz"))
 
 
 def build_plans(arguments) -> dict:
@@ -183,6 +240,7 @@ def build_plans(arguments) -> dict:
     script = lambda path, *args: [PYTHON, str(ROOT / path), *map(str, args)]
     pretrained = lambda name: str(arguments.models_from / name / "checkpoints/final.pt") if arguments.models_from else name
     nt18_folds = range(getattr(arguments, "nt18_folds", NT18_FOLDS))
+    other_folds = range(getattr(arguments, "other_folds", OTHER_FOLDS))
 
     def finetune(model, data_root, task, fold, output, micro_batches, recipe=None, save_best=False, random_init=False) -> Job:
         command = script("scripts/finetune.py", "--pretrained", pretrained(model), "--recipe", ROOT / "configs/finetune" / f"{recipe or RECIPE[model]}.yaml",
@@ -231,9 +289,10 @@ def build_plans(arguments) -> dict:
         return job
 
     plans = {}
-    plans["pretrain"] = Plan("pretrain", ["genome-windows"], [[Job(f"pretrain.{name}", script("scripts/pretrain.py", "--config", ROOT / "configs/pretrain" / f"{name}.yaml",
-                                                                                         "--output-dir", arguments.runs / name, "--resume"),
-                                                                    arguments.runs / name / "checkpoints/final.pt") for name in PRETRAIN]])
+    plans["pretrain"] = Plan("pretrain", ["genome-windows"], [[
+        Job(f"pretrain.{name}", script("scripts/pretrain.py", "--config", ROOT / "configs/pretrain" / f"{name}.yaml", "--output-dir", arguments.runs / name,
+                                       "--resume", "--set", f"data.genome_windows={data / 'GRCh38.p14.acgt.w4096.s4096'}"),
+            arguments.runs / name / "checkpoints/final.pt") for name in PRETRAIN]], exclusive=True)
     nt18_jobs = [finetune(model, nt18, f"{task}_revised", fold, results / model / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", MICRO_BATCHES[model])
                  for model in ("locus-0.5m",) for task in NT18_TASKS for fold in nt18_folds]
     lcp_jobs = [twin_job("lcp", task, fold) for task in NT18_TASKS for fold in nt18_folds]
@@ -246,11 +305,18 @@ def build_plans(arguments) -> dict:
     # the selected weights are kept, so the baselines can also be scored on the modified test sets (benchmarks/noisy_reads)
     plans["baselines"] = Plan("baselines", ["nt18"], [[baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json",
                                                                 save_best=True)
-                                                       for name in BASELINES for task in NT18_TASKS for fold in nt18_folds]])
+                                                       for name in BASELINES + NT18_ONLY_BASELINES for task in NT18_TASKS for fold in nt18_folds]])
+    # fold by fold (every model and task of fold 0, then fold 1, ...), so an unfinished run leaves complete folds
+    plans["baselines-authors"] = Plan("baselines-authors", ["nt18"], [[
+        baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
+        for fold in nt18_folds for name in AUTHORS_BASELINES for task in NT18_TASKS]])
+    plans["baselines-authors-bf16"] = Plan("baselines-authors-bf16", ["nt18"], [[
+        baseline(rerun, f"{task}_revised", fold, results / rerun / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
+        for run, rerun in AUTHORS_BF16.items() for task, fold in fp16_overflowed(results / run / "nt18", nt18_folds)]])
     plans["genomic-benchmarks"] = Plan("genomic-benchmarks", ["genomic-benchmarks"], [[
         finetune(model, gb, f"gb_{task}", fold, results / model / "genomic_benchmarks" / f"gb_{task}" / f"fold-{fold:02d}.json",
                  MICRO_BATCHES[model] * (4 if task in LONG_GB_TASKS else 1))
-        for model in LOCUS for task in GB_TASKS for fold in range(FOLDS)]])
+        for model in LOCUS for task in GB_TASKS for fold in other_folds]])
     plans["tokenizer-study"] = Plan("tokenizer-study", ["nt18", "error-sets", "control-sets", "pbsim-sets"], [
         lcp_jobs + [twin_job(twin, task, fold) for twin in ("fixed", "bpe") for task in NT18_TASKS for fold in nt18_folds],
         [score_job(twin, task, fold, sets=["clean"] + NOISY_SETS) for twin in TWINS for task in NT18_TASKS for fold in nt18_folds]])
@@ -298,7 +364,7 @@ def build_plans(arguments) -> dict:
     heldout = []
     for name, random in (("locus-2m", False), ("locus-2m-random-init", True)):  # random init: saw neither test set in pretraining
         for task in NT18_TASKS:
-            for fold in range(FOLDS):
+            for fold in other_folds:
                 job = finetune("locus-2m", data / "benchmarks/nt18_heldout", f"{task}_revised", fold,
                                results / name / "nt18_heldout" / f"{task}_revised" / f"fold-{fold:02d}.json", MICRO_BATCHES["locus-2m"],
                                random_init=random)
@@ -317,19 +383,22 @@ def build_plans(arguments) -> dict:
     plans["long-range"] = Plan("long-range", ["genome-fasta", "long-range-frozen"], [embeds, fits])
     windows = data / "GRCh38.p14.acgt.w4096.s4096"
     locality, lcp_stats = results / "parsing/locality.json", results / "parsing/lcp_statistics.json"
+    boundaries = results / "parsing/boundary_information.json"
     plans["parsing"] = Plan("parsing", ["genome-windows"], [[
         Job("parsing.locality", script("benchmarks/parsing/locality.py", "--windows", windows, "--output", locality), locality, gpu=False),
-        Job("parsing.lcp_statistics", script("benchmarks/parsing/lcp_statistics.py", "--windows", windows, "--output", lcp_stats), lcp_stats, gpu=False)]])
+        Job("parsing.lcp_statistics", script("benchmarks/parsing/lcp_statistics.py", "--windows", windows, "--output", lcp_stats), lcp_stats, gpu=False),
+        Job("parsing.boundary_information", script("benchmarks/parsing/boundary_information.py", "--windows", windows, "--output", boundaries),
+            boundaries, gpu=False)]])
     stability = results / "embedding/stability.json"
     plans["stability"] = Plan("stability", ["genome-windows"], [[Job("stability", script(
         "benchmarks/embedding/stability.py", "--windows", windows, "--output", stability,
         *(["--models-from", arguments.models_from] if arguments.models_from else [])), stability)]], exclusive=True)
     bend_dir = results / "bend"
     plans["bend"] = Plan("bend", ["genome-fasta", "bend"], [
-        [Job(f"bend.{name}", script("benchmarks/bend/zero_shot_vep.py", "embed", "--pretrained", pretrained(name), "--name", name, "--data", data / "benchmarks/bend",
-                                    "--results", bend_dir), bend_dir / f"dist_{name}.npz") for name in BEND_MODELS],
+        [Job(f"bend.{name}", script("benchmarks/bend/zero_shot_vep.py", "embed", "--pretrained", pretrained(name), "--name", name,
+                                    "--data", data / "benchmarks/bend", "--results", bend_dir), bend_dir / f"dist_{name}.npz") for name in BEND_MODELS],
         [Job("bend.analyze", script("benchmarks/bend/zero_shot_vep.py", "analyze", "--data", data / "benchmarks/bend", "--results", bend_dir),
-             bend_dir / "results.json", gpu=False, done=lambda: False)]])
+             bend_dir / "results.json", gpu=False, done=lambda: bend_analyzed(bend_dir))]])
     speed = results / "efficiency/finetune_speed.json"
     segmentation = results / "efficiency/segmentation_time.json"
     # the segmentation time first, alone, on an otherwise idle machine; then the GPU throughput
@@ -341,11 +410,75 @@ def build_plans(arguments) -> dict:
              speed, done=lambda: speed_complete(speed))]])
     timing = [finetune(model, nt18, f"{task}_revised", 0, results / "timing" / model / "nt18" / f"{task}_revised" / "fold-00.json", MICRO_BATCHES[model])
               for model in LOCUS for task in NT18_TASKS]
-    timing += [baseline(name, f"{task}_revised", 0, results / "timing" / name / "nt18" / f"{task}_revised" / "fold-00.json") for name in BASELINES if name not in BASELINE_MODEL for task in NT18_TASKS]
+    timing += [baseline(name, f"{task}_revised", 0, results / "timing" / name / "nt18" / f"{task}_revised" / "fold-00.json")
+               for name in [n for n in BASELINES + NT18_ONLY_BASELINES if n not in BASELINE_MODEL] + TIMING_BF16 for task in NT18_TASKS]
     for job in timing:
         job.name = "timing." + job.name
     plans["timing"] = Plan("timing", ["nt18"], [timing], exclusive=True)
+    # the pretraining-split ablation: one pretraining per GPU; then NT18 for the four models, fold by fold, with the recipe and
+    # micro-batches of the released counterpart and the selected weights kept; then the 2M models' scoring, as for the twins
+    plans["split-pretrain"] = Plan("split-pretrain", ["genome-windows", "bpe-no-chr20-21"], [[
+        Job(f"pretrain.{name}", script("scripts/pretrain.py", "--config", ROOT / "configs/pretrain" / f"{name}.yaml", "--output-dir", arguments.runs / name,
+                                       "--resume", "--set", f"data.genome_windows={data / 'GRCh38.p14.acgt.w4096.s4096'}"),
+            arguments.runs / name / "checkpoints/final.pt") for name in SPLIT]], exclusive=True)
+
+    def split_job(name, task, fold) -> Job:
+        output = results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json"
+        return Job(f"{name}.nt18.{task}_revised.fold{fold}",
+                   script("scripts/finetune.py", "--pretrained", arguments.runs / name / "checkpoints/final.pt", "--recipe",
+                          ROOT / "configs/finetune" / f"{RECIPE[SPLIT[name]]}.yaml", "--data-root", nt18, "--task", f"{task}_revised", "--fold", fold,
+                          "--output", output, "--micro-batches", MICRO_BATCHES[SPLIT[name]], "--save-best"), output)
+
+    def split_score_job(name, task, fold, data_root, sets, study=None) -> Job:
+        """Scores a saved split-ablation fold, next to its result or (with `study`) into results/<study>/<name>/nt18/<task>_revised."""
+        result = results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json"
+        output_dir = results / study / name / "nt18" / f"{task}_revised" if study else None
+        scored = (output_dir or result.parent) / f"fold-{fold:02d}.scored.json"
+        complete = lambda: scored.is_file() and set(sets) <= set(json.loads(scored.read_text())["sets"])
+        command = script("benchmarks/noisy_reads/score.py", result, "--sets", *sets, "--data-root", data_root, "--save-predictions")
+        return Job(f"{name}.score{'_' + study if study else ''}.{task}.fold{fold}", command + (["--output-dir", str(output_dir)] if study else []),
+                   scored, done=complete)
+
+    plans["split-nt18"] = Plan("split-nt18", ["nt18"], [[split_job(name, task, fold) for fold in nt18_folds for name in SPLIT for task in NT18_TASKS]])
+    plans["split-score"] = Plan("split-score", ["genome-fasta", "nt18", "error-sets", "control-sets", "pbsim-sets", "real-reads"], [
+        [split_job(name, task, fold) for fold in nt18_folds for name in SPLIT_SCORED for task in NT18_TASKS],
+        [split_score_job(name, task, fold, nt18, ["clean"] + NOISY_SETS) for name in SPLIT_SCORED for task in NT18_TASKS for fold in nt18_folds]
+        + [split_score_job(name, task, fold, data / "benchmarks/real_reads", REAL_SETS, "real_reads")
+           for name in SPLIT_SCORED for task in REAL_TASKS for fold in nt18_folds]])
     return plans
+
+
+def split_models_needed(plans: dict, names: list, only=None) -> list:
+    """The pretrained split-ablation models that the selected jobs of the split plans start from (fine-tunes) or write (split-pretrain)."""
+    jobs = [job.name for name in names if name in SPLIT_PLANS for stage in plans[name].stages for job in stage
+            if not only or any(fnmatch.fnmatchcase(job.name, pattern) for pattern in only)]
+    return [name for name in SPLIT if any(job.startswith(f"{name}.nt18.") or job == f"pretrain.{name}" for job in jobs)]
+
+
+def check_split_checkpoints(runs: Path, models: list) -> None:
+    """Each pretrained split-ablation model ran its full schedule with its own configuration (pretraining writes final.pt also
+    when it is stopped early, and a final.pt of another configuration would be fine-tuned without notice)."""
+    import torch
+
+    from locus.config import load_config
+
+    for name in models:
+        path = runs / name / "checkpoints/final.pt"
+        if not path.is_file():
+            sys.exit(f"{path} is missing: run the split-pretrain plan first")
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+        wanted = load_config(ROOT / "configs/pretrain" / f"{name}.yaml").to_dict()
+        found = checkpoint["config"]
+        problems = []
+        if checkpoint["step"] != wanted["training"]["max_steps"]:
+            problems.append(f"it stopped at step {checkpoint['step']} of {wanted['training']['max_steps']}")
+        if found["model"] != wanted["model"] or found["training"] != wanted["training"]:
+            problems.append("its model or training settings differ from the configuration")
+        if list(found["data"]["train_sources"]) != list(wanted["data"]["train_sources"]):
+            problems.append("its training chromosomes differ from the configuration")
+        if problems:
+            sys.exit(f"{path}: " + "; ".join(problems) + ". Remove this final.pt and run the split-pretrain plan again (it continues "
+                     "from the newest step checkpoint).")
 
 
 def run_data(names: list, data: Path, dry_run: bool, logs: Path) -> None:
@@ -363,7 +496,8 @@ def run_data(names: list, data: Path, dry_run: bool, logs: Path) -> None:
                         sys.exit(f"data preparation {name} failed; see {logs / f'data.{name}.log'}")
 
 
-def run_stage(jobs: list, gpu_slots: list, cpu_slots: int, dry_run: bool, logs: Path, verbose: bool = False) -> list:
+def run_stage(jobs: list, gpu_slots: list, cpu_slots: int, dry_run: bool, logs: Path, verbose: bool = False,
+              gpu_env: str = "CUDA_VISIBLE_DEVICES") -> list:
     """Runs the jobs that are not done; returns the failed ones."""
     pending = [job for job in jobs if not job.is_done()]
     if dry_run:
@@ -381,7 +515,7 @@ def run_stage(jobs: list, gpu_slots: list, cpu_slots: int, dry_run: bool, logs: 
             slot = free[kind].pop(0)
             pending.remove(job)
             log = open(logs / f"{job.name}.log", "a")
-            env = dict(os.environ, CUDA_VISIBLE_DEVICES=slot)
+            env = dict(os.environ, **{gpu_env: slot})
             # as in the paper's runs: expandable allocator segments, so that three fine-tunes fit on one 24 GB GPU (memory layout
             # only; the computation is unchanged)
             env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -402,9 +536,9 @@ def run_stage(jobs: list, gpu_slots: list, cpu_slots: int, dry_run: bool, logs: 
     return failed
 
 
-def collect(results: Path, dry_run: bool, nt18_folds: int = NT18_FOLDS) -> None:
+def collect(results: Path, dry_run: bool, nt18_folds: int = NT18_FOLDS, other_folds: int = OTHER_FOLDS) -> None:
     command = [PYTHON, str(ROOT / "scripts/collect_results.py"), "--results", str(results), "--output", str(results / "tables"),
-               "--nt18-folds", str(nt18_folds)]
+               "--nt18-folds", str(nt18_folds), "--other-folds", str(other_folds)]
     print(shlex.join(command), flush=True)
     if not dry_run:
         subprocess.run(command, cwd=ROOT, check=True)
@@ -412,12 +546,16 @@ def collect(results: Path, dry_run: bool, nt18_folds: int = NT18_FOLDS) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("plans", nargs="*", metavar="PLAN", help=f"{', '.join(PLANS)}, all, or tables")
+    parser.add_argument("plans", nargs="*", metavar="PLAN", help=f"{', '.join(PLANS + SPLIT_PLANS)}, all, or tables")
     parser.add_argument("--list", action="store_true", help="list the plans with their number of jobs and how many are done")
     parser.add_argument("--gpus", help="comma-separated GPU indices (default: every visible GPU)")
     parser.add_argument("--jobs-per-gpu", type=int, default=1, help="fine-tunes sharing one GPU (the paper: up to 3)")
     parser.add_argument("--nt18-folds", type=int, default=NT18_FOLDS, choices=range(1, 11), metavar="{1..10}",
                         help=f"folds of the NT18 plans and gue-splice (default {NT18_FOLDS}, the paper's; the split has 10)")
+    parser.add_argument("--other-folds", type=int, default=OTHER_FOLDS, choices=range(1, 11), metavar="{1..10}",
+                        help=f"folds of genomic-benchmarks and heldout (default {OTHER_FOLDS}, the paper's)")
+    parser.add_argument("--gpu-env", default="CUDA_VISIBLE_DEVICES",
+                        help="environment variable that gives each job its GPU (AMD GPUs with ROCm: HIP_VISIBLE_DEVICES)")
     parser.add_argument("--cpu-jobs", type=int, default=2, help="parallel CPU jobs (frozen-embedding fits, parsing tests, BEND analysis)")
     parser.add_argument("--results", type=Path, default=ROOT / "results")
     parser.add_argument("--data", type=Path, default=ROOT / "data")
@@ -433,14 +571,18 @@ def main() -> None:
     plans = build_plans(arguments)
 
     if arguments.list or not arguments.plans:
-        for name in PLANS:
+        for name in PLANS + SPLIT_PLANS:
             jobs = [job for stage in plans[name].stages for job in stage]
             print(f"{name:20s} {sum(job.is_done() for job in jobs):4d} / {len(jobs):4d} jobs done")
         return
     names = PLANS[1:] if "all" in arguments.plans else [n for n in arguments.plans if n != "tables"]
     unknown = [n for n in names if n not in plans]
     if unknown:
-        parser.error(f"unknown plan(s) {', '.join(unknown)}; choose from {', '.join(PLANS)}, all, tables")
+        parser.error(f"unknown plan(s) {', '.join(unknown)}; choose from {', '.join(PLANS + SPLIT_PLANS)}, all, tables")
+    if not arguments.dry_run:  # split-pretrain writes the missing checkpoints of its models and skips the existing ones: those are checked
+        written = split_models_needed(plans, ["split-pretrain"], arguments.only) if "split-pretrain" in names else []
+        check_split_checkpoints(arguments.runs, [name for name in split_models_needed(plans, names, arguments.only)
+                                                 if name not in written or (arguments.runs / name / "checkpoints/final.pt").is_file()])
     if arguments.gpus is not None:
         gpus = [g for g in arguments.gpus.split(",") if g]
     else:
@@ -454,19 +596,22 @@ def main() -> None:
     run_data(sorted({d for n in names for d in plans[n].data}, key=DATA_ORDER.index), arguments.data, arguments.dry_run, logs)
     seen, failed = set(), []
     for name in names:
+        if name == "baselines-authors-bf16":  # its folds are read from the fp16 results, which an earlier plan may just have written
+            plans[name] = build_plans(arguments)[name]
         per_gpu = 1 if plans[name].exclusive else arguments.jobs_per_gpu
         for stage in plans[name].stages:
             jobs = [job for job in stage if job.name not in seen]  # jobs shared by two plans run once
             seen.update(job.name for job in jobs)
             if arguments.only:
                 jobs = [job for job in jobs if any(fnmatch.fnmatchcase(job.name, pattern) for pattern in arguments.only)]
-            stage_failed = run_stage(jobs, [g for g in gpus for _ in range(per_gpu)], arguments.cpu_jobs, arguments.dry_run, logs, arguments.verbose)
+            stage_failed = run_stage(jobs, [g for g in gpus for _ in range(per_gpu)], arguments.cpu_jobs, arguments.dry_run, logs, arguments.verbose,
+                                     arguments.gpu_env)
             failed += stage_failed
             if stage_failed:
                 print(f"{name}: {len(stage_failed)} job(s) failed; the plan's later stages are skipped", flush=True)
                 break
-    if names != ["pretrain"]:
-        collect(arguments.results, arguments.dry_run, arguments.nt18_folds)
+    if not names or not set(names) <= {"pretrain", "split-pretrain"}:  # no names: the tables only
+        collect(arguments.results, arguments.dry_run, arguments.nt18_folds, arguments.other_folds)
     if failed:
         sys.exit(f"{len(failed)} job(s) failed: " + ", ".join(job.name for job in failed))
 

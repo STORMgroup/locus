@@ -15,7 +15,8 @@ MLP's hidden width is twice the input embedding dimension.
 Choices where the benchmark paper is silent: features are standardized with training-fold statistics; Adam (lr 1e-3),
 batch 256, ReLU, at most 100 epochs, stopping after 10 epochs without a lower validation loss; embeddings are averaged
 over both strands; inputs are the benchmark loader's 4 kb windows. An item is kept only when both its 4,096 bp and its
-16,384 bp window lie on the chromosome and contain no N, the item set of the paper's runs (counts in rows.json.gz). Model "tss" (eqtl only) is the sequence-free reference:
+16,384 bp window lie on the chromosome and contain no N: the item set of the paper's runs, fixed when longer inputs were
+also tried, so that every input length is scored on the same items (counts in rows.json.gz). Model "tss" (eqtl only) is the sequence-free reference:
 one-hot tissue and log distance to the TSS. Fits on several CPU threads (--threads, default 4) can differ in the last digits
 between repeated runs; --threads 1 is reproducible.
 
@@ -204,7 +205,6 @@ def embed(arguments) -> None:
     from locus.segmentation import Segmenter
 
     from locus.finetune.model import load_pretrained
-    from locus.models.locus_model import parameter_count
 
     device = torch.device(arguments.device or ("cuda" if torch.cuda.is_available() else "cpu"))
     length, task = arguments.length, arguments.task
@@ -212,12 +212,11 @@ def embed(arguments) -> None:
     model = model.to(device).eval()
     segmenter = Segmenter(with_paths_relative_to(config, ROOT).data)
     orientations = ("forward", "reverse")
-    large = parameter_count(model) > 5_000_000
 
     def per_base(batch):
         return model.encode(batch.base_ids, batch.valid_mask, batch.segment_starts, batch.nucleotide_mask, batch.segment_mask)[0]
 
-    batch_size = arguments.batch_size or max(1, BASES_PER_BATCH // length // (2 if large else 1))
+    batch_size = arguments.batch_size or max(1, BASES_PER_BATCH // length)
     folder = arguments.data / task_directory(task, length)
     with gzip.open(folder / "rows.json.gz", "rt") as handle:
         strands = {row["item"]: row.get("strand", "+") for row in json.load(handle)["rows"]}

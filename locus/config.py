@@ -59,7 +59,7 @@ class DataConfig:
     lcp_library: str = "build/lcptools/lib/liblcptools.so"
     fixed_length: int = 10
     fixed_stride: int = 5
-    bpe_tokenizer: str = "data/tokenizers/bpe-4096.json"
+    bpe_tokenizer: str = "data/tokenizers/bpe-4096-1gb-seed42.json"  # the released BPE twin's vocabulary
     # Worker processes that build training examples (segmentation and masking); the example order does not depend on it.
     example_workers: int = 3
 

@@ -3,11 +3,11 @@ fine-tuned as same-protocol baselines (at the revisions pinned in locus/finetune
 
     python scripts/download_models.py                  # the four LoCUS models (same as --locus)
     python scripts/download_models.py locus-0.5m locus-2m
-    python scripts/download_models.py --baselines      # the three baselines
+    python scripts/download_models.py --baselines      # the two baselines (Caduceus-PS 0.47M and 1.9M)
     python scripts/download_models.py --locus --baselines
 
 The models are then loaded by name: locus.load("locus-2m"), scripts/finetune.py --pretrained locus-2m, or
-scripts/finetune_baseline.py --baseline hyenadna-tiny-0.44m."""
+scripts/finetune_baseline.py --baseline caduceus-ps-1.9m."""
 import argparse
 import sys
 from pathlib import Path
@@ -30,7 +30,7 @@ def main() -> None:
     parser.add_argument("models", nargs="*", metavar="MODEL",
                         help=f"models to download (default: all of {', '.join(MODELS)}; baselines: {', '.join(BASELINES)})")
     parser.add_argument("--locus", action="store_true", help="all four LoCUS models")
-    parser.add_argument("--baselines", action="store_true", help="all three baselines")
+    parser.add_argument("--baselines", action="store_true", help="both baselines")
     arguments = parser.parse_args()
     unknown = [name for name in arguments.models if name not in MODELS and name not in BASELINES]
     if unknown:

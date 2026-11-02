@@ -1,0 +1,22 @@
+# Fixed-segment twin of LoCUS-2M (configs/pretrain/twin-fixed-2m.yaml: segments of 10 bp starting every 5 bp) pretrained on
+# chromosomes 1-19 and 22, so that chromosomes 20 and 21 (the test chromosomes of the revised NT benchmark) are never seen in
+# pretraining; the released twin pretrains on chromosomes 3-22. Everything else is configs/pretrain/twin-fixed-2m.yaml.
+model:
+  model_dim: 128
+  attention_heads: 4
+  ffn_dim: 512
+  base_attention_radii: [32, 128]
+  segment_layers: 6
+data:
+  genome_windows: data/GRCh38.p14.acgt.w4096.s4096
+  context_length: 4096
+  segmenter: fixed
+  fixed_length: 10
+  fixed_stride: 5
+  train_sources: [NC_000001.11, NC_000002.12, NC_000003.12, NC_000004.12, NC_000005.10, NC_000006.12, NC_000007.14, NC_000008.11, NC_000009.12, NC_000010.11, NC_000011.10, NC_000012.12, NC_000013.11, NC_000014.9, NC_000015.10, NC_000016.10, NC_000017.11, NC_000018.10, NC_000019.10, NC_000022.11]
+  # not used in pretraining (recorded in the config only): the held-out chromosomes 20 and 21
+  validation_sources: []
+  test_sources: [NC_000020.11, NC_000021.9]
+training:
+  run_name: twin-fixed-2m-no-chr20-21
+  batch_size: 16

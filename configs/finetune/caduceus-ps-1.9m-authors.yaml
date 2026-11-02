@@ -1,0 +1,37 @@
+# Supplementary fine-tuning recipe of the Caduceus-PS 1.9M baseline (scripts/finetune_baseline.py --recipe): Caduceus's own
+# fine-tuning settings for the Nucleotide Transformer tasks (github.com/kuleshov-group/caduceus,
+# configs/experiment/hg38/nucleotide_transformer.yaml): per task the learning rate and batch size of its paper's Table 6
+# (task_settings below; 1e-3 and 128 elsewhere), AdamW with weight decay 0.1 on its parameter groups (no decay on biases,
+# embeddings, normalization layers, and Mamba's A_log and D; locus/finetune/baselines.py), 1% warm-up and cosine decay to 0.1x,
+# clipping 1.0, 20 epochs, no dropout, the forward strand only in training (rc_aug false; the model is reverse-complement
+# equivariant) and in validation and test (Caduceus's code reads one strand), and fp16 mixed precision with loss scaling
+# (precision: 16 in Caduceus's config). Kept from the protocol of every model: our data, folds and seeds, and the epoch with
+# the lowest validation loss. Each batch is accumulated over micro-batches of 32 (the update is that of the
+# full batch). Folds whose fp16 training overflows (non-finite steps or validation losses) are run again in bfloat16
+# (caduceus-ps-1.9m-authors-bf16.yaml, scripts/reproduce.py plan baselines-authors-bf16).
+epochs: 20
+batch_size: 128
+learning_rate: 1.0e-3
+warmup_fraction: 0.01
+weight_decay: 0.1
+min_learning_rate_ratio: 0.1
+gradient_clip: 1.0
+dropout: 0.0
+autocast: float16
+micro_batches: 4
+validation_folds: 10
+seed: 42
+optimizer_groups: caduceus
+train_orientation: forward
+evaluation_orientation: forward
+# Per task, the values Caduceus-PS used in its paper (Schiff et al. 2024, Table 6; learning rate 1e-3 and batch 128 unless listed),
+# matched by name to the original NT tasks; the histone marks of the revised benchmark without a namesake there (H2AFZ, H3K27ac,
+# H3K27me3, H3K9me3, H4K20me1) keep batch 128, its choice for 8 of its 10 histone tasks. A batch of 512 is accumulated over 16
+# micro-batches of 32.
+task_settings:
+  H3K4me2_revised: {batch_size: 512, micro_batches: 16}
+  H3K4me3_revised: {batch_size: 512, micro_batches: 16}
+  enhancers_revised: {batch_size: 512, micro_batches: 16}
+  enhancers_types_revised: {batch_size: 512, micro_batches: 16, learning_rate: 2.0e-3}
+  promoter_tata_revised: {batch_size: 512, micro_batches: 16}
+  splice_sites_all_revised: {batch_size: 512, micro_batches: 16}

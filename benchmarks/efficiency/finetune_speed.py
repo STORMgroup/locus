@@ -7,10 +7,10 @@ peak GPU memory, and the last training loss.
 
 Every model runs through the fine-tuning pipeline of scripts/finetune.py (classifier and collation), with its input
 prepared before timing: the LCP segment boundaries of LoCUS are computed once per sequence (as the fine-tuning pipeline
-does), and the baselines (Caduceus-PS 1.9M, HyenaDNA-tiny 0.44M and HyenaDNA-small 3.3M, locus/finetune/baselines.py)
-read single bases, so no model segments or tokenizes inside the timed step.
+does), and the baselines (Caduceus-PS 1.9M and 0.47M, locus/finetune/baselines.py) read single bases, so no model segments
+or tokenizes inside the timed step.
 
-    python benchmarks/efficiency/finetune_speed.py [--models "LoCUS-2M" "HyenaDNA-tiny 0.44M" ...] \\
+    python benchmarks/efficiency/finetune_speed.py [--models "LoCUS-2M" "Caduceus-PS 1.9M" ...] \\
         [--output results/efficiency/finetune_speed.json]
 
 The LoCUS models are the released ones (downloaded by name), or with --models-from DIR the checkpoints
@@ -35,7 +35,7 @@ from locus.finetune.data import get_task, load_records  # noqa: E402
 
 TASK = "splice_sites_all_revised"
 LOCUS = {"LoCUS-0.5M": "locus-0.5m", "LoCUS-2M": "locus-2m"}
-BASELINES = {"Caduceus-PS 1.9M": "caduceus-ps-1.9m", "HyenaDNA-tiny 0.44M": "hyenadna-tiny-0.44m", "HyenaDNA-small 3.3M": "hyenadna-small-3.3m"}
+BASELINES = {"Caduceus-PS 1.9M": "caduceus-ps-1.9m", "Caduceus-PS 0.47M": "caduceus-ps-0.47m"}
 
 
 def synchronize(device) -> None:
@@ -118,7 +118,7 @@ def main() -> None:
     parser.add_argument("--models", nargs="+", default=names, choices=names)
     parser.add_argument("--models-from", type=Path, help="pretraining directory with <name>/checkpoints/final.pt (default: the released models)")
     parser.add_argument("--baseline-path", nargs=2, action="append", default=[], metavar=("MODEL", "DIR"),
-                        help="local copy of a baseline's Hugging Face repository, e.g. 'HyenaDNA-tiny 0.44M' DIR")
+                        help="local copy of a baseline's Hugging Face repository, e.g. 'Caduceus-PS 1.9M' DIR")
     parser.add_argument("--data-root", type=Path, default=ROOT / "data/benchmarks/nt18")
     parser.add_argument("--output", type=Path, default=ROOT / "results/efficiency/finetune_speed.json")
     parser.add_argument("--batch-size", type=int, default=64)

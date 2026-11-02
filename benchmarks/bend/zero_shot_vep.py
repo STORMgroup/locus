@@ -8,8 +8,9 @@ and disease (ClinVar noncoding pathogenic against benign, 295,495 variants).
 
 LoCUS models: the per-base output (the mean of the segments covering the base), both strands averaged (on the reverse
 strand the variant is at index 255). Also recorded, never used for the main number: the forward strand alone and the
-distance between window-mean embeddings. AUROC is also reported for the variants on chromosomes that were not used for
-pretraining (1, 2, X, Y) and by variant consequence.
+distance between window-mean embeddings. AUROC is also reported for the variants on chromosomes that the model's
+pretraining did not use (from its configuration: 1, 2, X and Y for the released models) and by variant consequence. The
+models run in float32, as BEND's embedders do.
 
     python benchmarks/bend/zero_shot_vep.py prepare            # data/bend/variant_effects_{expression,disease}.bed + GRCh38
     python benchmarks/bend/zero_shot_vep.py embed --pretrained locus-2m
@@ -36,12 +37,11 @@ from locus.finetune.data import sha256_file  # noqa: E402
 
 TASKS = ("expression", "disease")
 FLANK, SHARD, BATCH = 256, 25_000, 256
-HELD_OUT = {"chr1", "chr2", "chrX", "chrY"}  # chromosomes not used for pretraining (chromosomes 3-22 only)
+CHROMOSOMES = [f"chr{name}" for name in list(range(1, 23)) + ["X", "Y"]]
 BED_URL = "https://sid.erda.dk/share_redirect/aNQa0Oz2lY/data/variant_effects/variant_effects_{task}.bed"
 BED_SHA256 = {"expression": "c881ae2e7bc32e62f411893fc0e1de1524fd7e1accd20df9cc2c6bb0e9b8efca",
               "disease": "ea3ce8dcc0274e0f4f0412eecf47f4a9faec77ef6702f1ec85a7e7adc8371246"}
-LABELS = {"locus-0.5m": "LoCUS-0.5M", "locus-2m": "LoCUS-2M",
-          "twin-fixed-2m": "fixed-segment twin (2M)", "twin-bpe-2m": "BPE twin (2M)"}
+LABELS = {"locus-0.5m": "LoCUS-0.5M", "locus-2m": "LoCUS-2M"}
 # BEND Table 3: zero-shot AUROC over all variants
 PUBLISHED = {"expression": {"DNABERT": 0.60, "GROVER": 0.56, "ResNet-LM": 0.55, "NT-H": 0.55, "NT-MS": 0.54, "AWD-LSTM": 0.53,
                             "HyenaDNA large": 0.51, "DNABERT-2": 0.49, "GENA-LM BERT": 0.49, "GENA-LM BigBird": 0.49, "NT-V2": 0.48,
@@ -132,12 +132,11 @@ def prepare(arguments) -> None:
 def embed(arguments) -> None:
     import torch
 
-    from locus.config import with_paths_relative_to
+    from locus.config import GRCH38_CHROMOSOMES, with_paths_relative_to
     from locus.finetune.data import load_records
     from locus.segmentation import Segmenter
 
     from locus.finetune.model import load_pretrained
-    from locus.models.locus_model import parameter_count
 
     device = torch.device(arguments.device or ("cuda" if torch.cuda.is_available() else "cpu"))
     name = arguments.name or Path(arguments.pretrained).stem
@@ -150,12 +149,14 @@ def embed(arguments) -> None:
     config = with_paths_relative_to(config, ROOT)
     if arguments.bpe_tokenizer is not None:
         config = replace(config, data=replace(config.data, bpe_tokenizer=str(arguments.bpe_tokenizer)))
-    segmenter, large, orientations = Segmenter(config.data), parameter_count(model) > 5_000_000, ("forward", "reverse")
+    segmenter, orientations = Segmenter(config.data), ("forward", "reverse")
+    seen = {f"chr{name}" for name, accession in GRCH38_CHROMOSOMES.items() if accession in config.data.train_sources}
+    held_out = [chromosome for chromosome in CHROMOSOMES if chromosome not in seen]  # not used in this model's pretraining
 
     def per_base(batch):
         return model.encode(batch.base_ids, batch.valid_mask, batch.segment_starts, batch.nucleotide_mask, batch.segment_mask)[0]
 
-    batch_size = arguments.batch_size or (BATCH // 4 if large else BATCH)
+    batch_size = arguments.batch_size or BATCH
     parts = arguments.results / "parts"
     parts.mkdir(parents=True, exist_ok=True)
 
@@ -175,7 +176,7 @@ def embed(arguments) -> None:
             if part.is_file():
                 continue
             vectors = {}  # (allele, orientation) -> (vectors of the variant base, window means)
-            with torch.no_grad(), torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=device.type == "cuda"):
+            with torch.no_grad():  # float32, as BEND's embedders
                 for allele, (records, collate) in collates.items():
                     for orientation, function in collate.items():
                         at = FLANK if orientation == "forward" else 2 * FLANK - 1 - FLANK  # the variant base on the reverse strand
@@ -184,7 +185,7 @@ def embed(arguments) -> None:
                             batch = function(list(range(start, min(start + batch_size, shard_start + SHARD, n)))).to(device)
                             hidden = per_base(batch).float()
                             keep = (batch.valid_mask.bool() & (hidden.norm(dim=-1) > 0)).unsqueeze(-1).float()
-                            variant_base.append(hidden[:, at])
+                            variant_base.append(hidden[:, at].clone())  # a copy, so the batch's hidden states are freed
                             window_mean.append((hidden * keep).sum(1) / keep.sum(1).clamp_min(1))
                         vectors[allele, orientation] = (torch.cat(variant_base), torch.cat(window_mean))
 
@@ -201,6 +202,7 @@ def embed(arguments) -> None:
         files = [np.load(parts / f"{name}_{task}_{k:03d}.npz") for k in range((n + SHARD - 1) // SHARD)]
         for key in files[0].files:
             result[f"{task}|{key}"] = np.concatenate([item[key] for item in files])
+    result["held_out_chromosomes"] = np.array(held_out)
     np.savez_compressed(final, **result)
     for path in parts.glob(f"{name}_*.npz"):
         path.unlink()
@@ -227,12 +229,13 @@ def analyze(arguments) -> None:
               "published": PUBLISHED, "prepared": json.loads((arguments.data / "prepared.json").read_text()), "models": {}}
     for path in sorted(arguments.results.glob("dist_*.npz")):
         name, distances = path.stem[5:], np.load(path)
-        entry = result["models"][name] = {"label": LABELS.get(name, name)}
+        unseen = list(distances["held_out_chromosomes"])
+        entry = result["models"][name] = {"label": LABELS.get(name, name), "chromosomes_not_in_pretraining": unseen}
         for task, meta in rows.items():
             labels = np.array([row["label"] for row in meta])
             score = distances[f"{task}|position"]
             finite = np.isfinite(score)
-            held_out = np.array([row["chromosome"] in HELD_OUT for row in meta])
+            held_out = np.array([row["chromosome"] in unseen for row in meta])
             consequence = np.array([row["consequence"] for row in meta])
             by_consequence = {kind: {"auroc": auroc(labels[finite & (consequence == kind)], score[finite & (consequence == kind)]),
                                      "n": int((consequence == kind).sum()), "positives": int(labels[consequence == kind].sum())}
@@ -267,7 +270,7 @@ def main() -> None:
                              help="released model name (e.g. locus-2m), Hub-layout directory or scripts/pretrain.py checkpoint")
             sub.add_argument("--name", help="output name (default: the model name, or the file name of a checkpoint)")
             sub.add_argument("--bpe-tokenizer", type=Path, help="BPE model of a BPE checkpoint (default: the path in its config)")
-            sub.add_argument("--batch-size", type=int, help=f"default: {BATCH}, {BATCH // 4} for models above 5M parameters")
+            sub.add_argument("--batch-size", type=int, help=f"default: {BATCH}")
             sub.add_argument("--limit", type=int, default=0, help="score only the first N variants of each task (quick test)")
             sub.add_argument("--device", help="default: cuda when available, else cpu")
     arguments = parser.parse_args()
