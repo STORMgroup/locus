@@ -66,8 +66,8 @@ def test_jobs_have_distinct_outputs(tmp_path):
     outputs = [job.output for job in jobs.values() if job.name != "bend.analyze"]
     assert len(outputs) == len(set(outputs))
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in plans(tmp_path).items()}
-    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 360, "baselines-authors": 360, "baselines-authors-bf16": 0, "genomic-benchmarks": 180, "tokenizer-study": 1080, "gue-splice": 90,
-                      "real-reads": 1080, "single-nucleotide": 540, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "bend": 3, "efficiency": 2, "timing": 108,
+    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 360, "baselines-authors": 360, "baselines-authors-bf16": 0, "baselines-bf16": 360, "genomic-benchmarks": 180, "tokenizer-study": 1080, "gue-splice": 90,
+                      "real-reads": 1080, "single-nucleotide": 540, "single-nucleotide-bf16": 540, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "bend": 3, "efficiency": 2, "timing": 108,
                       "split-pretrain": 4, "split-nt18": 720, "split-score": 1620}
 
 
@@ -76,8 +76,8 @@ def test_nt18_folds(tmp_path):
     to folds 0-2 of the split (default: all 10) and leaves the other plans unchanged."""
     arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, nt18_folds=3)
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in reproduce.build_plans(arguments).items()}
-    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 108, "baselines-authors": 108, "baselines-authors-bf16": 0, "genomic-benchmarks": 180, "tokenizer-study": 324, "gue-splice": 27,
-                      "real-reads": 324, "single-nucleotide": 162, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "bend": 3, "efficiency": 2, "timing": 108,
+    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 108, "baselines-authors": 108, "baselines-authors-bf16": 0, "baselines-bf16": 108, "genomic-benchmarks": 180, "tokenizer-study": 324, "gue-splice": 27,
+                      "real-reads": 324, "single-nucleotide": 162, "single-nucleotide-bf16": 162, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "bend": 3, "efficiency": 2, "timing": 108,
                       "split-pretrain": 4, "split-nt18": 216, "split-score": 486}
 
 
@@ -86,3 +86,12 @@ def test_other_folds(tmp_path):
     arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, other_folds=3)
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in reproduce.build_plans(arguments).items()}
     assert counts["genomic-benchmarks"] == 54 and counts["heldout"] == 108 and counts["nt18"] == 360
+
+
+def test_one_fold_tables():
+    """--nt18-folds 1: a one-fold cell is complete and has no standard deviation, so the table step does not fail."""
+    import collect_results
+
+    one, two = collect_results.cell([0.5], folds=1), collect_results.cell([0.5, 0.6], folds=2)
+    assert one["complete"] and one["sd"] is None and collect_results.text(one) == "0.500"
+    assert collect_results.text(two) == "0.550 ± 0.071"

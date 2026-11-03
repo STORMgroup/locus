@@ -21,6 +21,8 @@ Plans:
                         the folds of Caduceus-PS (own settings) whose fp16 training overflowed (non-finite steps or
                         validation losses), again in bfloat16 (configs/finetune/caduceus-ps-<size>-authors-bf16.yaml); after
                         baselines-authors, which it reads; the table uses these runs for those folds
+    baselines-bf16      Caduceus-PS 0.47M and 1.9M on NT18 with the protocol of LoCUS in bfloat16, the precision of LoCUS
+                        (configs/finetune/caduceus-ps-<size>-bf16.yaml), 10 folds, fold by fold (needs bash install.sh --baselines)
     genomic-benchmarks  LoCUS-0.5M and LoCUS-2M on the 9 Genomic Benchmarks tasks, 10 folds each (--other-folds: fewer)
     tokenizer-study     the 2M twins (LoCUS-2M, twin-fixed-2m, twin-bpe-2m) on NT18, then scored on the modified test
                         sets (errors at 1% / 3%, controls, PBSIM3 reads; needs make pbsim3), each in 10 independent error draws
@@ -31,6 +33,8 @@ Plans:
                         (benchmarks/noisy_reads/real_reads.py; streams the public CRAM files, needs network)
     single-nucleotide   Caduceus-PS 1.9M's runs (single nucleotides, folds of the baselines plan) scored on the same modified test
                         sets and real reads: the loss that errors cause without a tokenizer (needs bash install.sh --baselines)
+    single-nucleotide-bf16
+                        the 1.9M runs of baselines-bf16 scored on the modified test sets and real reads, as in single-nucleotide
     intervals           intervals from resampling test windows for the drops of the twins and the single-nucleotide models
                         (benchmarks/noisy_reads/window_intervals.py; after tokenizer-study, gue-splice, real-reads, single-nucleotide;
                         CPU)
@@ -47,7 +51,7 @@ Plans:
                         segment every NT18 record with each segmenter (dataset creation, CPU)
     timing              wall clock of full fine-tunes: fold 0 of every NT18 task, LoCUS and Caduceus-PS, always one
                         job per GPU; Caduceus-PS also with its recipe in bfloat16, the precision of LoCUS
-                        (configs/finetune/caduceus-ps-<size>-bf16.yaml, timing only)
+                        (configs/finetune/caduceus-ps-<size>-bf16.yaml, the recipe of plan baselines-bf16)
     split-pretrain      the pretraining-split ablation: LoCUS-0.5M, LoCUS-2M and the two 2M twins pretrained on chromosomes 1-19 and
                         22, without the NT18 test chromosomes 20 and 21 (configs/pretrain/<model>-no-chr20-21.yaml), one GPU each;
                         the BPE twin's tokenizer is data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json (retrained by the data
@@ -110,6 +114,10 @@ BASELINE_MODEL.update({rerun: BASELINE_MODEL[run] for run, rerun in AUTHORS_BF16
 # timing only: the Caduceus-PS recipes in bfloat16, so the wall clock can also be compared at LoCUS's precision (plan timing)
 TIMING_BF16 = ["caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"]
 BASELINE_MODEL.update({name: name.removesuffix("-bf16") for name in TIMING_BF16})
+# the same bfloat16 recipes on NT18, 10 folds (plan baselines-bf16); the 1.9M runs are also scored on the modified test sets and
+# real reads, like the float32 runs of plan single-nucleotide
+BASELINES_BF16 = TIMING_BF16
+SINGLE_NUCLEOTIDE_BF16 = ["caduceus-ps-1.9m-bf16"]
 SINGLE_NUCLEOTIDE = BASELINES  # single-nucleotide models scored on the modified test sets and real reads
 SINGLE_NUCLEOTIDE_LABELS = {"caduceus-ps-1.9m": "Caduceus"}
 RECIPE = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "twin-fixed-2m": "locus-2m", "twin-bpe-2m": "locus-2m"}
@@ -140,7 +148,7 @@ SPLIT = {"locus-0.5m-no-chr20-21": "locus-0.5m", "locus-2m-no-chr20-21": "locus-
 SPLIT_SCORED = ["locus-2m-no-chr20-21", "twin-fixed-2m-no-chr20-21", "twin-bpe-2m-no-chr20-21"]
 SPLIT_PLANS = ["split-pretrain", "split-nt18", "split-score"]
 SPLIT_TOKENIZER = ROOT / "data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json"
-PLANS = ["pretrain", "nt18", "random-init", "baselines", "baselines-authors", "baselines-authors-bf16", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "intervals", "heldout", "long-range", "parsing",
+PLANS = ["pretrain", "nt18", "random-init", "baselines", "baselines-authors", "baselines-authors-bf16", "baselines-bf16", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "single-nucleotide-bf16", "intervals", "heldout", "long-range", "parsing",
          "stability", "bend", "efficiency", "timing"]
 
 
@@ -314,6 +322,15 @@ def build_plans(arguments) -> dict:
     plans["baselines-authors-bf16"] = Plan("baselines-authors-bf16", ["nt18"], [[
         baseline(rerun, f"{task}_revised", fold, results / rerun / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
         for run, rerun in AUTHORS_BF16.items() for task, fold in fp16_overflowed(results / run / "nt18", nt18_folds)]])
+    bf16_runs = [baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
+                 for fold in nt18_folds for name in BASELINES_BF16 for task in NT18_TASKS]
+    plans["baselines-bf16"] = Plan("baselines-bf16", ["nt18"], [bf16_runs])
+    plans["single-nucleotide-bf16"] = Plan("single-nucleotide-bf16", ["genome-fasta", "nt18", "error-sets", "control-sets", "pbsim-sets", "real-reads"], [
+        [job for job in bf16_runs if any(job.name.startswith(f"{name}.nt18.") for name in SINGLE_NUCLEOTIDE_BF16)],
+        [baseline_score_job(name, task, fold, nt18, ["clean"] + NOISY_SETS, "single_nucleotide")
+         for name in SINGLE_NUCLEOTIDE_BF16 for task in NT18_TASKS for fold in nt18_folds]
+        + [baseline_score_job(name, task, fold, data / "benchmarks/real_reads", REAL_SETS, "real_reads")
+           for name in SINGLE_NUCLEOTIDE_BF16 for task in REAL_TASKS for fold in nt18_folds]])
     plans["genomic-benchmarks"] = Plan("genomic-benchmarks", ["genomic-benchmarks"], [[
         finetune(model, gb, f"gb_{task}", fold, results / model / "genomic_benchmarks" / f"gb_{task}" / f"fold-{fold:02d}.json",
                  MICRO_BATCHES[model] * (4 if task in LONG_GB_TASKS else 1))
@@ -602,7 +619,7 @@ def main() -> None:
         import torch
 
         gpus = [str(i) for i in range(torch.cuda.device_count())]
-    if not gpus and any(job.gpu for n in names for stage in plans[n].stages for job in stage):
+    if not gpus and not arguments.dry_run and any(job.gpu for n in names for stage in plans[n].stages for job in stage):
         sys.exit("no GPU found; pass --gpus")
 
     logs = arguments.results / "logs"

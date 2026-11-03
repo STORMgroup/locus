@@ -22,7 +22,9 @@ source .venv/bin/activate
 `install.sh` creates a virtual environment in `.venv`, installs the pinned package versions (`requirements.txt`), builds
 the LCP library, runs the unit tests, and with `--models` downloads the pretrained models. PyTorch from PyPI is built for
 CUDA 12.4; for the CUDA 11.8 build that the paper used, run `TORCH_INDEX_URL=https://download.pytorch.org/whl/cu118 bash
-install.sh --models`.
+install.sh --models`. `--baselines` always installs the CUDA 11.8 build, because the prebuilt kernels of the Caduceus
+baselines do not load with the PyPI build. If you were given access to the models before their public release, log in
+to Hugging Face first (`hf auth login`, or set `HF_TOKEN`).
 
 <details>
 <summary>The same steps by hand</summary>
@@ -32,7 +34,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e . --no-deps
 make                                 # builds build/lcptools (the LCP library) and build/split_fasta
-pytest                               # unit tests, CPU only, about one minute
+pytest                               # unit tests, CPU only, about 30 seconds
 python scripts/download_models.py    # the pretrained models
 ```
 
@@ -62,6 +64,10 @@ python scripts/finetune.py --pretrained locus-2m --recipe configs/finetune/locus
     --output results/examples/locus-2m/H3K27ac_revised/fold-00.json
 ```
 
+On an RTX A5000 this takes about 15 minutes. The paper's test MCC for this task is 0.469 ± 0.009 over its 10 folds
+(0.487 on fold 0, its highest fold); runs of this example on fold 0 gave 0.448 to 0.467, because repeated GPU runs differ
+(see [Reproducibility](benchmarks/README.md#reproducibility)).
+
 The result file records every epoch and the test score of the epoch with the lowest validation loss. `--pretrained`
 accepts a model name, a downloaded model folder, or your own checkpoint (below). Add `--save-best` to keep the fine-tuned
 weights. `python scripts/finetune.py --help` lists all options.
@@ -73,7 +79,7 @@ bash scripts/prepare_genome.sh         # downloads GRCh38 and cuts it into 4,096
 python scripts/pretrain.py --config configs/pretrain/locus-2m.yaml --output-dir runs/locus-2m
 ```
 
-Pretraining runs on one GPU and takes 11 to 19 hours per model on an RTX A5000. An interrupted run continues with
+Pretraining runs on one GPU and takes 9 to 19 hours per model on an RTX A5000. An interrupted run continues with
 `--resume`. The pretrained model is `runs/locus-2m/checkpoints/final.pt`, which you can pass anywhere a model name works.
 
 ## Pretrained models
@@ -117,6 +123,10 @@ python scripts/reproduce.py all --gpus 0,1,2,3 --jobs-per-gpu 3
 python scripts/reproduce.py split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3   # the split ablation (released split models)
 python scripts/compare_results.py                         # how far your numbers are from the paper's
 ```
+
+`--all` includes the baselines, whose CUDA kernels have prebuilt packages for Python 3.10 and newer; on Python 3.9 they
+are compiled, which needs the CUDA toolkit (`nvcc`) and takes about 50 minutes. To switch an existing environment to
+another Python, remove it first: `rm -rf .venv && PYTHON=python3.10 bash install.sh --all`.
 
 `scripts/reproduce.py` downloads the data, runs every experiment on the listed GPUs, and writes the tables to
 `results/tables.md`. Running a finished command again skips what is done. [`benchmarks/README.md`](benchmarks/README.md)

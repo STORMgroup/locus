@@ -142,14 +142,14 @@ def study_folds(directory: Path, folds: int = FOLDS) -> dict[int, dict]:
 def cell(values: list, folds: int = FOLDS) -> dict:
     complete = len(values) == folds
     return {"values": values, "mean": statistics.mean(values) if values else None,
-            "sd": statistics.stdev(values) if complete else None, "complete": complete, "folds": folds}
+            "sd": statistics.stdev(values) if complete and len(values) > 1 else None, "complete": complete, "folds": folds}
 
 
 def text(c) -> str:
     if c is None or not c["values"]:
         return "-"
     if c["complete"]:
-        return f"{c['mean']:.3f} ± {c['sd']:.3f}"
+        return f"{c['mean']:.3f} ± {c['sd']:.3f}" if c["sd"] is not None else f"{c['mean']:.3f}"
     return f"{c['mean']:.3f} ({len(c['values'])}/{c.get('folds', FOLDS)})"
 
 
@@ -508,7 +508,7 @@ def timing_table(results: Path, numbers: dict) -> str:
         for path in sorted((root / model / "nt18").glob("*/fold-00.json")):
             report = json.loads(path.read_text())
             if not report["resources"]["resumed"]:
-                runs.setdefault(model, {})[path.parent.name] = report["resources"]
+                runs.setdefault(model, {})[path.parent.name] = {k: v for k, v in report["resources"].items() if k != "node"}  # no host names
     if not runs:
         return ""
     common = set.intersection(*(set(tasks) for tasks in runs.values()))

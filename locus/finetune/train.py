@@ -117,6 +117,8 @@ def train_fold(model, train_cache: SegmentCache, train_indices: torch.Tensor, va
     optimizer = torch.optim.AdamW([{"params": groups[decays], "weight_decay": weight_decay if decays else 0.0, "lr": learning_rate}
                                    for decays in sorted(groups)], lr=learning_rate)
     amp_dtype = effective_autocast_dtype(autocast_dtype, device)
+    if amp_dtype != AUTOCAST_DTYPES[autocast_dtype]:
+        print(f"this GPU does not support {autocast_dtype}; mixed precision uses {str(amp_dtype).removeprefix('torch.')} instead", flush=True)
     scaler = torch.amp.GradScaler("cuda", enabled=device.type == "cuda" and amp_dtype == torch.float16)
     eval_batch_size = max(1, batch_size // micro_batches)
     train_list, validation_list = train_indices.tolist(), validation_indices.tolist()

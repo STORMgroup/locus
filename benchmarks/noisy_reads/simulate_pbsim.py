@@ -114,6 +114,8 @@ def main() -> None:
     for path in (pbsim_dir / "src/pbsim", error_model):
         if not path.is_file():
             raise FileNotFoundError(f"{path} does not exist; build PBSIM3 first (make pbsim3)")
+    if arguments.work_dir:
+        arguments.work_dir.mkdir(parents=True, exist_ok=True)
     commit = pbsim_commit(pbsim_dir)
     if commit != REPORTED_COMMIT:
         print(f"warning: PBSIM3 commit {commit} differs from the commit of the reported sets ({REPORTED_COMMIT})", file=sys.stderr)

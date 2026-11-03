@@ -47,8 +47,14 @@ def download(name: str, revision: str = None) -> Path:
                            "LOCUS_HUB_REPOSITORY), or point LOCUS_HUB_DIR to a local copy")
     from huggingface_hub import snapshot_download
 
+    from huggingface_hub.errors import GatedRepoError, RepositoryNotFoundError
+
     files = [f"{name}/{file}" for file in ("config.json", "model.safetensors", "README.md")]
-    return Path(snapshot_download(HUB_REPOSITORY, revision=revision, allow_patterns=files)) / name
+    try:
+        return Path(snapshot_download(HUB_REPOSITORY, revision=revision, allow_patterns=files)) / name
+    except (RepositoryNotFoundError, GatedRepoError) as error:
+        raise RuntimeError(f"Could not download {name} from the Hugging Face repository {HUB_REPOSITORY}: it does not exist or "
+                           "needs access. If you have access, log in first (hf auth login, or set HF_TOKEN)") from error
 
 
 def export(checkpoint_path: Path, output_directory: Path, name: str) -> Path:

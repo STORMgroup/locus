@@ -7604,7 +7604,6 @@
     "H2AFZ_revised": {
      "wall_seconds": 2331.202569961548,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.2218610516283661,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7612,7 +7611,6 @@
     "H3K27ac_revised": {
      "wall_seconds": 2273.251224756241,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.21464633266441524,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7620,7 +7618,6 @@
     "H3K27me3_revised": {
      "wall_seconds": 2332.24418926239,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.2189656503032893,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7628,7 +7625,6 @@
     "H3K36me3_revised": {
      "wall_seconds": 2335.1317932605743,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.22418491006828845,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7636,7 +7632,6 @@
     "H3K4me1_revised": {
      "wall_seconds": 2334.7422981262207,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.2205586836207658,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7644,7 +7639,6 @@
     "H3K4me2_revised": {
      "wall_seconds": 2299.134066104889,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.21563137625344098,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7652,7 +7646,6 @@
     "H3K4me3_revised": {
      "wall_seconds": 1316.3660683631897,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.12266525230370462,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7660,7 +7653,6 @@
     "H3K9ac_revised": {
      "wall_seconds": 1752.6938710212708,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.16495977039448917,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7668,7 +7660,6 @@
     "H3K9me3_revised": {
      "wall_seconds": 2052.3673825263977,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.19115067785605788,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7676,7 +7667,6 @@
     "H4K20me1_revised": {
      "wall_seconds": 2300.8517849445343,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.2181706556584686,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.432518144
@@ -7684,7 +7674,6 @@
     "enhancers_revised": {
      "wall_seconds": 1083.7291429042816,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.17822230514138937,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.155026944
@@ -7692,7 +7681,6 @@
     "enhancers_types_revised": {
      "wall_seconds": 1084.9862151145935,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.1768741044215858,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.155027968
@@ -7700,7 +7688,6 @@
     "promoter_all_revised": {
      "wall_seconds": 903.5413889884949,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.16140987747348845,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.942111744
@@ -7708,7 +7695,6 @@
     "promoter_no_tata_revised": {
      "wall_seconds": 900.3413348197937,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.16348144714720547,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.942111744
@@ -7716,7 +7702,6 @@
     "promoter_tata_revised": {
      "wall_seconds": 155.08695888519287,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.02763577038422227,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.942111744
@@ -7724,7 +7709,6 @@
     "splice_sites_acceptors_revised": {
      "wall_seconds": 1773.5968737602234,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.18893818953074515,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.580857344
@@ -7732,7 +7716,6 @@
     "splice_sites_all_revised": {
      "wall_seconds": 1772.1970908641815,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.19173710350878537,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.580858368
@@ -7740,7 +7723,6 @@
     "splice_sites_donors_revised": {
      "wall_seconds": 1770.056403875351,
      "resumed": false,
-     "node": "cbcb26.umiacs.umd.edu",
      "segmentation_seconds": 0.18941772147081792,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.580857344
@@ -7860,7 +7842,6 @@
     "H2AFZ_revised": {
      "wall_seconds": 1622.6454935073853,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2804406026843935,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7868,7 +7849,6 @@
     "H3K27ac_revised": {
      "wall_seconds": 1580.7188580036163,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2721002004109323,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7876,7 +7856,6 @@
     "H3K27me3_revised": {
      "wall_seconds": 1622.935922384262,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2800537752918899,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7884,7 +7863,6 @@
     "H3K36me3_revised": {
      "wall_seconds": 1623.4318809509277,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.27921732049435377,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7892,7 +7870,6 @@
     "H3K4me1_revised": {
      "wall_seconds": 1623.6152760982513,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.27347244089469314,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7900,7 +7877,6 @@
     "H3K4me2_revised": {
      "wall_seconds": 1596.789134502411,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.27352338936179876,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7908,7 +7884,6 @@
     "H3K4me3_revised": {
      "wall_seconds": 913.4899444580078,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.15314243640750647,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7916,7 +7891,6 @@
     "H3K9ac_revised": {
      "wall_seconds": 1216.5540113449097,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.20340333599597216,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7924,7 +7898,6 @@
     "H3K9me3_revised": {
      "wall_seconds": 1424.7970118522644,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.23637577891349792,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7932,7 +7905,6 @@
     "H4K20me1_revised": {
      "wall_seconds": 1600.9262850284576,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2760681421495974,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.461810176
@@ -7940,7 +7912,6 @@
     "enhancers_revised": {
      "wall_seconds": 867.5665762424469,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.23141315043903887,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.767768576
@@ -7948,7 +7919,6 @@
     "enhancers_types_revised": {
      "wall_seconds": 867.0004873275757,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2312885846477002,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.7677696
@@ -7956,7 +7926,6 @@
     "promoter_all_revised": {
      "wall_seconds": 824.6203465461731,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.22077623242512345,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.652094976
@@ -7964,7 +7933,6 @@
     "promoter_no_tata_revised": {
      "wall_seconds": 823.8876359462738,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2060613774228841,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.652094976
@@ -7972,7 +7940,6 @@
     "promoter_tata_revised": {
      "wall_seconds": 145.86440467834473,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.035522934747859836,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.652094976
@@ -7980,7 +7947,6 @@
     "splice_sites_acceptors_revised": {
      "wall_seconds": 1339.3179144859314,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.24628265760838985,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.999115776
@@ -7988,7 +7954,6 @@
     "splice_sites_all_revised": {
      "wall_seconds": 1337.6868591308594,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.24458572710864246,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.9991168
@@ -7996,7 +7961,6 @@
     "splice_sites_donors_revised": {
      "wall_seconds": 1342.205328464508,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.24097027839161456,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 0.999115776
@@ -8006,7 +7970,6 @@
     "H2AFZ_revised": {
      "wall_seconds": 3259.4118530750275,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.28166737291030586,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8014,7 +7977,6 @@
     "H3K27ac_revised": {
      "wall_seconds": 3129.3097965717316,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2924620865378529,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8022,7 +7984,6 @@
     "H3K27me3_revised": {
      "wall_seconds": 3250.3663346767426,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.28186387405730784,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8030,7 +7991,6 @@
     "H3K36me3_revised": {
      "wall_seconds": 3250.3863847255707,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.291563228238374,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8038,7 +7998,6 @@
     "H3K4me1_revised": {
      "wall_seconds": 3246.3475642204285,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.2760066385380924,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8046,7 +8005,6 @@
     "H3K4me2_revised": {
      "wall_seconds": 3191.289555311203,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.2889286398421973,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8054,7 +8012,6 @@
     "H3K4me3_revised": {
      "wall_seconds": 1800.865487575531,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.16846448043361306,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8062,7 +8019,6 @@
     "H3K9ac_revised": {
      "wall_seconds": 2399.736461162567,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2201103155966848,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8070,7 +8026,6 @@
     "H3K9me3_revised": {
      "wall_seconds": 2810.745350599289,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.26547948992811143,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8078,7 +8033,6 @@
     "H4K20me1_revised": {
      "wall_seconds": 3200.3817195892334,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.2855333734769374,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 2.763136512
@@ -8086,7 +8040,6 @@
     "enhancers_revised": {
      "wall_seconds": 1518.9096961021423,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.22739692963659763,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.306394112
@@ -8094,7 +8047,6 @@
     "enhancers_types_revised": {
      "wall_seconds": 1518.7773184776306,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.22126940777525306,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.30639616
@@ -8102,7 +8054,6 @@
     "promoter_all_revised": {
      "wall_seconds": 1414.0346853733063,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.20629141852259636,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.063603712
@@ -8110,7 +8061,6 @@
     "promoter_no_tata_revised": {
      "wall_seconds": 1393.8407487869263,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2042012275196612,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.063603712
@@ -8118,7 +8068,6 @@
     "promoter_tata_revised": {
      "wall_seconds": 241.01934385299683,
      "resumed": false,
-     "node": "tron49.umiacs.umd.edu",
      "segmentation_seconds": 0.03547707502730191,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.063603712
@@ -8126,7 +8075,6 @@
     "splice_sites_acceptors_revised": {
      "wall_seconds": 2624.34197306633,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2525443055201322,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.791974912
@@ -8134,7 +8082,6 @@
     "splice_sites_all_revised": {
      "wall_seconds": 2621.667238712311,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2564636319875717,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.79197696
@@ -8142,7 +8089,6 @@
     "splice_sites_donors_revised": {
      "wall_seconds": 2620.9249691963196,
      "resumed": false,
-     "node": "tron48.umiacs.umd.edu",
      "segmentation_seconds": 0.2516415452118963,
      "gpu": "NVIDIA RTX A5000",
      "peak_gpu_memory_allocated_gb": 1.791974912

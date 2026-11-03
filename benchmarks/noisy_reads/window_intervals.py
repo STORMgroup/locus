@@ -66,6 +66,7 @@ def main() -> None:
     p.add_argument("--resamples", type=int, default=2000)
     p.add_argument("--seed", type=int, default=20261027)
     p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--strict", action="store_true", help="exit with status 1 when a scope is left out (no task-fold has every model's predictions)")
     a = p.parse_args()
     models = [tuple(item.split("=", 1)) for item in a.models]
     exclude = {}
@@ -117,10 +118,12 @@ def main() -> None:
     out = {"models": dict(models), "reference set": a.reference, "resamples": a.resamples, "seed": a.seed,
            "check_max_abs_mcc_difference": check, "scopes": {}}
     reference_model = models[0][0]
+    left_out = []
     for scope, scope_tasks in scopes:
         pairs = [(t, f) for t in scope_tasks for f in folds_of[t]]
         if not pairs:
             print(f"{scope}: no task-fold has every model's predictions; left out", flush=True)
+            left_out.append(scope)
             continue
         universe = sorted({w for t in scope_tasks for w in ids[t]})
         index = {w: k for k, w in enumerate(universe)}
@@ -148,6 +151,8 @@ def main() -> None:
     a.output.parent.mkdir(parents=True, exist_ok=True)
     a.output.write_text(json.dumps(out, indent=1) + "\n")
     print("wrote", a.output)
+    if a.strict and left_out:
+        raise SystemExit(f"left out: {', '.join(left_out)}")
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ per task (`task_settings`).
 | `caduceus-ps-1.9m.yaml`, `caduceus-ps-0.47m.yaml` | Caduceus-PS 1.9M and 0.47M with the protocol of LoCUS (the same settings) | the LoCUS-2M recipe in float32, each batch of 128 split into 4 micro-batches |
 | `caduceus-ps-1.9m-authors.yaml`, `caduceus-ps-0.47m-authors.yaml` | Caduceus-PS 1.9M and 0.47M with Caduceus's own settings (supplementary table) | per task the learning rate and batch size of the Caduceus paper (Table 6), Caduceus's weight-decay groups, no dropout, the forward strand in training and evaluation, fp16 with loss scaling |
 | `caduceus-ps-1.9m-authors-bf16.yaml`, `caduceus-ps-0.47m-authors-bf16.yaml` | the folds of the runs above whose fp16 training overflowed | the same settings in bfloat16 |
-| `caduceus-ps-1.9m-bf16.yaml`, `caduceus-ps-0.47m-bf16.yaml` | timing only (plan `timing`): the wall clock at the precision of LoCUS | `caduceus-ps-<size>.yaml` in bfloat16 |
+| `caduceus-ps-1.9m-bf16.yaml`, `caduceus-ps-0.47m-bf16.yaml` | plan `baselines-bf16` (NT18 accuracy at the precision of LoCUS) and plan `timing` (the wall clock) | `caduceus-ps-<size>.yaml` in bfloat16 |
 
 Every recipe validates on one of 10 folds of the training set (`validation_folds: 10`, `seed: 42`); the fold is chosen
 with `--fold`. Micro-batches only save memory: the update is that of the full batch.

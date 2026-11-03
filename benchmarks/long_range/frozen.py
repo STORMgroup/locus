@@ -287,6 +287,15 @@ def spearman_rows(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return (ra * rb).sum(1) / np.sqrt((ra ** 2).sum(1) * (rb ** 2).sum(1))
 
 
+def load_embeddings(path: Path, key: str, item: np.ndarray):
+    """The embed stage's output; fit needs an embedding for every item of the task (embed without --limit)."""
+    embeddings = np.load(path)
+    if len(embeddings[key]) <= item.max():
+        raise SystemExit(f"{path} has {len(embeddings[key])} embedded items, the task {int(item.max()) + 1}: fit needs every item "
+                         "embedded (run embed without --limit)")
+    return embeddings
+
+
 def fit(arguments) -> None:
     import torch
 
@@ -303,12 +312,12 @@ def fit(arguments) -> None:
             features = np.concatenate([onehot, np.log10(1 + np.array([[row["distance"]] for row in rows], dtype=np.float32))], 1)
             width = 64
         else:
-            embeddings = np.load(embeddings_path)
+            embeddings = load_embeddings(embeddings_path, "ref", item)
             features, width = np.concatenate([embeddings["ref"][item], embeddings["alt"][item], onehot], 1), 2 * embeddings["ref"].shape[1]
         targets = np.array([row["label"] for row in rows])
         depth, outputs = 2, 2
     else:
-        embeddings = np.load(embeddings_path)
+        embeddings = load_embeddings(embeddings_path, "seq", item)
         features, width = embeddings["seq"][item], 2 * embeddings["seq"].shape[1]
         targets = np.array([row["labels"] for row in rows], dtype=np.float32)
         depth, outputs = 1, targets.shape[1]

@@ -226,7 +226,9 @@ from pretraining instead.
 **BEND.** Only BEND's two zero-shot tasks are run: noncoding variant effects on expression (eQTLs) and disease (ClinVar).
 A variant's score is the cosine distance between the per-base embeddings of the reference and the alternative 512 bp window
 at the variant, both strands averaged, in float32; AUROC over all variants, and over the variants on the chromosomes the
-model's pretraining did not use (taken from its configuration).
+model's pretraining did not use (taken from its configuration). The two BED files come from BEND's data host
+(sid.erda.dk); if it does not answer, put copies at `data/bend/variant_effects_{expression,disease}.bed` and run
+`prepare` again, which checks them by SHA-256.
 
 ## The tokenizer study
 
@@ -342,13 +344,18 @@ This writes each table of the paper that `results/` has results for to `results/
 - **Shared GPUs.** The paper's fine-tunes ran up to three at a time on one GPU (`--jobs-per-gpu 3`). Sharing does not
   change the computation, but a run alone on a GPU is not bit-identical to a shared one, just as two shared runs are not.
   Repeated fine-tunes with the same seed differed by about 0.013 MCC per task and fold on average (alone vs shared, and
-  shared vs shared), more on small tasks such as promoter_tata, and by about 0.01 on 18-task means. `reproduce.py` sets
+  shared vs shared), and by about 0.01 on 18-task means. Small test sets differ more: on promoter_tata (212 test
+  sequences, where 4 sequences change the MCC by about 0.04) same-seed runs of LoCUS-2M on fold 0 ranged from 0.77 to
+  0.90, and on H3K9me3 runs differed by 0.03 to 0.06. The fine-tune example of the main README (H3K27ac, fold 0) gave
+  0.448 to 0.467 against the paper's 0.487. Compare means over folds and tasks, not single folds. `reproduce.py` sets
   `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` for its jobs, as the paper's runs did, so that three fine-tunes fit
   on one 24 GB GPU; this only changes how memory is allocated.
 - **Test sets with errors.** The error sets and controls are generated from fixed seeds, and PBSIM3 runs with a fixed
   seed at its pinned commit. Regenerated from the NT18 download, they are byte-identical to the paper's. PBSIM3 draws its
-  random numbers from the C library, so this holds on Linux (glibc). The real reads are checked against the paper's
-  checksums by `scripts/get_real_reads.sh`.
+  random numbers from the C library, so this holds on Linux (glibc). `benchmarks/noisy_reads/test_sets_sha256.tsv` lists
+  the SHA-256 of the paper's 1,330 generated sets (NT18 and GUE splice sites, 10 draws each); check yours with
+  `cd data/benchmarks && sha256sum -c ../../benchmarks/noisy_reads/test_sets_sha256.tsv`. The real reads are checked
+  against the paper's checksums by `scripts/get_real_reads.sh`.
 - **The LCP library.** `third_party/lcptools` is [lcptools](https://github.com/BilkentCompGen/lcptools) at commit
   9dcc05f with a small local patch (`third_party/lcptools/local-changes.patch`). The patch adds the core type to `struct
   core`, which the Python bindings in `locus/segmentation.py` need, and fixes how cores are released in

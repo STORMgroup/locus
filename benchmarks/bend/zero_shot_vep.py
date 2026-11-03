@@ -64,7 +64,11 @@ def bed_file(directory: Path, task: str) -> Path:
     if not path.is_file():
         directory.mkdir(parents=True, exist_ok=True)
         print("downloading", BED_URL.format(task=task), flush=True)
-        urllib.request.urlretrieve(BED_URL.format(task=task), path.with_suffix(".part"))
+        try:
+            urllib.request.urlretrieve(BED_URL.format(task=task), path.with_suffix(".part"))
+        except OSError as error:
+            raise SystemExit(f"could not download {BED_URL.format(task=task)} ({error}); if the BEND data host does not answer, put "
+                             f"a copy of variant_effects_{task}.bed at {path} (it is checked by SHA-256) and run prepare again") from error
         path.with_suffix(".part").rename(path)
     if sha256_file(path) != BED_SHA256[task]:
         raise ValueError(f"{path} is not the BEND file used in the paper (SHA-256 {BED_SHA256[task]})")
