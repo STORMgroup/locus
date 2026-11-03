@@ -63,11 +63,11 @@ def test_jobs_have_distinct_outputs(tmp_path):
                 if job.name in jobs:  # a job shared by two plans (LoCUS-2M's NT18 runs) must be the same job
                     assert jobs[job.name].command == job.command
                 jobs[job.name] = job
-    outputs = [job.output for job in jobs.values() if job.name != "bend.analyze"]
+    outputs = [job.output for job in jobs.values()]
     assert len(outputs) == len(set(outputs))
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in plans(tmp_path).items()}
     assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 360, "baselines-authors": 360, "baselines-authors-bf16": 0, "baselines-bf16": 360, "genomic-benchmarks": 180, "tokenizer-study": 1080, "gue-splice": 90,
-                      "real-reads": 1080, "single-nucleotide": 540, "single-nucleotide-bf16": 540, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "bend": 3, "efficiency": 2, "timing": 108,
+                      "real-reads": 1080, "single-nucleotide": 540, "single-nucleotide-bf16": 540, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "efficiency": 2, "timing": 108,
                       "split-pretrain": 4, "split-nt18": 720, "split-score": 1620}
 
 
@@ -77,7 +77,7 @@ def test_nt18_folds(tmp_path):
     arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, nt18_folds=3)
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in reproduce.build_plans(arguments).items()}
     assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 108, "baselines-authors": 108, "baselines-authors-bf16": 0, "baselines-bf16": 108, "genomic-benchmarks": 180, "tokenizer-study": 324, "gue-splice": 27,
-                      "real-reads": 324, "single-nucleotide": 162, "single-nucleotide-bf16": 162, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "bend": 3, "efficiency": 2, "timing": 108,
+                      "real-reads": 324, "single-nucleotide": 162, "single-nucleotide-bf16": 162, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "efficiency": 2, "timing": 108,
                       "split-pretrain": 4, "split-nt18": 216, "split-score": 486}
 
 

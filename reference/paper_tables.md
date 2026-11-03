@@ -538,15 +538,6 @@ Changed segments: no model. Per-base change: (1 - cos(u, u')) / (1 - c0) per bas
 
 Ratio of the means over sequences; > 1: the other segmenter changes more than LCP. Paired bootstrap over sequences (2,000 resamples).
 
-## BEND zero-shot noncoding variant effects (AUROC over all variants, no training)
-
-| model | expression | disease | mean of the 2 | expression, held-out chromosomes | disease, held-out chromosomes |
-|---|---|---|---|---|---|
-| LoCUS-0.5M | 0.516 | 0.530 | 0.523 | 0.516 | 0.532 |
-| LoCUS-2M | 0.507 | 0.531 | 0.519 | 0.509 | 0.532 |
-
-Held-out chromosomes: 1, 2, X and Y, not used for pretraining. Every model in float32.
-
 ## Pretraining-split ablation: NT18 test MCC without the test chromosomes in pretraining
 
 | group | task | LoCUS-0.5M, released (chromosomes 3-22) | LoCUS-0.5M, chromosomes 1-19 and 22 | LoCUS-2M, released (chromosomes 3-22) | LoCUS-2M, chromosomes 1-19 and 22 | fixed-segment twin, released (chromosomes 3-22) | fixed-segment twin, chromosomes 1-19 and 22 | BPE twin, released (chromosomes 3-22) | BPE twin, chromosomes 1-19 and 22 |

@@ -23390,28 +23390,6 @@
    }
   }
  },
- "bend": {
-  "locus-0.5m": {
-   "expression": {
-    "auroc": 0.5156284872017239,
-    "held_out_chromosomes": 0.5163381482382277
-   },
-   "disease": {
-    "auroc": 0.530073600777917,
-    "held_out_chromosomes": 0.5317449178646788
-   }
-  },
-  "locus-2m": {
-   "expression": {
-    "auroc": 0.5069408930417352,
-    "held_out_chromosomes": 0.5089120625757503
-   },
-   "disease": {
-    "auroc": 0.5309960841485922,
-    "held_out_chromosomes": 0.5316081180310814
-   }
-  }
- },
  "split_ablation": {
   "test_mcc": {
    "LoCUS-0.5M/histone": {

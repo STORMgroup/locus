@@ -44,21 +44,22 @@ resume from their last epoch, so after a crash you can run the same command agai
 | `baselines` | Caduceus-PS 1.9M and 0.47M (the sizes of LoCUS-2M and LoCUS-0.5M) on NT18, same protocol | 360 | about 71 min per fold (1.9M) |
 | `baselines-authors` | Caduceus-PS 0.47M and 1.9M (the sizes of LoCUS-0.5M and LoCUS-2M) on NT18 with Caduceus's own fine-tuning settings (supplementary table), 10 folds | 360 | |
 | `baselines-authors-bf16` | the folds of `baselines-authors` whose fp16 training overflowed, again in bfloat16 (after `baselines-authors`) | 64 in the paper (2 + 62) | |
+| `baselines-bf16` | Caduceus-PS 0.47M and 1.9M on NT18 with the protocol of `baselines` in bfloat16, the precision of LoCUS, 10 folds | 360 | about 40 min per fold (1.9M) |
 | `genomic-benchmarks` | LoCUS-0.5M and LoCUS-2M on the Genomic Benchmarks (9 tasks, 10 folds) | 180 | |
 | `tokenizer-study` | the three 2M twins (LCP, BPE, fixed segments) on NT18, then scored on the test sets with errors | 1,080 (180 shared with `nt18`: the LoCUS-2M runs) | about 17 min per fold, 6 min per scoring |
 | `gue-splice` | the same study on GUE splice sites, on all test sequences and on those sharing no splice site with NT18 | 90 | |
 | `real-reads` | the twins scored on real HG002 nanopore reads of the NT18 test windows (needs network; extraction about 25 min) | 1,080 (540 shared with `tokenizer-study`) | |
 | `single-nucleotide` | Caduceus-PS 1.9M scored on the same error sets and real reads | 540 (180 shared with `baselines`) | |
+| `single-nucleotide-bf16` | the same for the bfloat16 runs of Caduceus-PS 1.9M | 540 (180 shared with `baselines-bf16`) | |
 | `intervals` | confidence intervals from resampling test windows (CPU) | 3 | minutes |
 | `heldout` | LoCUS-2M and its random-init control tested on chromosomes that pretraining never saw | 360 | about 17 min per fold |
 | `long-range` | frozen embeddings on the eQTL and bulk RNA tasks of the long-range benchmark | 9 | |
 | `parsing` | how LCP, BPE and fixed segments react to one edit, statistics of the LCP parse, and what the boundaries reveal about masked bases (CPU) | 3 | about 2, 10 and 40 CPU minutes |
 | `stability` | how far one edit spreads through the frozen 2M twins | 1 | about 40 min |
-| `bend` | BEND's two zero-shot variant effect tasks, LoCUS-0.5M and LoCUS-2M | 3 | about 15 min per model |
 | `efficiency` | fine-tuning throughput and segmentation time (CPU for the latter) | 2 | minutes |
-| `timing` | wall clock of full fine-tunes, fold 0 of each NT18 task, one job per GPU; Caduceus-PS also in bf16, the precision of LoCUS (timing only) | 108 | |
-| `pretrain` | the four pretraining runs (not part of `all`) | 4 | 11-19 h per model |
-| `split-pretrain` | the pretraining-split ablation: the same four models pretrained without chromosomes 20 and 21 (not part of `all`) | 4 | 11-19 h per model |
+| `timing` | wall clock of full fine-tunes, fold 0 of each NT18 task, one job per GPU; Caduceus-PS also in bf16, the precision of LoCUS (the recipe of `baselines-bf16`) | 108 | |
+| `pretrain` | the four pretraining runs (not part of `all`) | 4 | 9-19 h per model |
+| `split-pretrain` | the pretraining-split ablation: the same four models pretrained without chromosomes 20 and 21 (not part of `all`) | 4 | 9-19 h per model |
 | `split-nt18` | those four models on NT18, 10 folds: the released split models, or your own `split-pretrain` with `--models-from runs` (not part of `all`) | 720 | as `nt18` |
 | `split-score` | the three 2M ones scored on the error sets and real reads (not part of `all`) | 1,620 (540 shared with `split-nt18`) | 6 min per scoring |
 
@@ -99,8 +100,7 @@ bash scripts/get_real_reads.sh                     # real nanopore reads of the 
   windows that contain only A, C, G and T. Only pretraining needs the windows; `--download-only` skips them.
 - **hg19.** The bulk RNA task of the long-range benchmark uses hg19. `benchmarks/long_range/frozen.py prepare --task
   bulk_rna` downloads UCSC's `hg19.fa.gz` (0.9 GB, MD5-checked) to `data/hg19.fa.gz` if it is missing.
-- **Benchmarks.** The datasets are pinned to the revisions used in the paper, and the BEND variant files are checked
-  against their SHA-256.
+- **Benchmarks.** The datasets are pinned to the revisions used in the paper.
 - **BPE tokenizers.** The tokenizer of twin-bpe-2m is included as `data/tokenizers/bpe-4096-1gb-seed42.json`, and that of
   its split-ablation counterpart (trained the same way on chromosomes 1-19 and 22) as
   `data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json`, because retraining one needs about 64 GB of RAM;
@@ -210,7 +210,6 @@ Each folder here prepares the data of one benchmark or runs one analysis:
 | LCP parse statistics: core types, segment lengths, coverage, worst case of one edit | genome windows | `parsing/lcp_statistics.py` |
 | Masked bases recovered from the segment boundaries (pretrained models, random and chromosome-1 sequences) | genome windows | `parsing/boundary_information.py` |
 | Embedding stability after one edit (frozen 2M twins) | genome windows | `embedding/stability.py` |
-| BEND zero-shot variant effect prediction (expression and disease tasks) | `bend/zero_shot_vep.py prepare` | `bend/zero_shot_vep.py embed / analyze` |
 | Fine-tuning throughput (LoCUS and Caduceus-PS, inputs prepared before timing) | | `efficiency/finetune_speed.py` |
 | Segmentation time of the NT18 data per segmenter (CPU) | `nt18/prepare.py` | `efficiency/segmentation_time.py` |
 
@@ -222,13 +221,6 @@ arguments of each run in the paper.
 into a new test set. LoCUS-2M and its random-init control are fine-tuned on the remaining examples, and both test sets
 are scored at the same selected epoch (plan `heldout`). The pretraining-split ablation (below) removes the test chromosomes
 from pretraining instead.
-
-**BEND.** Only BEND's two zero-shot tasks are run: noncoding variant effects on expression (eQTLs) and disease (ClinVar).
-A variant's score is the cosine distance between the per-base embeddings of the reference and the alternative 512 bp window
-at the variant, both strands averaged, in float32; AUROC over all variants, and over the variants on the chromosomes the
-model's pretraining did not use (taken from its configuration). The two BED files come from BEND's data host
-(sid.erda.dk); if it does not answer, put copies at `data/bend/variant_effects_{expression,disease}.bed` and run
-`prepare` again, which checks them by SHA-256.
 
 ## The tokenizer study
 
@@ -283,7 +275,7 @@ compares them with the released models on the same task-folds.
 
 ```bash
 python scripts/reproduce.py split-nt18 split-score --gpus 0,1,2,3 --jobs-per-gpu 3   # from the released split models
-# or pretrain them yourself first (runs/<model>-no-chr20-21/checkpoints/final.pt, 11-19 h each):
+# or pretrain them yourself first (runs/<model>-no-chr20-21/checkpoints/final.pt, 9-19 h each):
 python scripts/reproduce.py split-pretrain --gpus 0,1,2,3
 python scripts/reproduce.py split-nt18 split-score --models-from runs --gpus 0,1,2,3 --jobs-per-gpu 3
 ```

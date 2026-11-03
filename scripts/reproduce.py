@@ -46,7 +46,6 @@ Plans:
                         of the LCP parse (segment lengths and coverage, worst-case edit locality at levels 1 and 2), and how
                         much the segment boundaries tell the pretrained models about masked bases (CPU)
     stability           embedding stability: how far one edit propagates through the frozen 2M twins (one GPU)
-    bend                BEND zero-shot variant effect prediction (its two zero-shot tasks), LoCUS-0.5M and LoCUS-2M
     efficiency          fine-tuning throughput of LoCUS and Caduceus-PS (needs bash install.sh --baselines), and the time to
                         segment every NT18 record with each segmenter (dataset creation, CPU)
     timing              wall clock of full fine-tunes: fold 0 of every NT18 task, LoCUS and Caduceus-PS, always one
@@ -138,7 +137,6 @@ NOISY_SETS = drawn(["ont1", "ont3", "ontw1", "ontw3", "sub1", "sub3", "pbsim97"]
 REAL_TASKS = NT18_TASKS  # every NT18 test record names its window on chromosome 20 or 21
 REAL_SETS = ["realref"] + drawn(["realsup", "realhac"])
 FROZEN = [("eqtl", 4096, ["locus-0.5m", "locus-2m"]), ("bulk_rna", 4096, ["locus-0.5m", "locus-2m"])]
-BEND_MODELS = ["locus-0.5m", "locus-2m"]
 PRETRAIN = ["locus-0.5m", "locus-2m", "twin-fixed-2m", "twin-bpe-2m"]
 # Pretraining-split ablation: the four models pretrained without chromosomes 20 and 21 (the NT18 test chromosomes), each
 # fine-tuned with the recipe and micro-batches of its released counterpart (model -> released model); the 2M ones are also
@@ -149,7 +147,7 @@ SPLIT_SCORED = ["locus-2m-no-chr20-21", "twin-fixed-2m-no-chr20-21", "twin-bpe-2
 SPLIT_PLANS = ["split-pretrain", "split-nt18", "split-score"]
 SPLIT_TOKENIZER = ROOT / "data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json"
 PLANS = ["pretrain", "nt18", "random-init", "baselines", "baselines-authors", "baselines-authors-bf16", "baselines-bf16", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "single-nucleotide-bf16", "intervals", "heldout", "long-range", "parsing",
-         "stability", "bend", "efficiency", "timing"]
+         "stability", "efficiency", "timing"]
 
 
 @dataclass
@@ -212,14 +210,11 @@ def data_steps(data: Path) -> dict:
         "long-range-frozen": ([data / f"benchmarks/long_range/lrb_{task}_{length}/rows.json.gz" for task in ("eqtl", "bulk_rna") for length in ("4k",)],
                               [script("benchmarks/long_range/frozen.py", "prepare", "--task", task, "--data", data / "benchmarks/long_range",
                                       "--fasta", data / "GRCh38.p14.fasta.gz", "--hg19", data / "hg19.fa.gz") for task in ("eqtl", "bulk_rna")]),
-        "bend": ([data / "benchmarks/bend/prepared.json"],
-                 [script("benchmarks/bend/zero_shot_vep.py", "prepare", "--data", data / "benchmarks/bend", "--bed-dir", data / "bend",
-                         "--fasta", data / "GRCh38.p14.fasta.gz")]),
     }
 
 
 DATA_ORDER = ["genome-fasta", "genome-windows", "bpe-no-chr20-21", "nt18", "nt18-heldout", "genomic-benchmarks", "error-sets", "control-sets", "pbsim-sets", "gue", "gue-sets",
-              "gue-independent", "real-reads", "long-range-frozen", "bend"]
+              "gue-independent", "real-reads", "long-range-frozen"]
 
 
 def fp16_overflowed(directory: Path, folds) -> list:
@@ -235,12 +230,6 @@ def fp16_overflowed(directory: Path, folds) -> list:
                 if report.get("nonfinite_steps") or report.get("no_finite_validation_loss") or not all(math.isfinite(x) for x in losses):
                     found.append((task, fold))
     return found
-
-
-def bend_analyzed(bend_dir: Path) -> bool:
-    """BEND's results.json is newer than the distances of every embedded model (analyze reruns after any new embedding)."""
-    results = bend_dir / "results.json"
-    return results.is_file() and all(path.stat().st_mtime <= results.stat().st_mtime for path in bend_dir.glob("dist_*.npz"))
 
 
 def build_plans(arguments) -> dict:
@@ -411,12 +400,6 @@ def build_plans(arguments) -> dict:
     plans["stability"] = Plan("stability", ["genome-windows"], [[Job("stability", script(
         "benchmarks/embedding/stability.py", "--windows", windows, "--output", stability,
         *(["--models-from", arguments.models_from] if arguments.models_from else [])), stability)]], exclusive=True)
-    bend_dir = results / "bend"
-    plans["bend"] = Plan("bend", ["genome-fasta", "bend"], [
-        [Job(f"bend.{name}", script("benchmarks/bend/zero_shot_vep.py", "embed", "--pretrained", pretrained(name), "--name", name,
-                                    "--data", data / "benchmarks/bend", "--results", bend_dir), bend_dir / f"dist_{name}.npz") for name in BEND_MODELS],
-        [Job("bend.analyze", script("benchmarks/bend/zero_shot_vep.py", "analyze", "--data", data / "benchmarks/bend", "--results", bend_dir),
-             bend_dir / "results.json", gpu=False, done=lambda: bend_analyzed(bend_dir))]])
     speed = results / "efficiency/finetune_speed.json"
     segmentation = results / "efficiency/segmentation_time.json"
     # the segmentation time first, alone, on an otherwise idle machine; then the GPU throughput
@@ -585,7 +568,7 @@ def main() -> None:
                         help=f"folds of genomic-benchmarks and heldout (default {OTHER_FOLDS}, the paper's)")
     parser.add_argument("--gpu-env", default="CUDA_VISIBLE_DEVICES",
                         help="environment variable that gives each job its GPU (AMD GPUs with ROCm: HIP_VISIBLE_DEVICES)")
-    parser.add_argument("--cpu-jobs", type=int, default=2, help="parallel CPU jobs (frozen-embedding fits, parsing tests, BEND analysis)")
+    parser.add_argument("--cpu-jobs", type=int, default=2, help="parallel CPU jobs (frozen-embedding fits, parsing tests)")
     parser.add_argument("--results", type=Path, default=ROOT / "results")
     parser.add_argument("--data", type=Path, default=ROOT / "data")
     parser.add_argument("--runs", type=Path, default=ROOT / "runs", help="output directory of the pretrain plan")

@@ -20,7 +20,6 @@ Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
     results/parsing/lcp_statistics.json                      LCP segmentation statistics and worst-case edit locality
     results/parsing/boundary_information.json                masked bases recovered from the segment boundaries (pretrained models)
     results/embedding/stability.json                         embedding stability after one edit (frozen 2M twins)
-    results/bend/results.json                                BEND zero-shot variant effects
     results/efficiency/finetune_speed.json                   fine-tuning throughput
     results/efficiency/segmentation_time.json                segmentation time of the NT18 datasets (dataset creation)
     results/timing/<model>/nt18/<task>/fold-00.json          full fine-tuning wall clock
@@ -53,7 +52,6 @@ AUTHORS_BF16 = {run: f"{run}-bf16" for run in AUTHORS_BASELINES}
 # timing only: the Caduceus-PS recipes in bfloat16, the precision of LoCUS (scripts/reproduce.py plan timing)
 TIMING_BF16 = ["caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"]
 FROZEN_LABELS = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "tss": "no sequence: tissue + TSS distance"}
-BEND_ORDER = ["locus-0.5m", "locus-2m"]
 # the work each model's fine-tuning data needs before training (benchmarks/efficiency/segmentation_time.py)
 SEGMENTER_OF = {"locus-0.5m": "lcp", "locus-2m": "lcp", "twin-fixed-2m": "fixed", "twin-bpe-2m": "bpe", "LoCUS-0.5M": "lcp", "LoCUS-2M": "lcp"}
 NT18_GROUPS = [("histone", ["H3K4me3", "H3K27ac", "H3K36me3", "H3K9me3", "H2AFZ", "H3K27me3", "H3K4me1", "H3K4me2", "H3K9ac", "H4K20me1"]),
@@ -453,24 +451,6 @@ def stability_table(results: Path, numbers: dict) -> str:
                      f"{stab['cos0_read']['BPE']:.3f}, fixed {stab['cos0_read']['fixed']:.3f}).") + "\n" +
             markdown("Embedding stability: paired ratios over sequences (95% bootstrap interval)", ["edit"] + list(next(iter(stab["paired"].values()))), paired,
                      "Ratio of the means over sequences; > 1: the other segmenter changes more than LCP. Paired bootstrap over sequences (2,000 resamples)."))
-
-
-def bend_table(results: Path, numbers: dict) -> str:
-    path = results / "bend/results.json"
-    if not path.is_file():
-        return ""
-    models = json.loads(path.read_text())["models"]
-    rows, values = [], {}
-    for name in sorted(models, key=lambda n: (BEND_ORDER.index(n) if n in BEND_ORDER else len(BEND_ORDER), n)):
-        entry = models[name]
-        values[name] = {task: {"auroc": entry[task]["auroc"], "held_out_chromosomes": entry[task]["held_out_chromosomes"]} for task in ("expression", "disease")}
-        rows.append([entry["label"], number(entry["expression"]["auroc"]), number(entry["disease"]["auroc"]),
-                     number((entry["expression"]["auroc"] + entry["disease"]["auroc"]) / 2),
-                     number(entry["expression"]["held_out_chromosomes"]), number(entry["disease"]["held_out_chromosomes"])])
-    numbers["bend"] = values
-    return markdown("BEND zero-shot noncoding variant effects (AUROC over all variants, no training)",
-                    ["model", "expression", "disease", "mean of the 2", "expression, held-out chromosomes", "disease, held-out chromosomes"], rows,
-                    "Held-out chromosomes: 1, 2, X and Y, not used for pretraining. Every model in float32.")
 
 
 def efficiency_table(results: Path, numbers: dict) -> str:
@@ -1066,7 +1046,7 @@ def main() -> None:
                 efficiency_table(arguments.results, numbers), timing_table(arguments.results, numbers),
                 study_tables(arguments.results, numbers), gue_tables(arguments.results, numbers), real_reads_table(arguments.results, numbers), single_nucleotide_table(arguments.results, numbers), interval_tables(arguments.results, numbers), parsing_tables(arguments.results, numbers), lcp_statistics_tables(arguments.results, numbers),
                 boundary_table(arguments.results, numbers),
-                stability_table(arguments.results, numbers), bend_table(arguments.results, numbers), split_tables(arguments.results, numbers)]
+                stability_table(arguments.results, numbers), split_tables(arguments.results, numbers)]
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     Path(f"{arguments.output}.md").write_text("\n".join(s for s in sections if s))
     Path(f"{arguments.output}.json").write_text(json.dumps(numbers, indent=1) + "\n")
