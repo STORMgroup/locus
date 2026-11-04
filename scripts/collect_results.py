@@ -14,6 +14,7 @@ Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
     results/gue_independent/<lcp|fixed|bpe>/gue/gue_splice/fold-XX.scored.json   GUE splice, test rows independent of NT18
     results/real_reads/<lcp|fixed|bpe>/nt18/<task>/fold-XX.scored.json            real nanopore reads of the test windows
     results/single_nucleotide/<model>/nt18/<task>/fold-XX.scored.json   single-nucleotide baselines on the modified test sets
+                                                             (caduceus-ps-1.9m-bf16; caduceus-ps-1.9m: float32 precision check)
     results/real_reads/<model>/nt18/<task>/fold-XX.scored.json          single-nucleotide baselines and split models on the real reads
     results/<locus-2m|locus-2m-random-init>/nt18_heldout/<task>/fold-XX.json   NT18 tested on chromosomes outside pretraining
     results/parsing/locality.json                            parse-level edit locality and context independence
@@ -23,6 +24,7 @@ Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
     results/efficiency/finetune_speed.json                   fine-tuning throughput
     results/efficiency/segmentation_time.json                segmentation time of the NT18 datasets (dataset creation)
     results/timing/<model>/nt18/<task>/fold-00.json          full fine-tuning wall clock
+    runs/<model>/train_metrics.jsonl (--runs)                pretraining time (plans pretrain, split-pretrain)
 NT18 results of the 2M twins (LoCUS-2M, twin-fixed-2m, twin-bpe-2m) are the tokenizer study's runs (clean test set) when
 results/<model>/nt18 does not exist. Every fine-tuning
 score is the test metric at the epoch with the lowest validation loss, recorded during fine-tuning; cells are mean +-
@@ -73,6 +75,11 @@ REAL_DRAWS = 10  # reads per window (benchmarks/noisy_reads/real_reads.py); a ta
 NOISY_DRAWS = 10  # error draws per noisy set (benchmarks/noisy_reads/noisy_sets.py), required in the single-nucleotide comparison
 # single-nucleotide models (scripts/reproduce.py plan single-nucleotide): no nucleotides merged into tokens
 SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m-bf16")]  # (label, run); the label also seeds the model's bootstrap intervals
+# the same recipe in float32 (plan single-nucleotide-fp32, the precision check of the supplementary table)
+SINGLE_NUCLEOTIDE_FP32 = [("Caduceus", "caduceus-ps-1.9m")]
+# pretraining runs whose training time is reported (runs/<model>/train_metrics.jsonl of plans pretrain and split-pretrain)
+PRETRAINED = ["locus-0.5m", "locus-2m", "twin-fixed-2m", "twin-bpe-2m", "locus-0.5m-no-chr20-21", "locus-2m-no-chr20-21",
+              "twin-fixed-2m-no-chr20-21", "twin-bpe-2m-no-chr20-21"]
 # pretraining-split ablation (scripts/reproduce.py split-nt18, split-score): the model pretrained without chromosomes 20 and 21,
 # its label, and the paper runs of its released counterpart (relative to the results directory); the 2M ones are also scored
 SPLIT = [("locus-0.5m-no-chr20-21", "LoCUS-0.5M", "locus-0.5m/nt18"), ("locus-2m-no-chr20-21", "LoCUS-2M", "tokenizer_study/lcp/nt18"),
@@ -851,17 +858,45 @@ def real_reads_table(results: Path, numbers: dict) -> str:
                     "rows with at least 5 tasks only (with 2 or 3 tasks it would be the range of the task means).")
 
 
-def single_nucleotide_table(results: Path, numbers: dict) -> str:
-    """LCP's drops next to those of the single-nucleotide models (plan single-nucleotide), on the tokenizer study's simulated
-    sets and on the real reads; the single-nucleotide drops show the loss from read errors without any merging into tokens."""
-    out, numbers["single_nucleotide"] = [], {}
+def pretraining_time_table(runs: Path, numbers: dict) -> str:
+    """Training time of the pretraining runs found in `runs` (plans pretrain and split-pretrain): the sum over the training steps of
+    their compute and data-loading seconds (runs/<model>/train_metrics.jsonl, one line per step), without checkpointing and start-up."""
+    rows, values = [], {}
+    for model in PRETRAINED:
+        path = runs / model / "train_metrics.jsonl"
+        if not path.is_file():
+            continue
+        steps, compute, data = set(), 0.0, 0.0
+        with open(path) as handle:
+            for line in handle:
+                entry = json.loads(line)
+                if entry["step"] in steps:  # a resumed run repeats no step; count each step once
+                    continue
+                steps.add(entry["step"]); compute += entry["compute_seconds"]; data += entry["data_seconds"]
+        values[model] = {"steps": len(steps), "compute_hours": compute / 3600, "data_hours": data / 3600, "hours": (compute + data) / 3600}
+        rows.append([model, f"{len(steps):,}", f"{compute / 3600:.2f}", f"{data / 3600:.2f}", f"{(compute + data) / 3600:.1f}"])
+    numbers["pretraining_time"] = values
+    if not rows:
+        return ""
+    return markdown("Pretraining time: training steps of the pretraining runs (one GPU)",
+                    ["model", "steps", "compute (hours)", "data loading (hours)", "training time (hours)"], rows,
+                    f"Sums over the steps of runs/<model>/train_metrics.jsonl ({runs.name}); checkpointing and start-up are not included. "
+                    "The paper reports the runs of the pretraining-split ablation (plan split-pretrain), one GPU each.")
+
+
+def single_nucleotide_table(results: Path, numbers: dict, single: list = None, key_name: str = "single_nucleotide", heading: str = "") -> str:
+    """LCP's drops next to those of the single-nucleotide models (plan single-nucleotide; with `single` = SINGLE_NUCLEOTIDE_FP32,
+    the float32 runs of plan single-nucleotide-fp32), on the tokenizer study's simulated sets and on the real reads; the
+    single-nucleotide drops show the loss from read errors without any merging into tokens."""
+    single = SINGLE_NUCLEOTIDE if single is None else single
+    out, numbers[key_name] = [], {}
     all_tasks = [t for _, ts in NT18_GROUPS for t in ts]
     for title, root, sets, reference, lcp_directory, lcp_reader in (
             ("NT18, simulated errors (drop = set - clean test set)", results / "single_nucleotide", STUDY_SETS, "clean",
              results / "tokenizer_study" / "lcp" / "nt18", study_folds),
             ("NT18 test windows as real HG002 nanopore reads (drop = reads - reference sequences of the same windows)", results / "real_reads",
              [("sup reads", "realsup"), ("hac reads", "realhac")], "realref", results / "real_reads" / "lcp" / "nt18", scored_folds)):
-        models = [(name, directory) for name, directory in SINGLE_NUCLEOTIDE if (root / directory / "nt18").is_dir()]
+        models = [(name, directory) for name, directory in single if (root / directory / "nt18").is_dir()]
         if not models:
             continue
         names = ["LCP"] + [name for name, _ in models]
@@ -900,10 +935,10 @@ def single_nucleotide_table(results: Path, numbers: dict) -> str:
                     cells += [number(statistics.mean(differences), True), interval_text(interval), f"{sum(d > 0 for d in differences)}/{len(differences)}"]
                 values.setdefault(label, {})[scope] = entry
                 table.append([label, scope, len(pairs)] + [number(entry[f"{name} drop"], True) if name in present else "n/a" for name in names] + cells)
-        numbers["single_nucleotide"][title] = values
+        numbers[key_name][title] = values
         header = ["test set", "tasks", "task-folds"] + [f"{name} drop" for name in names] + [
             x for name in names[1:] for x in (f"LCP - {name}", f"LCP - {name} 95% CI", f"LCP loses less than {name}")]
-        out.append(markdown(f"LCP and single-nucleotide models: {title}", header, table,
+        out.append(markdown(f"LCP and single-nucleotide models{heading}: {title}", header, table,
                             "Single-nucleotide models: " + ", ".join(f"{name} ({directory})" for name, directory in models) + ", fine-tuned "
                             "like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any "
                             "merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean "
@@ -1032,14 +1067,19 @@ def main() -> None:
                         help=f"folds of the NT18, tokenizer-study, GUE splice and real-read runs (default {NT18_FOLDS}, the paper's)")
     parser.add_argument("--other-folds", type=int, default=OTHER_FOLDS,
                         help=f"folds of the Genomic Benchmarks and held-out-chromosome runs (default {OTHER_FOLDS}, the paper's)")
+    parser.add_argument("--runs", type=Path, default=Path("runs"),
+                        help="pretraining runs (plans pretrain and split-pretrain): runs/<model>/train_metrics.jsonl gives the training time")
     arguments = parser.parse_args()
     NT18_FOLDS, OTHER_FOLDS = arguments.nt18_folds, arguments.other_folds
     numbers = {}
     sections = [nt18_table(arguments.results, numbers), authors_table(arguments.results, numbers), precision_table(arguments.results, numbers),
                 heldout_table(arguments.results, numbers), gb_table(arguments.results, numbers),
-                segmentation_table(arguments.results, numbers),
+                pretraining_time_table(arguments.runs, numbers), segmentation_table(arguments.results, numbers),
                 efficiency_table(arguments.results, numbers), timing_table(arguments.results, numbers),
-                study_tables(arguments.results, numbers), gue_tables(arguments.results, numbers), real_reads_table(arguments.results, numbers), single_nucleotide_table(arguments.results, numbers), parsing_tables(arguments.results, numbers), lcp_statistics_tables(arguments.results, numbers),
+                study_tables(arguments.results, numbers), gue_tables(arguments.results, numbers), real_reads_table(arguments.results, numbers), single_nucleotide_table(arguments.results, numbers),
+                single_nucleotide_table(arguments.results, numbers, SINGLE_NUCLEOTIDE_FP32, "single_nucleotide_fp32",
+                                        ", Caduceus-PS 1.9M in float32 (precision check)"),
+                parsing_tables(arguments.results, numbers), lcp_statistics_tables(arguments.results, numbers),
                 boundary_table(arguments.results, numbers),
                 stability_table(arguments.results, numbers), split_tables(arguments.results, numbers)]
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

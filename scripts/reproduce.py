@@ -34,6 +34,9 @@ Plans:
                         (benchmarks/noisy_reads/real_reads.py; streams the public CRAM files, needs network)
     single-nucleotide   Caduceus-PS 1.9M's runs (single nucleotides, folds of the baselines plan) scored on the same modified test
                         sets and real reads: the loss that errors cause without a tokenizer (needs bash install.sh --baselines)
+    single-nucleotide-fp32
+                        the same for Caduceus-PS 1.9M's float32 runs (folds of the baselines-fp32 plan): the precision check of the
+                        single-nucleotide drops (supplementary table)
     heldout             LoCUS-2M on NT18 tested on chromosomes outside the pretraining chromosomes (benchmarks/nt18/heldout_split.py),
                         with the official test set scored alongside, and the same with random initialization (a model that saw
                         neither test set); 10 folds (--other-folds: fewer)
@@ -109,6 +112,8 @@ BASELINE_MODEL.update({rerun: BASELINE_MODEL[run] for run, rerun in AUTHORS_BF16
 # single-nucleotide models scored on the modified test sets and real reads (plan single-nucleotide): Caduceus-PS 1.9M's runs of
 # plan baselines
 SINGLE_NUCLEOTIDE = ["caduceus-ps-1.9m-bf16"]
+# the same for the float32 runs of plan baselines-fp32 (plan single-nucleotide-fp32, the precision check)
+SINGLE_NUCLEOTIDE_FP32 = ["caduceus-ps-1.9m"]
 RECIPE = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "twin-fixed-2m": "locus-2m", "twin-bpe-2m": "locus-2m"}
 # Micro-batches of the reported runs (gradient accumulation; the update is that of the full batch, only memory changes):
 # per model, times 4 for the two Genomic Benchmarks tasks with long sequences.
@@ -135,7 +140,7 @@ SPLIT = {"locus-0.5m-no-chr20-21": "locus-0.5m", "locus-2m-no-chr20-21": "locus-
 SPLIT_SCORED = ["locus-2m-no-chr20-21", "twin-fixed-2m-no-chr20-21", "twin-bpe-2m-no-chr20-21"]
 SPLIT_PLANS = ["split-pretrain", "split-nt18", "split-score"]
 SPLIT_TOKENIZER = ROOT / "data/tokenizers/bpe-4096-1gb-seed42-no-chr20-21.json"
-PLANS = ["pretrain", "nt18", "random-init", "baselines", "baselines-fp32", "baselines-authors", "baselines-authors-bf16", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "heldout", "parsing",
+PLANS = ["pretrain", "nt18", "random-init", "baselines", "baselines-fp32", "baselines-authors", "baselines-authors-bf16", "genomic-benchmarks", "tokenizer-study", "gue-splice", "real-reads", "single-nucleotide", "single-nucleotide-fp32", "heldout", "parsing",
          "stability", "efficiency", "timing"]
 
 
@@ -292,9 +297,9 @@ def build_plans(arguments) -> dict:
     baseline_runs = [baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
                      for fold in nt18_folds for name in BASELINES for task in NT18_TASKS]
     plans["baselines"] = Plan("baselines", ["nt18"], [baseline_runs])
-    plans["baselines-fp32"] = Plan("baselines-fp32", ["nt18"], [[
-        baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
-        for name in FP32_BASELINES for task in NT18_TASKS for fold in nt18_folds]])
+    fp32_runs = [baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
+                 for name in FP32_BASELINES for task in NT18_TASKS for fold in nt18_folds]
+    plans["baselines-fp32"] = Plan("baselines-fp32", ["nt18"], [fp32_runs])
     # fold by fold (every model and task of fold 0, then fold 1, ...), so an unfinished run leaves complete folds
     plans["baselines-authors"] = Plan("baselines-authors", ["nt18"], [[
         baseline(name, f"{task}_revised", fold, results / name / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json", save_best=True)
@@ -327,6 +332,13 @@ def build_plans(arguments) -> dict:
          for name in SINGLE_NUCLEOTIDE for task in NT18_TASKS for fold in nt18_folds]
         + [baseline_score_job(name, task, fold, data / "benchmarks/real_reads", REAL_SETS, "real_reads")
            for name in SINGLE_NUCLEOTIDE for task in REAL_TASKS for fold in nt18_folds]])
+    # the same for the float32 runs (precision check): their NT18 folds are those of the baselines-fp32 plan
+    plans["single-nucleotide-fp32"] = Plan("single-nucleotide-fp32", ["genome-fasta", "nt18", "error-sets", "control-sets", "pbsim-sets", "real-reads"], [
+        [job for job in fp32_runs if job.name.split(".nt18.")[0] in SINGLE_NUCLEOTIDE_FP32],
+        [baseline_score_job(name, task, fold, nt18, ["clean"] + NOISY_SETS, "single_nucleotide")
+         for name in SINGLE_NUCLEOTIDE_FP32 for task in NT18_TASKS for fold in nt18_folds]
+        + [baseline_score_job(name, task, fold, data / "benchmarks/real_reads", REAL_SETS, "real_reads")
+           for name in SINGLE_NUCLEOTIDE_FP32 for task in REAL_TASKS for fold in nt18_folds]])
     heldout = []
     for name, random in (("locus-2m", False), ("locus-2m-random-init", True)):  # random init: saw neither test set in pretraining
         for task in NT18_TASKS:
@@ -498,9 +510,9 @@ def run_stage(jobs: list, gpu_slots: list, cpu_slots: int, dry_run: bool, logs: 
     return failed
 
 
-def collect(results: Path, dry_run: bool, nt18_folds: int = NT18_FOLDS, other_folds: int = OTHER_FOLDS) -> None:
+def collect(results: Path, dry_run: bool, nt18_folds: int = NT18_FOLDS, other_folds: int = OTHER_FOLDS, runs: Path = None) -> None:
     command = [PYTHON, str(ROOT / "scripts/collect_results.py"), "--results", str(results), "--output", str(results / "tables"),
-               "--nt18-folds", str(nt18_folds), "--other-folds", str(other_folds)]
+               "--nt18-folds", str(nt18_folds), "--other-folds", str(other_folds)] + (["--runs", str(runs)] if runs else [])
     print(shlex.join(command), flush=True)
     if not dry_run:
         subprocess.run(command, cwd=ROOT, check=True)
@@ -574,7 +586,7 @@ def main() -> None:
                 print(f"{name}: {len(stage_failed)} job(s) failed; the plan's later stages are skipped", flush=True)
                 break
     if not names or not set(names) <= {"pretrain", "split-pretrain"}:  # no names: the tables only
-        collect(arguments.results, arguments.dry_run, arguments.nt18_folds, arguments.other_folds)
+        collect(arguments.results, arguments.dry_run, arguments.nt18_folds, arguments.other_folds, arguments.runs)
     if failed:
         sys.exit(f"{len(failed)} job(s) failed: " + ", ".join(job.name for job in failed))
 

@@ -148,6 +148,17 @@ Gain per task: mean over the folds of LoCUS-2M minus that of random init, on the
 
 Mean ± SD over 10 folds.
 
+## Pretraining time: training steps of the pretraining runs (one GPU)
+
+| model | steps | compute (hours) | data loading (hours) | training time (hours) |
+|---|---|---|---|---|
+| locus-0.5m-no-chr20-21 | 359,466 | 8.41 | 0.32 | 8.7 |
+| locus-2m-no-chr20-21 | 359,466 | 11.69 | 0.40 | 12.1 |
+| twin-fixed-2m-no-chr20-21 | 359,466 | 10.81 | 0.30 | 11.1 |
+| twin-bpe-2m-no-chr20-21 | 359,466 | 10.26 | 0.17 | 10.4 |
+
+Sums over the steps of runs/<model>/train_metrics.jsonl (runs); checkpointing and start-up are not included. The paper reports the runs of the pretraining-split ablation (plan split-pretrain), one GPU each.
+
 ## Dataset creation: segmentation time of the NT18 fine-tuning data (one CPU core)
 
 | segmenter | 18 tasks (seconds) | mean per task (seconds) | largest task (seconds) | million bases per second | ms per 600 bp sequence (one strand) |
@@ -423,6 +434,55 @@ Single-nucleotide models: Caduceus (caduceus-ps-1.9m-bf16), fine-tuned like the 
 | hac reads | enhancer | 20 | -0.006 | -0.005 | -0.001 | n/a (< 5 tasks) | 6/20 |
 
 Single-nucleotide models: Caduceus (caduceus-ps-1.9m-bf16), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
+
+## LCP and single-nucleotide models, Caduceus-PS 1.9M in float32 (precision check): NT18, simulated errors (drop = set - clean test set)
+
+| test set | tasks | task-folds | LCP drop | Caduceus drop | LCP - Caduceus | LCP - Caduceus 95% CI | LCP loses less than Caduceus |
+|---|---|---|---|---|---|---|---|
+| 1% | all 18 | 180 | -0.009 | -0.008 | -0.001 | [-0.003, +0.001] | 80/180 |
+| 1% | histone | 100 | -0.006 | -0.006 | -0.000 | [-0.002, +0.001] | 47/100 |
+| 1% | promoter | 30 | -0.007 | -0.008 | +0.001 | n/a (< 5 tasks) | 16/30 |
+| 1% | splice | 30 | -0.025 | -0.019 | -0.007 | n/a (< 5 tasks) | 6/30 |
+| 1% | enhancer | 20 | -0.003 | -0.004 | +0.001 | n/a (< 5 tasks) | 11/20 |
+| 3% | all 18 | 180 | -0.027 | -0.024 | -0.003 | [-0.008, +0.002] | 80/180 |
+| 3% | histone | 100 | -0.020 | -0.017 | -0.003 | [-0.006, +0.001] | 45/100 |
+| 3% | promoter | 30 | -0.010 | -0.020 | +0.010 | n/a (< 5 tasks) | 22/30 |
+| 3% | splice | 30 | -0.076 | -0.058 | -0.018 | n/a (< 5 tasks) | 5/30 |
+| 3% | enhancer | 20 | -0.011 | -0.009 | -0.002 | n/a (< 5 tasks) | 8/20 |
+| PBSIM3 | all 18 | 180 | -0.035 | -0.031 | -0.004 | [-0.012, +0.002] | 79/180 |
+| PBSIM3 | histone | 100 | -0.025 | -0.022 | -0.003 | [-0.006, -0.000] | 38/100 |
+| PBSIM3 | promoter | 30 | -0.017 | -0.027 | +0.010 | n/a (< 5 tasks) | 24/30 |
+| PBSIM3 | splice | 30 | -0.102 | -0.076 | -0.025 | n/a (< 5 tasks) | 6/30 |
+| PBSIM3 | enhancer | 20 | -0.013 | -0.013 | +0.000 | n/a (< 5 tasks) | 11/20 |
+| 3% subst. only | all 18 | 180 | -0.031 | -0.028 | -0.003 | [-0.006, -0.000] | 72/180 |
+| 3% subst. only | histone | 100 | -0.030 | -0.026 | -0.004 | [-0.008, -0.000] | 37/100 |
+| 3% subst. only | promoter | 30 | -0.021 | -0.017 | -0.003 | n/a (< 5 tasks) | 12/30 |
+| 3% subst. only | splice | 30 | -0.057 | -0.057 | -0.000 | n/a (< 5 tasks) | 16/30 |
+| 3% subst. only | enhancer | 20 | -0.014 | -0.011 | -0.002 | n/a (< 5 tasks) | 7/20 |
+| 1% subst. only | all 18 | 180 | -0.010 | -0.008 | -0.001 | [-0.002, -0.001] | 81/180 |
+| 1% subst. only | histone | 100 | -0.009 | -0.007 | -0.002 | [-0.003, -0.001] | 45/100 |
+| 1% subst. only | promoter | 30 | -0.005 | -0.004 | -0.002 | n/a (< 5 tasks) | 14/30 |
+| 1% subst. only | splice | 30 | -0.019 | -0.018 | -0.001 | n/a (< 5 tasks) | 13/30 |
+| 1% subst. only | enhancer | 20 | -0.004 | -0.003 | -0.001 | n/a (< 5 tasks) | 9/20 |
+
+Single-nucleotide models: Caduceus (caduceus-ps-1.9m), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
+
+## LCP and single-nucleotide models, Caduceus-PS 1.9M in float32 (precision check): NT18 test windows as real HG002 nanopore reads (drop = reads - reference sequences of the same windows)
+
+| test set | tasks | task-folds | LCP drop | Caduceus drop | LCP - Caduceus | LCP - Caduceus 95% CI | LCP loses less than Caduceus |
+|---|---|---|---|---|---|---|---|
+| sup reads | all 18 | 180 | -0.011 | -0.009 | -0.002 | [-0.005, +0.000] | 70/180 |
+| sup reads | histone | 100 | -0.005 | -0.004 | -0.001 | [-0.003, +0.001] | 38/100 |
+| sup reads | promoter | 30 | -0.008 | -0.005 | -0.003 | n/a (< 5 tasks) | 14/30 |
+| sup reads | splice | 30 | -0.041 | -0.035 | -0.006 | n/a (< 5 tasks) | 9/30 |
+| sup reads | enhancer | 20 | -0.003 | -0.003 | -0.000 | n/a (< 5 tasks) | 9/20 |
+| hac reads | all 18 | 180 | -0.017 | -0.015 | -0.002 | [-0.006, +0.001] | 75/180 |
+| hac reads | histone | 100 | -0.007 | -0.007 | -0.001 | [-0.003, +0.002] | 46/100 |
+| hac reads | promoter | 30 | -0.015 | -0.011 | -0.004 | n/a (< 5 tasks) | 12/30 |
+| hac reads | splice | 30 | -0.060 | -0.053 | -0.007 | n/a (< 5 tasks) | 9/30 |
+| hac reads | enhancer | 20 | -0.006 | -0.005 | -0.001 | n/a (< 5 tasks) | 8/20 |
+
+Single-nucleotide models: Caduceus (caduceus-ps-1.9m), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
 
 ## Parsing: segments changed by one edit (4 kb chromosome-1 windows, edit at least 1 kb from both ends)
 

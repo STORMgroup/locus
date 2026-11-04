@@ -8736,6 +8736,32 @@
    }
   }
  },
+ "pretraining_time": {
+  "locus-0.5m-no-chr20-21": {
+   "steps": 359466,
+   "compute_hours": 8.408788016573656,
+   "data_hours": 0.31516335944334667,
+   "hours": 8.723951376017002
+  },
+  "locus-2m-no-chr20-21": {
+   "steps": 359466,
+   "compute_hours": 11.691260709167173,
+   "data_hours": 0.3989085983825822,
+   "hours": 12.090169307549756
+  },
+  "twin-fixed-2m-no-chr20-21": {
+   "steps": 359466,
+   "compute_hours": 10.806255770654857,
+   "data_hours": 0.2960115033786537,
+   "hours": 11.102267274033512
+  },
+  "twin-bpe-2m-no-chr20-21": {
+   "steps": 359466,
+   "compute_hours": 10.261642130835616,
+   "data_hours": 0.1698574423753113,
+   "hours": 10.431499573210926
+  }
+ },
  "segmentation_time": {
   "processor": "x86_64",
   "python": "3.9.25",
@@ -22733,6 +22759,418 @@
       "mean": -0.001209960533034435,
       "interval": null,
       "LCP loses less": 6
+     }
+    }
+   }
+  }
+ },
+ "single_nucleotide_fp32": {
+  "NT18, simulated errors (drop = set - clean test set)": {
+   "1%": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.009106273162214264,
+     "Caduceus drop": -0.008041554108591536,
+     "LCP - Caduceus": {
+      "mean": -0.0010647190536227289,
+      "interval": [
+       -0.002933357420580587,
+       0.0005695713097142701
+      ],
+      "LCP loses less": 80
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.00618403731391389,
+     "Caduceus drop": -0.0056928563281894795,
+     "LCP - Caduceus": {
+      "mean": -0.000491180985724411,
+      "interval": [
+       -0.0020957745777973476,
+       0.0010594989596116895
+      ],
+      "LCP loses less": 47
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.006641880848922769,
+     "Caduceus drop": -0.007765928465551142,
+     "LCP - Caduceus": {
+      "mean": 0.0011240476166283727,
+      "interval": null,
+      "LCP loses less": 16
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.02547907340356013,
+     "Caduceus drop": -0.018762371935810786,
+     "LCP - Caduceus": {
+      "mean": -0.006716701467749342,
+      "interval": null,
+      "LCP loses less": 6
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.0028548405116345793,
+     "Caduceus drop": -0.004117254734333528,
+     "LCP - Caduceus": {
+      "mean": 0.0012624142226989488,
+      "interval": null,
+      "LCP loses less": 11
+     }
+    }
+   },
+   "3%": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.0265918119990404,
+     "Caduceus drop": -0.023644667793525694,
+     "LCP - Caduceus": {
+      "mean": -0.002947144205514706,
+      "interval": [
+       -0.00796084254201596,
+       0.0017416401035291894
+      ],
+      "LCP loses less": 80
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.019901845147981552,
+     "Caduceus drop": -0.017195100693281066,
+     "LCP - Caduceus": {
+      "mean": -0.0027067444547004865,
+      "interval": [
+       -0.0061291343851881345,
+       0.0007049658230241695
+      ],
+      "LCP loses less": 45
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.009820358548419469,
+     "Caduceus drop": -0.020079928438779978,
+     "LCP - Caduceus": {
+      "mean": 0.010259569890360509,
+      "interval": null,
+      "LCP loses less": 22
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.07593859329673643,
+     "Caduceus drop": -0.0582888743596617,
+     "LCP - Caduceus": {
+      "mean": -0.01764971893707473,
+      "interval": null,
+      "LCP loses less": 5
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.011178654483721979,
+     "Caduceus drop": -0.009273302477663387,
+     "LCP - Caduceus": {
+      "mean": -0.0019053520060585915,
+      "interval": null,
+      "LCP loses less": 8
+     }
+    }
+   },
+   "PBSIM3": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.034909824569994106,
+     "Caduceus drop": -0.03076022850936239,
+     "LCP - Caduceus": {
+      "mean": -0.00414959606063172,
+      "interval": [
+       -0.011528549515842876,
+       0.0016878505062460569
+      ],
+      "LCP loses less": 79
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.024655548403827356,
+     "Caduceus drop": -0.02172595899432922,
+     "LCP - Caduceus": {
+      "mean": -0.0029295894094981357,
+      "interval": [
+       -0.005997413729668339,
+       -7.635273322859349e-05
+      ],
+      "LCP loses less": 38
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.01691974103158066,
+     "Caduceus drop": -0.026810013307126054,
+     "LCP - Caduceus": {
+      "mean": 0.009890272275545394,
+      "interval": null,
+      "LCP loses less": 24
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.10169665776893333,
+     "Caduceus drop": -0.0763917258120471,
+     "LCP - Caduceus": {
+      "mean": -0.02530493195688622,
+      "interval": null,
+      "LCP loses less": 6
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.012986080910039213,
+     "Caduceus drop": -0.013409652933855645,
+     "LCP - Caduceus": {
+      "mean": 0.000423572023816432,
+      "interval": null,
+      "LCP loses less": 11
+     }
+    }
+   },
+   "3% subst. only": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.031147631320680647,
+     "Caduceus drop": -0.02822096422994683,
+     "LCP - Caduceus": {
+      "mean": -0.002926667090733819,
+      "interval": [
+       -0.005540760739885644,
+       -0.0004137774953695815
+      ],
+      "LCP loses less": 72
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.02991066305358485,
+     "Caduceus drop": -0.026081575551506073,
+     "LCP - Caduceus": {
+      "mean": -0.0038290875020787745,
+      "interval": [
+       -0.007628248931448127,
+       -0.00013701402865516632
+      ],
+      "LCP loses less": 37
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.020645861523671292,
+     "Caduceus drop": -0.017424079229308352,
+     "LCP - Caduceus": {
+      "mean": -0.0032217822943629367,
+      "interval": null,
+      "LCP loses less": 12
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.057378713958249714,
+     "Caduceus drop": -0.057371512629053566,
+     "LCP - Caduceus": {
+      "mean": -7.201329196152942e-06,
+      "interval": null,
+      "LCP loses less": 16
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.01373850339532009,
+     "Caduceus drop": -0.011387412524448226,
+     "LCP - Caduceus": {
+      "mean": -0.0023510908708718635,
+      "interval": null,
+      "LCP loses less": 7
+     }
+    }
+   },
+   "1% subst. only": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.00953096461741797,
+     "Caduceus drop": -0.008095702047063011,
+     "LCP - Caduceus": {
+      "mean": -0.00143526257035496,
+      "interval": [
+       -0.0023718708579059927,
+       -0.0005462831686377321
+      ],
+      "LCP loses less": 81
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.009001399775591492,
+     "Caduceus drop": -0.007392106156465511,
+     "LCP - Caduceus": {
+      "mean": -0.00160929361912598,
+      "interval": [
+       -0.002757440249054564,
+       -0.0005498843409328874
+      ],
+      "LCP loses less": 45
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.0053694844622858935,
+     "Caduceus drop": -0.003625170451777641,
+     "LCP - Caduceus": {
+      "mean": -0.001744314010508252,
+      "interval": null,
+      "LCP loses less": 14
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.018908886612434887,
+     "Caduceus drop": -0.018076205600631928,
+     "LCP - Caduceus": {
+      "mean": -0.0008326810118029603,
+      "interval": null,
+      "LCP loses less": 13
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.004354126066723108,
+     "Caduceus drop": -0.003348723562625186,
+     "LCP - Caduceus": {
+      "mean": -0.0010054025040979215,
+      "interval": null,
+      "LCP loses less": 9
+     }
+    }
+   }
+  },
+  "NT18 test windows as real HG002 nanopore reads (drop = reads - reference sequences of the same windows)": {
+   "sup reads": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.011256766275001927,
+     "Caduceus drop": -0.00914047261644064,
+     "LCP - Caduceus": {
+      "mean": -0.002116293658561287,
+      "interval": [
+       -0.004761187860237365,
+       0.0003033462062045846
+      ],
+      "LCP loses less": 70
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.005005254441288924,
+     "Caduceus drop": -0.00396200947372922,
+     "LCP - Caduceus": {
+      "mean": -0.0010432449675597045,
+      "interval": [
+       -0.0028931478554350787,
+       0.001079556027659726
+      ],
+      "LCP loses less": 38
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.008190076338478628,
+     "Caduceus drop": -0.005273726599953391,
+     "LCP - Caduceus": {
+      "mean": -0.002916349738525237,
+      "interval": null,
+      "LCP loses less": 14
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.04081723031506138,
+     "Caduceus drop": -0.034581681026547434,
+     "LCP - Caduceus": {
+      "mean": -0.00623554928851395,
+      "interval": null,
+      "LCP loses less": 9
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.002773664288262698,
+     "Caduceus drop": -0.0026710947395684166,
+     "LCP - Caduceus": {
+      "mean": -0.00010256954869428125,
+      "interval": null,
+      "LCP loses less": 9
+     }
+    }
+   },
+   "hac reads": {
+    "all 18": {
+     "task-folds": 180,
+     "LCP drop": -0.017226798579201407,
+     "Caduceus drop": -0.014761488445931002,
+     "LCP - Caduceus": {
+      "mean": -0.0024653101332704048,
+      "interval": [
+       -0.005890640431974627,
+       0.0009024976931585728
+      ],
+      "LCP loses less": 75
+     }
+    },
+    "histone": {
+     "task-folds": 100,
+     "LCP drop": -0.007382954972931668,
+     "Caduceus drop": -0.006624908328125099,
+     "LCP - Caduceus": {
+      "mean": -0.0007580466448065698,
+      "interval": [
+       -0.003443545382422779,
+       0.0022027575430900196
+      ],
+      "LCP loses less": 46
+     }
+    },
+    "promoter": {
+     "task-folds": 30,
+     "LCP drop": -0.01493914498120977,
+     "Caduceus drop": -0.01053227919834378,
+     "LCP - Caduceus": {
+      "mean": -0.004406865782865991,
+      "interval": null,
+      "LCP loses less": 12
+     }
+    },
+    "splice": {
+     "task-folds": 30,
+     "LCP drop": -0.05981859316140279,
+     "Caduceus drop": -0.05267015434393709,
+     "LCP - Caduceus": {
+      "mean": -0.007148438817465704,
+      "interval": null,
+      "LCP loses less": 9
+     }
+    },
+    "enhancer": {
+     "task-folds": 20,
+     "LCP drop": -0.005989805134235471,
+     "Caduceus drop": -0.0049252040593322196,
+     "LCP - Caduceus": {
+      "mean": -0.0010646010749032514,
+      "interval": null,
+      "LCP loses less": 8
      }
     }
    }

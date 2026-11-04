@@ -50,6 +50,7 @@ resume from their last epoch, so after a crash you can run the same command agai
 | `gue-splice` | the same study on GUE splice sites, on all test sequences and on those sharing no splice site with NT18 | 90 | |
 | `real-reads` | the twins scored on real HG002 nanopore reads of the NT18 test windows (needs network; extraction about 25 min) | 1,080 (540 shared with `tokenizer-study`) | |
 | `single-nucleotide` | Caduceus-PS 1.9M scored on the same error sets and real reads | 540 (180 shared with `baselines`) | |
+| `single-nucleotide-fp32` | the same for its float32 runs (supplementary precision check) | 540 (180 shared with `baselines-fp32`) | |
 | `heldout` | LoCUS-2M and its random-init control tested on chromosomes that pretraining never saw | 360 | about 17 min per fold |
 | `parsing` | how LCP, BPE and fixed segments react to one edit, statistics of the LCP parse, and what the boundaries reveal about masked bases (CPU) | 3 | about 2, 10 and 40 CPU minutes |
 | `stability` | how far one edit spreads through the frozen 2M twins | 1 | about 40 min |
@@ -182,7 +183,7 @@ python scripts/finetune_baseline.py --baseline caduceus-ps-1.9m --data-root data
   of 180 for 1.9M in the paper), and the table uses those runs for them.
 - **Kept weights.** The `baselines` plan adds `--save-best`, which keeps the selected weights (`fold-XX.best.pt`) next to
   each result, so `benchmarks/noisy_reads/score.py` can score Caduceus-PS 1.9M on the error sets just like the twins
-  (plan `single-nucleotide`).
+  (plan `single-nucleotide`; its float32 runs of `baselines-fp32`: plan `single-nucleotide-fp32`).
 - **Caduceus** needs a CUDA GPU. Its kernels, mamba-ssm and causal-conv1d (`requirements-baselines.txt`), come as
   prebuilt wheels for Python 3.10 and newer. On Python 3.9 they are compiled instead, which takes about 50 minutes and
   needs the CUDA toolkit (`nvcc`). causal-conv1d 1.7.0 also uses type hints that Python 3.9 does not accept, so

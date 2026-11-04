@@ -8,8 +8,8 @@ and largest absolute difference, and the cells whose difference exceeds --tolera
 repeatable (floating-point atomics): in the paper, repeated fine-tunes with the same seed differed by about 0.013 MCC per
 fold on average, so 18-task means of a rerun are expected to differ by about 0.01 and single small tasks such as
 promoter_tata by more. The reference tables hold NT18 over all 10 folds (the default of reproduce.py); a rerun with
-fewer folds is compared on its fold means. Throughput, wall clock and segmentation time depend on the hardware and are not
-compared."""
+fewer folds is compared on its fold means. Throughput, wall clock, segmentation and pretraining time depend on the hardware and
+are not compared."""
 import argparse
 import json
 import statistics
@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKIPPED = {"efficiency", "timing", "segmentation_time"}
+SKIPPED = {"efficiency", "timing", "segmentation_time", "pretraining_time"}
 
 
 def leaves(node, path=()):
