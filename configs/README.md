@@ -23,17 +23,17 @@ editing a file, use `--set`, for example `--set training.device=cpu`.
 
 ## Fine-tuning (`finetune/`)
 
-Recipes passed to `scripts/finetune.py --recipe`. `scripts/finetune_baseline.py` uses `finetune/<baseline>.yaml` unless
+Recipes passed to `scripts/finetune.py --recipe`. `scripts/finetune_baseline.py` uses `finetune/<baseline>-bf16.yaml` unless
 you pass another. Each recipe is used for every task; only the `-authors` recipes change the learning rate and batch size
 per task (`task_settings`).
 
 | File | Used for | Recipe |
 |---|---|---|
 | `locus-2m.yaml`, `locus-0.5m.yaml` | LoCUS-2M, LoCUS-0.5M and the twins (the two files are identical) | 20 epochs, batch 128, learning rate 1e-3 with 1% warm-up and cosine decay to 0.1 of the peak, weight decay 0.1, dropout 0.1, bf16 |
-| `caduceus-ps-1.9m.yaml`, `caduceus-ps-0.47m.yaml` | Caduceus-PS 1.9M and 0.47M with the protocol of LoCUS (the same settings) | the LoCUS-2M recipe in float32, each batch of 128 split into 4 micro-batches |
+| `caduceus-ps-1.9m-bf16.yaml`, `caduceus-ps-0.47m-bf16.yaml` | Caduceus-PS 1.9M and 0.47M with the protocol of LoCUS (plans `baselines`, `single-nucleotide` and `timing`) | the LoCUS-2M recipe in bf16, each batch of 128 split into 4 micro-batches |
+| `caduceus-ps-1.9m.yaml`, `caduceus-ps-0.47m.yaml` | the same in float32 (plan `baselines-fp32`, the precision check, and plan `timing`) | `caduceus-ps-<size>-bf16.yaml` in float32 |
 | `caduceus-ps-1.9m-authors.yaml`, `caduceus-ps-0.47m-authors.yaml` | Caduceus-PS 1.9M and 0.47M with Caduceus's own settings (supplementary table) | per task the learning rate and batch size of the Caduceus paper (Table 6), Caduceus's weight-decay groups, no dropout, the forward strand in training and evaluation, fp16 with loss scaling |
 | `caduceus-ps-1.9m-authors-bf16.yaml`, `caduceus-ps-0.47m-authors-bf16.yaml` | the folds of the runs above whose fp16 training overflowed | the same settings in bfloat16 |
-| `caduceus-ps-1.9m-bf16.yaml`, `caduceus-ps-0.47m-bf16.yaml` | plan `baselines-bf16` (NT18 accuracy at the precision of LoCUS) and plan `timing` (the wall clock) | `caduceus-ps-<size>.yaml` in bfloat16 |
 
 Every recipe validates on one of 10 folds of the training set (`validation_folds: 10`, `seed: 42`); the fold is chosen
 with `--fold`. Micro-batches only save memory: the update is that of the full batch.

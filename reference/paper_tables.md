@@ -1,62 +1,92 @@
 ## Nucleotide Transformer benchmark, revised (test MCC)
 
-| group | task | locus-0.5m | locus-2m | twin-fixed-2m | twin-bpe-2m | locus-2m-random-init | caduceus-ps-0.47m | caduceus-ps-1.9m |
+| group | task | locus-0.5m | locus-2m | twin-fixed-2m | twin-bpe-2m | locus-2m-random-init | caduceus-ps-0.47m-bf16 | caduceus-ps-1.9m-bf16 |
 |---|---|---|---|---|---|---|---|---|
-| histone | H3K4me3 | 0.609 ± 0.012 | 0.615 ± 0.014 | 0.607 ± 0.009 | 0.622 ± 0.011 | 0.582 ± 0.008 | 0.607 ± 0.012 | 0.617 ± 0.009 |
-| histone | H3K27ac | 0.463 ± 0.009 | 0.469 ± 0.009 | 0.454 ± 0.011 | 0.469 ± 0.008 | 0.328 ± 0.026 | 0.436 ± 0.014 | 0.458 ± 0.014 |
-| histone | H3K36me3 | 0.525 ± 0.006 | 0.527 ± 0.012 | 0.536 ± 0.008 | 0.535 ± 0.006 | 0.458 ± 0.011 | 0.518 ± 0.010 | 0.527 ± 0.013 |
-| histone | H3K9me3 | 0.393 ± 0.023 | 0.385 ± 0.015 | 0.390 ± 0.018 | 0.381 ± 0.025 | 0.301 ± 0.021 | 0.386 ± 0.025 | 0.395 ± 0.014 |
-| histone | H2AFZ | 0.455 ± 0.009 | 0.460 ± 0.013 | 0.437 ± 0.006 | 0.451 ± 0.006 | 0.371 ± 0.007 | 0.439 ± 0.011 | 0.437 ± 0.008 |
-| histone | H3K27me3 | 0.542 ± 0.009 | 0.543 ± 0.007 | 0.545 ± 0.008 | 0.552 ± 0.004 | 0.517 ± 0.010 | 0.548 ± 0.005 | 0.555 ± 0.012 |
-| histone | H3K4me1 | 0.432 ± 0.009 | 0.445 ± 0.010 | 0.447 ± 0.009 | 0.448 ± 0.011 | 0.354 ± 0.008 | 0.420 ± 0.012 | 0.430 ± 0.013 |
-| histone | H3K4me2 | 0.501 ± 0.007 | 0.505 ± 0.011 | 0.504 ± 0.010 | 0.508 ± 0.011 | 0.429 ± 0.017 | 0.479 ± 0.015 | 0.493 ± 0.014 |
-| histone | H3K9ac | 0.508 ± 0.017 | 0.512 ± 0.010 | 0.512 ± 0.022 | 0.516 ± 0.015 | 0.425 ± 0.017 | 0.496 ± 0.014 | 0.507 ± 0.010 |
-| histone | H4K20me1 | 0.591 ± 0.008 | 0.590 ± 0.012 | 0.584 ± 0.007 | 0.586 ± 0.008 | 0.522 ± 0.009 | 0.580 ± 0.013 | 0.579 ± 0.007 |
-| promoter | promoter_all | 0.721 ± 0.004 | 0.716 ± 0.008 | 0.739 ± 0.014 | 0.719 ± 0.010 | 0.696 ± 0.009 | 0.710 ± 0.007 | 0.709 ± 0.009 |
-| promoter | promoter_no_tata | 0.746 ± 0.009 | 0.734 ± 0.011 | 0.746 ± 0.007 | 0.734 ± 0.007 | 0.727 ± 0.011 | 0.735 ± 0.007 | 0.728 ± 0.014 |
-| promoter | promoter_tata | 0.821 ± 0.049 | 0.843 ± 0.022 | 0.924 ± 0.020 | 0.837 ± 0.019 | 0.777 ± 0.050 | 0.765 ± 0.086 | 0.794 ± 0.029 |
-| splice | splice_sites_all | 0.925 ± 0.007 | 0.936 ± 0.006 | 0.963 ± 0.003 | 0.949 ± 0.005 | 0.547 ± 0.038 | 0.902 ± 0.009 | 0.902 ± 0.006 |
-| splice | splice_sites_acceptors | 0.917 ± 0.007 | 0.923 ± 0.006 | 0.957 ± 0.003 | 0.939 ± 0.006 | 0.671 ± 0.031 | 0.872 ± 0.010 | 0.869 ± 0.013 |
-| splice | splice_sites_donors | 0.930 ± 0.007 | 0.942 ± 0.004 | 0.965 ± 0.003 | 0.958 ± 0.006 | 0.667 ± 0.095 | 0.887 ± 0.013 | 0.889 ± 0.015 |
-| enhancer | enhancers | 0.505 ± 0.007 | 0.514 ± 0.005 | 0.497 ± 0.004 | 0.500 ± 0.006 | 0.449 ± 0.005 | 0.495 ± 0.010 | 0.505 ± 0.009 |
-| enhancer | enhancers_types | 0.477 ± 0.007 | 0.466 ± 0.009 | 0.455 ± 0.006 | 0.468 ± 0.011 | 0.409 ± 0.008 | 0.455 ± 0.007 | 0.459 ± 0.012 |
-| **mean** | histone | 0.502 | 0.505 | 0.502 | 0.507 | 0.429 | 0.491 | 0.500 |
-| **mean** | promoter | 0.763 | 0.764 | 0.803 | 0.764 | 0.733 | 0.737 | 0.744 |
-| **mean** | splice | 0.924 | 0.934 | 0.962 | 0.949 | 0.628 | 0.887 | 0.887 |
-| **mean** | enhancer | 0.491 | 0.490 | 0.476 | 0.484 | 0.429 | 0.475 | 0.482 |
-| **mean** | all 18 | 0.614 | 0.618 | 0.626 | 0.621 | 0.513 | 0.596 | 0.603 |
+| histone | H3K4me3 | 0.609 ± 0.012 | 0.615 ± 0.014 | 0.607 ± 0.009 | 0.622 ± 0.011 | 0.582 ± 0.008 | 0.605 ± 0.010 | 0.619 ± 0.009 |
+| histone | H3K27ac | 0.463 ± 0.009 | 0.469 ± 0.009 | 0.454 ± 0.011 | 0.469 ± 0.008 | 0.328 ± 0.026 | 0.444 ± 0.014 | 0.463 ± 0.013 |
+| histone | H3K36me3 | 0.525 ± 0.006 | 0.527 ± 0.012 | 0.536 ± 0.008 | 0.535 ± 0.006 | 0.458 ± 0.011 | 0.525 ± 0.012 | 0.528 ± 0.011 |
+| histone | H3K9me3 | 0.393 ± 0.023 | 0.385 ± 0.015 | 0.390 ± 0.018 | 0.381 ± 0.025 | 0.301 ± 0.021 | 0.382 ± 0.020 | 0.401 ± 0.030 |
+| histone | H2AFZ | 0.455 ± 0.009 | 0.460 ± 0.013 | 0.437 ± 0.006 | 0.451 ± 0.006 | 0.371 ± 0.007 | 0.437 ± 0.009 | 0.439 ± 0.007 |
+| histone | H3K27me3 | 0.542 ± 0.009 | 0.543 ± 0.007 | 0.545 ± 0.008 | 0.552 ± 0.004 | 0.517 ± 0.010 | 0.542 ± 0.009 | 0.556 ± 0.006 |
+| histone | H3K4me1 | 0.432 ± 0.009 | 0.445 ± 0.010 | 0.447 ± 0.009 | 0.448 ± 0.011 | 0.354 ± 0.008 | 0.425 ± 0.009 | 0.439 ± 0.015 |
+| histone | H3K4me2 | 0.501 ± 0.007 | 0.505 ± 0.011 | 0.504 ± 0.010 | 0.508 ± 0.011 | 0.429 ± 0.017 | 0.489 ± 0.018 | 0.499 ± 0.014 |
+| histone | H3K9ac | 0.508 ± 0.017 | 0.512 ± 0.010 | 0.512 ± 0.022 | 0.516 ± 0.015 | 0.425 ± 0.017 | 0.505 ± 0.015 | 0.500 ± 0.016 |
+| histone | H4K20me1 | 0.591 ± 0.008 | 0.590 ± 0.012 | 0.584 ± 0.007 | 0.586 ± 0.008 | 0.522 ± 0.009 | 0.576 ± 0.013 | 0.582 ± 0.011 |
+| promoter | promoter_all | 0.721 ± 0.004 | 0.716 ± 0.008 | 0.739 ± 0.014 | 0.719 ± 0.010 | 0.696 ± 0.009 | 0.711 ± 0.007 | 0.710 ± 0.013 |
+| promoter | promoter_no_tata | 0.746 ± 0.009 | 0.734 ± 0.011 | 0.746 ± 0.007 | 0.734 ± 0.007 | 0.727 ± 0.011 | 0.738 ± 0.007 | 0.740 ± 0.014 |
+| promoter | promoter_tata | 0.821 ± 0.049 | 0.843 ± 0.022 | 0.924 ± 0.020 | 0.837 ± 0.019 | 0.777 ± 0.050 | 0.767 ± 0.062 | 0.809 ± 0.030 |
+| splice | splice_sites_all | 0.925 ± 0.007 | 0.936 ± 0.006 | 0.963 ± 0.003 | 0.949 ± 0.005 | 0.547 ± 0.038 | 0.902 ± 0.006 | 0.903 ± 0.008 |
+| splice | splice_sites_acceptors | 0.917 ± 0.007 | 0.923 ± 0.006 | 0.957 ± 0.003 | 0.939 ± 0.006 | 0.671 ± 0.031 | 0.872 ± 0.008 | 0.875 ± 0.012 |
+| splice | splice_sites_donors | 0.930 ± 0.007 | 0.942 ± 0.004 | 0.965 ± 0.003 | 0.958 ± 0.006 | 0.667 ± 0.095 | 0.891 ± 0.012 | 0.895 ± 0.016 |
+| enhancer | enhancers | 0.505 ± 0.007 | 0.514 ± 0.005 | 0.497 ± 0.004 | 0.500 ± 0.006 | 0.449 ± 0.005 | 0.494 ± 0.009 | 0.504 ± 0.008 |
+| enhancer | enhancers_types | 0.477 ± 0.007 | 0.466 ± 0.009 | 0.455 ± 0.006 | 0.468 ± 0.011 | 0.409 ± 0.008 | 0.451 ± 0.013 | 0.459 ± 0.010 |
+| **mean** | histone | 0.502 | 0.505 | 0.502 | 0.507 | 0.429 | 0.493 | 0.503 |
+| **mean** | promoter | 0.763 | 0.764 | 0.803 | 0.764 | 0.733 | 0.738 | 0.753 |
+| **mean** | splice | 0.924 | 0.934 | 0.962 | 0.949 | 0.628 | 0.889 | 0.891 |
+| **mean** | enhancer | 0.491 | 0.490 | 0.476 | 0.484 | 0.429 | 0.472 | 0.482 |
+| **mean** | all 18 | 0.614 | 0.618 | 0.626 | 0.621 | 0.513 | 0.598 | 0.607 |
 
-twin-fixed-2m and twin-bpe-2m: LoCUS-2M with fixed 10 bp segments every 5 bp or BPE tokens (tokenizer study), same recipe and seeds. locus-2m-random-init: the LoCUS-2M architecture fine-tuned from random initialization (no pretraining), same recipe and seeds. Its selected epoch is the last one in 30 of 180 runs (20 of 30 on the splice tasks). Baselines (caduceus-ps-0.47m, caduceus-ps-1.9m): fine-tuned with the same protocol (scripts/finetune_baseline.py).
+twin-fixed-2m and twin-bpe-2m: LoCUS-2M with fixed 10 bp segments every 5 bp or BPE tokens (tokenizer study), same recipe and seeds. locus-2m-random-init: the LoCUS-2M architecture fine-tuned from random initialization (no pretraining), same recipe and seeds. Its selected epoch is the last one in 30 of 180 runs (20 of 30 on the splice tasks). Baselines (caduceus-ps-0.47m-bf16, caduceus-ps-1.9m-bf16): Caduceus-PS fine-tuned with the same protocol and precision (bfloat16) as LoCUS (scripts/finetune_baseline.py, configs/finetune/caduceus-ps-<size>-bf16.yaml).
 
 ## Nucleotide Transformer benchmark, Caduceus-PS with its own fine-tuning settings (test MCC)
 
-| group | task | locus-0.5m | locus-2m | caduceus-ps-0.47m | caduceus-ps-1.9m | caduceus-ps-0.47m-authors | caduceus-ps-1.9m-authors |
+| group | task | locus-0.5m | locus-2m | caduceus-ps-0.47m-bf16 | caduceus-ps-1.9m-bf16 | caduceus-ps-0.47m-authors | caduceus-ps-1.9m-authors |
 |---|---|---|---|---|---|---|---|
-| histone | H3K4me3 | 0.609 ± 0.012 | 0.615 ± 0.014 | 0.607 ± 0.012 | 0.617 ± 0.009 | 0.612 ± 0.011 | 0.622 ± 0.011 |
-| histone | H3K27ac | 0.463 ± 0.009 | 0.469 ± 0.009 | 0.436 ± 0.014 | 0.458 ± 0.014 | 0.438 ± 0.022 | 0.459 ± 0.013 |
-| histone | H3K36me3 | 0.525 ± 0.006 | 0.527 ± 0.012 | 0.518 ± 0.010 | 0.527 ± 0.013 | 0.525 ± 0.009 | 0.531 ± 0.015 |
-| histone | H3K9me3 | 0.393 ± 0.023 | 0.385 ± 0.015 | 0.386 ± 0.025 | 0.395 ± 0.014 | 0.370 ± 0.023 | 0.397 ± 0.020 |
-| histone | H2AFZ | 0.455 ± 0.009 | 0.460 ± 0.013 | 0.439 ± 0.011 | 0.437 ± 0.008 | 0.435 ± 0.010 | 0.436 ± 0.009 |
-| histone | H3K27me3 | 0.542 ± 0.009 | 0.543 ± 0.007 | 0.548 ± 0.005 | 0.555 ± 0.012 | 0.549 ± 0.013 | 0.550 ± 0.015 |
-| histone | H3K4me1 | 0.432 ± 0.009 | 0.445 ± 0.010 | 0.420 ± 0.012 | 0.430 ± 0.013 | 0.421 ± 0.013 | 0.432 ± 0.013 |
-| histone | H3K4me2 | 0.501 ± 0.007 | 0.505 ± 0.011 | 0.479 ± 0.015 | 0.493 ± 0.014 | 0.468 ± 0.010 | 0.476 ± 0.006 |
-| histone | H3K9ac | 0.508 ± 0.017 | 0.512 ± 0.010 | 0.496 ± 0.014 | 0.507 ± 0.010 | 0.503 ± 0.012 | 0.500 ± 0.014 |
-| histone | H4K20me1 | 0.591 ± 0.008 | 0.590 ± 0.012 | 0.580 ± 0.013 | 0.579 ± 0.007 | 0.579 ± 0.010 | 0.587 ± 0.010 |
-| promoter | promoter_all | 0.721 ± 0.004 | 0.716 ± 0.008 | 0.710 ± 0.007 | 0.709 ± 0.009 | 0.712 ± 0.013 | 0.714 ± 0.008 |
-| promoter | promoter_no_tata | 0.746 ± 0.009 | 0.734 ± 0.011 | 0.735 ± 0.007 | 0.728 ± 0.014 | 0.736 ± 0.013 | 0.730 ± 0.012 |
-| promoter | promoter_tata | 0.821 ± 0.049 | 0.843 ± 0.022 | 0.765 ± 0.086 | 0.794 ± 0.029 | 0.730 ± 0.096 | 0.740 ± 0.045 |
-| splice | splice_sites_all | 0.925 ± 0.007 | 0.936 ± 0.006 | 0.902 ± 0.009 | 0.902 ± 0.006 | 0.860 ± 0.020 | 0.858 ± 0.024 |
-| splice | splice_sites_acceptors | 0.917 ± 0.007 | 0.923 ± 0.006 | 0.872 ± 0.010 | 0.869 ± 0.013 | 0.877 ± 0.008 | 0.873 ± 0.009 |
-| splice | splice_sites_donors | 0.930 ± 0.007 | 0.942 ± 0.004 | 0.887 ± 0.013 | 0.889 ± 0.015 | 0.890 ± 0.013 | 0.890 ± 0.010 |
-| enhancer | enhancers | 0.505 ± 0.007 | 0.514 ± 0.005 | 0.495 ± 0.010 | 0.505 ± 0.009 | 0.484 ± 0.008 | 0.496 ± 0.010 |
-| enhancer | enhancers_types | 0.477 ± 0.007 | 0.466 ± 0.009 | 0.455 ± 0.007 | 0.459 ± 0.012 | 0.450 ± 0.011 | 0.460 ± 0.009 |
-| **mean** | histone | 0.502 | 0.505 | 0.491 | 0.500 | 0.490 | 0.499 |
-| **mean** | promoter | 0.763 | 0.764 | 0.737 | 0.744 | 0.726 | 0.728 |
-| **mean** | splice | 0.924 | 0.934 | 0.887 | 0.887 | 0.876 | 0.874 |
-| **mean** | enhancer | 0.491 | 0.490 | 0.475 | 0.482 | 0.467 | 0.478 |
-| **mean** | all 18 | 0.614 | 0.618 | 0.596 | 0.603 | 0.591 | 0.597 |
+| histone | H3K4me3 | 0.609 ± 0.012 | 0.615 ± 0.014 | 0.605 ± 0.010 | 0.619 ± 0.009 | 0.612 ± 0.011 | 0.622 ± 0.011 |
+| histone | H3K27ac | 0.463 ± 0.009 | 0.469 ± 0.009 | 0.444 ± 0.014 | 0.463 ± 0.013 | 0.438 ± 0.022 | 0.459 ± 0.013 |
+| histone | H3K36me3 | 0.525 ± 0.006 | 0.527 ± 0.012 | 0.525 ± 0.012 | 0.528 ± 0.011 | 0.525 ± 0.009 | 0.531 ± 0.015 |
+| histone | H3K9me3 | 0.393 ± 0.023 | 0.385 ± 0.015 | 0.382 ± 0.020 | 0.401 ± 0.030 | 0.370 ± 0.023 | 0.397 ± 0.020 |
+| histone | H2AFZ | 0.455 ± 0.009 | 0.460 ± 0.013 | 0.437 ± 0.009 | 0.439 ± 0.007 | 0.435 ± 0.010 | 0.436 ± 0.009 |
+| histone | H3K27me3 | 0.542 ± 0.009 | 0.543 ± 0.007 | 0.542 ± 0.009 | 0.556 ± 0.006 | 0.549 ± 0.013 | 0.550 ± 0.015 |
+| histone | H3K4me1 | 0.432 ± 0.009 | 0.445 ± 0.010 | 0.425 ± 0.009 | 0.439 ± 0.015 | 0.421 ± 0.013 | 0.432 ± 0.013 |
+| histone | H3K4me2 | 0.501 ± 0.007 | 0.505 ± 0.011 | 0.489 ± 0.018 | 0.499 ± 0.014 | 0.468 ± 0.010 | 0.476 ± 0.006 |
+| histone | H3K9ac | 0.508 ± 0.017 | 0.512 ± 0.010 | 0.505 ± 0.015 | 0.500 ± 0.016 | 0.503 ± 0.012 | 0.500 ± 0.014 |
+| histone | H4K20me1 | 0.591 ± 0.008 | 0.590 ± 0.012 | 0.576 ± 0.013 | 0.582 ± 0.011 | 0.579 ± 0.010 | 0.587 ± 0.010 |
+| promoter | promoter_all | 0.721 ± 0.004 | 0.716 ± 0.008 | 0.711 ± 0.007 | 0.710 ± 0.013 | 0.712 ± 0.013 | 0.714 ± 0.008 |
+| promoter | promoter_no_tata | 0.746 ± 0.009 | 0.734 ± 0.011 | 0.738 ± 0.007 | 0.740 ± 0.014 | 0.736 ± 0.013 | 0.730 ± 0.012 |
+| promoter | promoter_tata | 0.821 ± 0.049 | 0.843 ± 0.022 | 0.767 ± 0.062 | 0.809 ± 0.030 | 0.730 ± 0.096 | 0.740 ± 0.045 |
+| splice | splice_sites_all | 0.925 ± 0.007 | 0.936 ± 0.006 | 0.902 ± 0.006 | 0.903 ± 0.008 | 0.860 ± 0.020 | 0.858 ± 0.024 |
+| splice | splice_sites_acceptors | 0.917 ± 0.007 | 0.923 ± 0.006 | 0.872 ± 0.008 | 0.875 ± 0.012 | 0.877 ± 0.008 | 0.873 ± 0.009 |
+| splice | splice_sites_donors | 0.930 ± 0.007 | 0.942 ± 0.004 | 0.891 ± 0.012 | 0.895 ± 0.016 | 0.890 ± 0.013 | 0.890 ± 0.010 |
+| enhancer | enhancers | 0.505 ± 0.007 | 0.514 ± 0.005 | 0.494 ± 0.009 | 0.504 ± 0.008 | 0.484 ± 0.008 | 0.496 ± 0.010 |
+| enhancer | enhancers_types | 0.477 ± 0.007 | 0.466 ± 0.009 | 0.451 ± 0.013 | 0.459 ± 0.010 | 0.450 ± 0.011 | 0.460 ± 0.009 |
+| **mean** | histone | 0.502 | 0.505 | 0.493 | 0.503 | 0.490 | 0.499 |
+| **mean** | promoter | 0.763 | 0.764 | 0.738 | 0.753 | 0.726 | 0.728 |
+| **mean** | splice | 0.924 | 0.934 | 0.889 | 0.891 | 0.876 | 0.874 |
+| **mean** | enhancer | 0.491 | 0.490 | 0.472 | 0.482 | 0.467 | 0.478 |
+| **mean** | all 18 | 0.614 | 0.618 | 0.598 | 0.607 | 0.591 | 0.597 |
 
-caduceus-ps-<size>-authors: Caduceus-PS fine-tuned with Caduceus's own settings for the NT tasks (configs/finetune/caduceus-ps-<size>-authors.yaml: per task the learning rate and batch size of its paper's Table 6, its weight-decay groups, no dropout, the forward strand in training and evaluation); caduceus-ps-1.9m: the protocol shared with LoCUS. The folds, seeds and epoch selection (lowest validation loss) are the same for every column. 64 folds whose fp16 training overflowed (non-finite steps or validation losses) are the bfloat16 reruns (caduceus-ps-<size>-authors-bf16.yaml).
+caduceus-ps-<size>-authors: Caduceus-PS fine-tuned with Caduceus's own settings for the NT tasks (configs/finetune/caduceus-ps-<size>-authors.yaml: per task the learning rate and batch size of its paper's Table 6, its weight-decay groups, no dropout, the forward strand in training and evaluation); caduceus-ps-<size>-bf16: the protocol shared with LoCUS (main table). The folds, seeds and epoch selection (lowest validation loss) are the same for every column. 64 folds whose fp16 training overflowed (non-finite steps or validation losses) are the bfloat16 reruns (caduceus-ps-<size>-authors-bf16.yaml).
+
+## Nucleotide Transformer benchmark, Caduceus-PS in bfloat16 and float32 (test MCC)
+
+| group | task | caduceus-ps-0.47m-bf16 | caduceus-ps-0.47m | caduceus-ps-0.47m-bf16 - caduceus-ps-0.47m | caduceus-ps-1.9m-bf16 | caduceus-ps-1.9m | caduceus-ps-1.9m-bf16 - caduceus-ps-1.9m |
+|---|---|---|---|---|---|---|---|
+| histone | H3K4me3 | 0.605 ± 0.010 | 0.607 ± 0.012 | -0.002 ± 0.014 | 0.619 ± 0.009 | 0.617 ± 0.009 | +0.001 ± 0.011 |
+| histone | H3K27ac | 0.444 ± 0.014 | 0.436 ± 0.014 | +0.008 ± 0.017 | 0.463 ± 0.013 | 0.458 ± 0.014 | +0.005 ± 0.021 |
+| histone | H3K36me3 | 0.525 ± 0.012 | 0.518 ± 0.010 | +0.006 ± 0.010 | 0.528 ± 0.011 | 0.527 ± 0.013 | +0.001 ± 0.011 |
+| histone | H3K9me3 | 0.382 ± 0.020 | 0.386 ± 0.025 | -0.004 ± 0.036 | 0.401 ± 0.030 | 0.395 ± 0.014 | +0.006 ± 0.033 |
+| histone | H2AFZ | 0.437 ± 0.009 | 0.439 ± 0.011 | -0.001 ± 0.013 | 0.439 ± 0.007 | 0.437 ± 0.008 | +0.002 ± 0.009 |
+| histone | H3K27me3 | 0.542 ± 0.009 | 0.548 ± 0.005 | -0.006 ± 0.008 | 0.556 ± 0.006 | 0.555 ± 0.012 | +0.001 ± 0.010 |
+| histone | H3K4me1 | 0.425 ± 0.009 | 0.420 ± 0.012 | +0.005 ± 0.014 | 0.439 ± 0.015 | 0.430 ± 0.013 | +0.010 ± 0.014 |
+| histone | H3K4me2 | 0.489 ± 0.018 | 0.479 ± 0.015 | +0.010 ± 0.015 | 0.499 ± 0.014 | 0.493 ± 0.014 | +0.006 ± 0.013 |
+| histone | H3K9ac | 0.505 ± 0.015 | 0.496 ± 0.014 | +0.009 ± 0.018 | 0.500 ± 0.016 | 0.507 ± 0.010 | -0.007 ± 0.018 |
+| histone | H4K20me1 | 0.576 ± 0.013 | 0.580 ± 0.013 | -0.005 ± 0.016 | 0.582 ± 0.011 | 0.579 ± 0.007 | +0.003 ± 0.012 |
+| promoter | promoter_all | 0.711 ± 0.007 | 0.710 ± 0.007 | +0.001 ± 0.009 | 0.710 ± 0.013 | 0.709 ± 0.009 | +0.001 ± 0.014 |
+| promoter | promoter_no_tata | 0.738 ± 0.007 | 0.735 ± 0.007 | +0.003 ± 0.009 | 0.740 ± 0.014 | 0.728 ± 0.014 | +0.012 ± 0.020 |
+| promoter | promoter_tata | 0.767 ± 0.062 | 0.765 ± 0.086 | +0.002 ± 0.046 | 0.809 ± 0.030 | 0.794 ± 0.029 | +0.015 ± 0.020 |
+| splice | splice_sites_all | 0.902 ± 0.006 | 0.902 ± 0.009 | +0.000 ± 0.007 | 0.903 ± 0.008 | 0.902 ± 0.006 | +0.001 ± 0.009 |
+| splice | splice_sites_acceptors | 0.872 ± 0.008 | 0.872 ± 0.010 | +0.001 ± 0.014 | 0.875 ± 0.012 | 0.869 ± 0.013 | +0.006 ± 0.011 |
+| splice | splice_sites_donors | 0.891 ± 0.012 | 0.887 ± 0.013 | +0.004 ± 0.010 | 0.895 ± 0.016 | 0.889 ± 0.015 | +0.006 ± 0.016 |
+| enhancer | enhancers | 0.494 ± 0.009 | 0.495 ± 0.010 | -0.001 ± 0.010 | 0.504 ± 0.008 | 0.505 ± 0.009 | -0.001 ± 0.012 |
+| enhancer | enhancers_types | 0.451 ± 0.013 | 0.455 ± 0.007 | -0.004 ± 0.013 | 0.459 ± 0.010 | 0.459 ± 0.012 | +0.000 ± 0.010 |
+| **mean** | histone | 0.493 | 0.491 | +0.002 | 0.503 | 0.500 | +0.003 |
+| **mean** | promoter | 0.738 | 0.737 | +0.002 | 0.753 | 0.744 | +0.009 |
+| **mean** | splice | 0.889 | 0.887 | +0.002 | 0.891 | 0.887 | +0.004 |
+| **mean** | enhancer | 0.472 | 0.475 | -0.003 | 0.482 | 0.482 | -0.000 |
+| **mean** | all 18 | 0.598 | 0.596 | +0.001 | 0.607 | 0.603 | +0.004 |
+
+caduceus-ps-<size>-bf16: the runs of the main table (scripts/reproduce.py plan baselines, bfloat16 autocast like LoCUS); caduceus-ps-<size>: the same recipe, folds, seeds and training-data order in float32 (plan baselines-fp32). Difference: bfloat16 - float32 on the same fold, mean ± SD over the folds. Tasks where bfloat16 scores higher: caduceus-ps-0.47m-bf16 11/18, caduceus-ps-1.9m-bf16 16/18.
 
 ## NT18 on chromosomes outside pretraining (test MCC)
 
@@ -118,16 +148,6 @@ Gain per task: mean over the folds of LoCUS-2M minus that of random init, on the
 
 Mean ± SD over 10 folds.
 
-## Long-range benchmark, frozen embeddings, 4 kb input: causal eQTL and bulk RNA expression
-
-| model | eQTL AUROC | eQTL accuracy | bulk RNA Spearman (genes) | bulk RNA R2 |
-|---|---|---|---|---|
-| locus-0.5m | 0.708 | 0.651 | 0.726 | 0.437 |
-| locus-2m | 0.703 | 0.654 | 0.734 | 0.447 |
-| no sequence: tissue + TSS distance | 0.645 | 0.617 | - | - |
-
-Means over the 5 chromosome folds (benchmarks/long_range/frozen.py).
-
 ## Dataset creation: segmentation time of the NT18 fine-tuning data (one CPU core)
 
 | segmenter | 18 tasks (seconds) | mean per task (seconds) | largest task (seconds) | million bases per second | ms per 600 bp sequence (one strand) |
@@ -161,7 +181,7 @@ NVIDIA RTX A5000, task splice_sites_all_revised, batch 64, bf16 autocast, 10 war
 | caduceus-ps-0.47m-bf16 | 18 | 18 | 20.72 | 0.00 | 20.72 | 6.22 | 1.46 | NVIDIA RTX A5000 |
 | caduceus-ps-1.9m-bf16 | 18 | 18 | 40.27 | 0.00 | 40.27 | 12.08 | 2.76 | NVIDIA RTX A5000 |
 
-Fine-tuning: training and every per-epoch evaluation (resources.wall_seconds of the fold result, without its segmentation time). Segmentation: the time to segment the task's training and test records on both strands, once per run (resources.segmentation_seconds, or, for runs that segmented before the clock started, the measurement of the segmentation table on the same data; "included": inside the fine-tuning time, not measured on its own); the single-base baselines segment nothing (their bases are encoded per batch, inside the fine-tuning time). LoCUS runs in bf16 and Caduceus-PS in float32, as in the accuracy runs; caduceus-ps-<size>-bf16: the same Caduceus-PS recipe in bf16, timed only, so the models can also be compared at the same precision.
+Fine-tuning: training and every per-epoch evaluation (resources.wall_seconds of the fold result, without its segmentation time). Segmentation: the time to segment the task's training and test records on both strands, once per run (resources.segmentation_seconds, or, for runs that segmented before the clock started, the measurement of the segmentation table on the same data; "included": inside the fine-tuning time, not measured on its own); the single-base baselines segment nothing (their bases are encoded per batch, inside the fine-tuning time). LoCUS and caduceus-ps-<size>-bf16 (the recipe of the accuracy runs, plan baselines) run in bf16; caduceus-ps-<size>: the same Caduceus-PS recipe in float32 (plan baselines-fp32).
 
 ## Tokenizer study: modified test sets
 
@@ -360,88 +380,49 @@ Windows with 10 reads in both basecalls (sup and hac, the same molecules); the w
 | test set | tasks | task-folds | LCP drop | Caduceus drop | LCP - Caduceus | LCP - Caduceus 95% CI | LCP loses less than Caduceus |
 |---|---|---|---|---|---|---|---|
 | 1% | all 18 | 180 | -0.009 | -0.008 | -0.001 | [-0.003, +0.001] | 80/180 |
-| 1% | histone | 100 | -0.006 | -0.006 | -0.000 | [-0.002, +0.001] | 47/100 |
-| 1% | promoter | 30 | -0.007 | -0.008 | +0.001 | n/a (< 5 tasks) | 16/30 |
-| 1% | splice | 30 | -0.025 | -0.019 | -0.007 | n/a (< 5 tasks) | 6/30 |
-| 1% | enhancer | 20 | -0.003 | -0.004 | +0.001 | n/a (< 5 tasks) | 11/20 |
-| 3% | all 18 | 180 | -0.027 | -0.024 | -0.003 | [-0.008, +0.002] | 80/180 |
-| 3% | histone | 100 | -0.020 | -0.017 | -0.003 | [-0.006, +0.001] | 45/100 |
-| 3% | promoter | 30 | -0.010 | -0.020 | +0.010 | n/a (< 5 tasks) | 22/30 |
-| 3% | splice | 30 | -0.076 | -0.058 | -0.018 | n/a (< 5 tasks) | 5/30 |
-| 3% | enhancer | 20 | -0.011 | -0.009 | -0.002 | n/a (< 5 tasks) | 8/20 |
-| PBSIM3 | all 18 | 180 | -0.035 | -0.031 | -0.004 | [-0.012, +0.002] | 79/180 |
-| PBSIM3 | histone | 100 | -0.025 | -0.022 | -0.003 | [-0.006, -0.000] | 38/100 |
-| PBSIM3 | promoter | 30 | -0.017 | -0.027 | +0.010 | n/a (< 5 tasks) | 24/30 |
-| PBSIM3 | splice | 30 | -0.102 | -0.076 | -0.025 | n/a (< 5 tasks) | 6/30 |
-| PBSIM3 | enhancer | 20 | -0.013 | -0.013 | +0.000 | n/a (< 5 tasks) | 11/20 |
-| 3% subst. only | all 18 | 180 | -0.031 | -0.028 | -0.003 | [-0.006, -0.000] | 72/180 |
-| 3% subst. only | histone | 100 | -0.030 | -0.026 | -0.004 | [-0.008, -0.000] | 37/100 |
-| 3% subst. only | promoter | 30 | -0.021 | -0.017 | -0.003 | n/a (< 5 tasks) | 12/30 |
-| 3% subst. only | splice | 30 | -0.057 | -0.057 | -0.000 | n/a (< 5 tasks) | 16/30 |
-| 3% subst. only | enhancer | 20 | -0.014 | -0.011 | -0.002 | n/a (< 5 tasks) | 7/20 |
-| 1% subst. only | all 18 | 180 | -0.010 | -0.008 | -0.001 | [-0.002, -0.001] | 81/180 |
-| 1% subst. only | histone | 100 | -0.009 | -0.007 | -0.002 | [-0.003, -0.001] | 45/100 |
-| 1% subst. only | promoter | 30 | -0.005 | -0.004 | -0.002 | n/a (< 5 tasks) | 14/30 |
-| 1% subst. only | splice | 30 | -0.019 | -0.018 | -0.001 | n/a (< 5 tasks) | 13/30 |
-| 1% subst. only | enhancer | 20 | -0.004 | -0.003 | -0.001 | n/a (< 5 tasks) | 9/20 |
+| 1% | histone | 100 | -0.006 | -0.006 | -0.000 | [-0.002, +0.002] | 47/100 |
+| 1% | promoter | 30 | -0.007 | -0.010 | +0.003 | n/a (< 5 tasks) | 17/30 |
+| 1% | splice | 30 | -0.025 | -0.018 | -0.007 | n/a (< 5 tasks) | 6/30 |
+| 1% | enhancer | 20 | -0.003 | -0.003 | -0.000 | n/a (< 5 tasks) | 10/20 |
+| 3% | all 18 | 180 | -0.027 | -0.023 | -0.003 | [-0.008, +0.002] | 72/180 |
+| 3% | histone | 100 | -0.020 | -0.017 | -0.003 | [-0.007, +0.002] | 39/100 |
+| 3% | promoter | 30 | -0.010 | -0.021 | +0.011 | n/a (< 5 tasks) | 24/30 |
+| 3% | splice | 30 | -0.076 | -0.058 | -0.018 | n/a (< 5 tasks) | 1/30 |
+| 3% | enhancer | 20 | -0.011 | -0.010 | -0.002 | n/a (< 5 tasks) | 8/20 |
+| PBSIM3 | all 18 | 180 | -0.035 | -0.031 | -0.004 | [-0.011, +0.002] | 72/180 |
+| PBSIM3 | histone | 100 | -0.025 | -0.022 | -0.003 | [-0.006, +0.002] | 37/100 |
+| PBSIM3 | promoter | 30 | -0.017 | -0.027 | +0.010 | n/a (< 5 tasks) | 20/30 |
+| PBSIM3 | splice | 30 | -0.102 | -0.076 | -0.026 | n/a (< 5 tasks) | 4/30 |
+| PBSIM3 | enhancer | 20 | -0.013 | -0.014 | +0.001 | n/a (< 5 tasks) | 11/20 |
+| 3% subst. only | all 18 | 180 | -0.031 | -0.029 | -0.002 | [-0.005, +0.001] | 82/180 |
+| 3% subst. only | histone | 100 | -0.030 | -0.026 | -0.004 | [-0.009, +0.001] | 41/100 |
+| 3% subst. only | promoter | 30 | -0.021 | -0.023 | +0.002 | n/a (< 5 tasks) | 17/30 |
+| 3% subst. only | splice | 30 | -0.057 | -0.058 | +0.001 | n/a (< 5 tasks) | 16/30 |
+| 3% subst. only | enhancer | 20 | -0.014 | -0.011 | -0.003 | n/a (< 5 tasks) | 8/20 |
+| 1% subst. only | all 18 | 180 | -0.010 | -0.009 | -0.001 | [-0.002, +0.001] | 85/180 |
+| 1% subst. only | histone | 100 | -0.009 | -0.007 | -0.002 | [-0.003, +0.000] | 45/100 |
+| 1% subst. only | promoter | 30 | -0.005 | -0.008 | +0.003 | n/a (< 5 tasks) | 18/30 |
+| 1% subst. only | splice | 30 | -0.019 | -0.018 | -0.001 | n/a (< 5 tasks) | 14/30 |
+| 1% subst. only | enhancer | 20 | -0.004 | -0.003 | -0.002 | n/a (< 5 tasks) | 8/20 |
 
-Single-nucleotide models: Caduceus (caduceus-ps-1.9m), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
+Single-nucleotide models: Caduceus (caduceus-ps-1.9m-bf16), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
 
 ## LCP and single-nucleotide models: NT18 test windows as real HG002 nanopore reads (drop = reads - reference sequences of the same windows)
 
 | test set | tasks | task-folds | LCP drop | Caduceus drop | LCP - Caduceus | LCP - Caduceus 95% CI | LCP loses less than Caduceus |
 |---|---|---|---|---|---|---|---|
-| sup reads | all 18 | 180 | -0.011 | -0.009 | -0.002 | [-0.005, +0.000] | 70/180 |
-| sup reads | histone | 100 | -0.005 | -0.004 | -0.001 | [-0.003, +0.001] | 38/100 |
-| sup reads | promoter | 30 | -0.008 | -0.005 | -0.003 | n/a (< 5 tasks) | 14/30 |
-| sup reads | splice | 30 | -0.041 | -0.035 | -0.006 | n/a (< 5 tasks) | 9/30 |
-| sup reads | enhancer | 20 | -0.003 | -0.003 | -0.000 | n/a (< 5 tasks) | 9/20 |
-| hac reads | all 18 | 180 | -0.017 | -0.015 | -0.002 | [-0.006, +0.001] | 75/180 |
-| hac reads | histone | 100 | -0.007 | -0.007 | -0.001 | [-0.003, +0.002] | 46/100 |
-| hac reads | promoter | 30 | -0.015 | -0.011 | -0.004 | n/a (< 5 tasks) | 12/30 |
-| hac reads | splice | 30 | -0.060 | -0.053 | -0.007 | n/a (< 5 tasks) | 9/30 |
-| hac reads | enhancer | 20 | -0.006 | -0.005 | -0.001 | n/a (< 5 tasks) | 8/20 |
+| sup reads | all 18 | 180 | -0.011 | -0.010 | -0.001 | [-0.003, +0.002] | 86/180 |
+| sup reads | histone | 100 | -0.005 | -0.005 | +0.000 | [-0.002, +0.004] | 50/100 |
+| sup reads | promoter | 30 | -0.008 | -0.009 | +0.001 | n/a (< 5 tasks) | 17/30 |
+| sup reads | splice | 30 | -0.041 | -0.034 | -0.007 | n/a (< 5 tasks) | 9/30 |
+| sup reads | enhancer | 20 | -0.003 | -0.003 | -0.000 | n/a (< 5 tasks) | 10/20 |
+| hac reads | all 18 | 180 | -0.017 | -0.016 | -0.001 | [-0.004, +0.002] | 83/180 |
+| hac reads | histone | 100 | -0.007 | -0.008 | +0.000 | [-0.003, +0.004] | 52/100 |
+| hac reads | promoter | 30 | -0.015 | -0.015 | +0.000 | n/a (< 5 tasks) | 15/30 |
+| hac reads | splice | 30 | -0.060 | -0.052 | -0.008 | n/a (< 5 tasks) | 10/30 |
+| hac reads | enhancer | 20 | -0.006 | -0.005 | -0.001 | n/a (< 5 tasks) | 6/20 |
 
-Single-nucleotide models: Caduceus (caduceus-ps-1.9m), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
-
-## Robustness with intervals: NT18, simulated errors (drop = set - clean test set)
-
-| tasks | task-folds | set | LCP drop | BPE drop | fixed drop | Caduceus drop | LCP - BPE | LCP - fixed | LCP - Caduceus |
-|---|---|---|---|---|---|---|---|---|---|
-| splice | 30 | errors 1% | -0.025 [-0.027, -0.024] | -0.056 [-0.058, -0.053] | -0.219 [-0.225, -0.212] | -0.019 [-0.020, -0.017] | +0.030 [+0.028, +0.033] | +0.193 [+0.187, +0.199] | -0.007 [-0.009, -0.005] |
-| splice | 30 | errors 3% | -0.076 [-0.079, -0.072] | -0.156 [-0.161, -0.151] | -0.366 [-0.374, -0.358] | -0.058 [-0.061, -0.055] | +0.080 [+0.076, +0.084] | +0.290 [+0.284, +0.297] | -0.018 [-0.021, -0.015] |
-| splice | 30 | PBSIM3 reads | -0.102 [-0.105, -0.098] | -0.171 [-0.175, -0.166] | -0.302 [-0.308, -0.296] | -0.076 [-0.080, -0.073] | +0.069 [+0.066, +0.072] | +0.200 [+0.195, +0.205] | -0.025 [-0.029, -0.022] |
-| splice | 30 | 3%, substitutions only | -0.057 [-0.060, -0.055] | -0.053 [-0.056, -0.051] | -0.055 [-0.057, -0.052] | -0.057 [-0.060, -0.055] | -0.004 [-0.006, -0.002] | -0.003 [-0.005, -0.000] | -0.000 [-0.002, +0.003] |
-| splice | 30 | 3%, no edit within 100 bp of the junction | -0.019 [-0.021, -0.017] | -0.079 [-0.083, -0.075] | -0.282 [-0.290, -0.275] | -0.008 [-0.009, -0.007] | +0.060 [+0.056, +0.063] | +0.263 [+0.256, +0.270] | -0.011 [-0.013, -0.009] |
-| promoter | 30 | errors 1% | -0.007 [-0.011, -0.003] | -0.006 [-0.009, -0.003] | -0.014 [-0.021, -0.007] | -0.008 [-0.013, -0.003] | -0.001 [-0.004, +0.003] | +0.007 [+0.000, +0.013] | +0.001 [-0.004, +0.006] |
-| promoter | 30 | errors 3% | -0.010 [-0.016, -0.003] | -0.011 [-0.018, -0.005] | -0.026 [-0.035, -0.016] | -0.020 [-0.028, -0.013] | +0.001 [-0.005, +0.008] | +0.016 [+0.006, +0.026] | +0.010 [+0.002, +0.018] |
-| promoter | 30 | PBSIM3 reads | -0.017 [-0.023, -0.011] | -0.018 [-0.023, -0.012] | -0.026 [-0.032, -0.019] | -0.027 [-0.035, -0.019] | +0.001 [-0.004, +0.006] | +0.009 [+0.002, +0.016] | +0.010 [+0.002, +0.017] |
-| promoter | 30 | 3%, substitutions only | -0.021 [-0.028, -0.013] | -0.020 [-0.027, -0.012] | -0.025 [-0.032, -0.019] | -0.017 [-0.024, -0.011] | -0.001 [-0.008, +0.006] | +0.005 [-0.003, +0.012] | -0.003 [-0.011, +0.005] |
-
-Drop: mean over the task-folds of [mean over the 10 error draws (or reads) of the MCC on the set - the MCC on the reference set]; LCP - x > 0: LCP loses less. Intervals: 2.5th-97.5th percentile over 2,000 resamples of the test windows (the same resample for every model, fold and set; benchmarks/noisy_reads/window_intervals.py). Only task-folds scored for every model are used.
-
-## Robustness with intervals: NT18 test windows as real HG002 nanopore reads (drop = reads - reference sequences of the same windows)
-
-| tasks | task-folds | set | LCP drop | BPE drop | fixed drop | Caduceus drop | LCP - BPE | LCP - fixed | LCP - Caduceus |
-|---|---|---|---|---|---|---|---|---|---|
-| splice | 30 | sup reads | -0.041 [-0.044, -0.038] | -0.081 [-0.084, -0.077] | -0.217 [-0.223, -0.211] | -0.035 [-0.037, -0.032] | +0.040 [+0.038, +0.043] | +0.176 [+0.171, +0.181] | -0.006 [-0.009, -0.003] |
-| splice | 30 | hac reads | -0.060 [-0.063, -0.056] | -0.123 [-0.127, -0.118] | -0.295 [-0.302, -0.288] | -0.053 [-0.056, -0.050] | +0.063 [+0.059, +0.066] | +0.236 [+0.230, +0.241] | -0.007 [-0.011, -0.004] |
-| promoter | 30 | sup reads | -0.008 [-0.014, -0.002] | -0.007 [-0.013, -0.001] | -0.021 [-0.029, -0.012] | -0.005 [-0.012, +0.001] | -0.001 [-0.006, +0.004] | +0.012 [+0.005, +0.020] | -0.003 [-0.010, +0.004] |
-| promoter | 30 | hac reads | -0.015 [-0.022, -0.008] | -0.014 [-0.021, -0.007] | -0.031 [-0.040, -0.020] | -0.011 [-0.018, -0.003] | -0.001 [-0.007, +0.004] | +0.016 [+0.007, +0.024] | -0.004 [-0.012, +0.003] |
-
-Drop: mean over the task-folds of [mean over the 10 error draws (or reads) of the MCC on the set - the MCC on the reference set]; LCP - x > 0: LCP loses less. Intervals: 2.5th-97.5th percentile over 2,000 resamples of the test windows (the same resample for every model, fold and set; benchmarks/noisy_reads/window_intervals.py). Only task-folds scored for every model are used.
-
-## Robustness with intervals: GUE splice sites, simulated errors (drop = set - clean test set)
-
-| tasks | task-folds | set | LCP drop | BPE drop | fixed drop | LCP - BPE | LCP - fixed |
-|---|---|---|---|---|---|---|---|
-| gue_splice | 10 | errors 1% | -0.025 [-0.028, -0.023] | -0.037 [-0.041, -0.034] | -0.179 [-0.188, -0.170] | +0.012 [+0.009, +0.015] | +0.154 [+0.145, +0.162] |
-| gue_splice | 10 | errors 3% | -0.084 [-0.089, -0.079] | -0.131 [-0.137, -0.124] | -0.354 [-0.365, -0.342] | +0.047 [+0.042, +0.052] | +0.270 [+0.260, +0.279] |
-| gue_splice | 10 | PBSIM3 reads | -0.103 [-0.107, -0.098] | -0.145 [-0.151, -0.139] | -0.253 [-0.260, -0.245] | +0.042 [+0.039, +0.046] | +0.150 [+0.144, +0.156] |
-| gue_splice | 10 | 3%, substitutions only | -0.079 [-0.084, -0.075] | -0.075 [-0.080, -0.071] | -0.074 [-0.078, -0.069] | -0.004 [-0.008, -0.001] | -0.006 [-0.009, -0.002] |
-| gue_splice | 10 | 3%, no edit within 100 bp of the junction | -0.011 [-0.013, -0.008] | -0.033 [-0.037, -0.030] | -0.217 [-0.227, -0.207] | +0.023 [+0.020, +0.026] | +0.207 [+0.197, +0.216] |
-
-Drop: mean over the task-folds of [mean over the 10 error draws (or reads) of the MCC on the set - the MCC on the reference set]; LCP - x > 0: LCP loses less. Intervals: 2.5th-97.5th percentile over 2,000 resamples of the test windows (the same resample for every model, fold and set; benchmarks/noisy_reads/window_intervals.py). Only task-folds scored for every model are used.
+Single-nucleotide models: Caduceus (caduceus-ps-1.9m-bf16), fine-tuned like the other baselines; their tokens are nucleotides, so a drop is the loss from the read errors without any merging into tokens. Drops: mean over the task-folds scored for every model (each noisy set or basecall: mean over its 10 draws); n/a: the model has not yet been scored on every task-fold of the row. LCP - x > 0: LCP loses less. Intervals: bootstrap over tasks (4,000 resamples), for rows with at least 5 tasks only.
 
 ## Parsing: segments changed by one edit (4 kb chromosome-1 windows, edit at least 1 kb from both ends)
 

@@ -18,8 +18,8 @@ source .venv/bin/activate
 `--all` installs everything `--models` does (see the main README), plus the baselines' CUDA kernels and models and
 [PBSIM3](https://github.com/yukiteruono/pbsim3) at commit 35ce0de for the simulated reads. You also need:
 - NVIDIA GPUs. One fine-tune needs at most about 6 GB of GPU memory, so three fit on a 24 GB GPU.
-- About 6 GB of disk for data (GRCh38 0.9 GB and its windows 1.4 GB, hg19 0.9 GB for the bulk RNA task, the benchmarks
-  and their modified test sets about 1 GB) and about 15 GB for results, most of it the fine-tuned weights kept for the
+- About 5 GB of disk for data (GRCh38 0.9 GB and its windows 1.4 GB, the benchmarks and their modified test sets about
+  1 GB) and about 15 GB for results, most of it the fine-tuned weights kept for the
   tokenizer study. Data preparation needs at most about 5 GB of RAM.
 - Network access while the data and models are downloaded.
 
@@ -41,23 +41,20 @@ resume from their last epoch, so after a crash you can run the same command agai
 |---|---|---|---|
 | `nt18` | LoCUS-0.5M and LoCUS-2M on the revised NT benchmark (18 tasks, 10 folds) | 360 | about 13 / 17 min per fold |
 | `random-init` | pretraining ablation: LoCUS-2M fine-tuned from random weights | 180 | about 17 min per fold |
-| `baselines` | Caduceus-PS 1.9M and 0.47M (the sizes of LoCUS-2M and LoCUS-0.5M) on NT18, same protocol | 360 | about 71 min per fold (1.9M) |
+| `baselines` | Caduceus-PS 0.47M and 1.9M (the sizes of LoCUS-0.5M and LoCUS-2M) on NT18, same protocol and precision (bfloat16) as LoCUS, 10 folds | 360 | about 21 / 40 min per fold |
+| `baselines-fp32` | the same runs in float32 (supplementary precision check) | 360 | about 29 / 71 min per fold |
 | `baselines-authors` | Caduceus-PS 0.47M and 1.9M (the sizes of LoCUS-0.5M and LoCUS-2M) on NT18 with Caduceus's own fine-tuning settings (supplementary table), 10 folds | 360 | |
 | `baselines-authors-bf16` | the folds of `baselines-authors` whose fp16 training overflowed, again in bfloat16 (after `baselines-authors`) | 64 in the paper (2 + 62) | |
-| `baselines-bf16` | Caduceus-PS 0.47M and 1.9M on NT18 with the protocol of `baselines` in bfloat16, the precision of LoCUS, 10 folds | 360 | about 40 min per fold (1.9M) |
 | `genomic-benchmarks` | LoCUS-0.5M and LoCUS-2M on the Genomic Benchmarks (9 tasks, 10 folds) | 180 | |
 | `tokenizer-study` | the three 2M twins (LCP, BPE, fixed segments) on NT18, then scored on the test sets with errors | 1,080 (180 shared with `nt18`: the LoCUS-2M runs) | about 17 min per fold, 6 min per scoring |
 | `gue-splice` | the same study on GUE splice sites, on all test sequences and on those sharing no splice site with NT18 | 90 | |
 | `real-reads` | the twins scored on real HG002 nanopore reads of the NT18 test windows (needs network; extraction about 25 min) | 1,080 (540 shared with `tokenizer-study`) | |
 | `single-nucleotide` | Caduceus-PS 1.9M scored on the same error sets and real reads | 540 (180 shared with `baselines`) | |
-| `single-nucleotide-bf16` | the same for the bfloat16 runs of Caduceus-PS 1.9M | 540 (180 shared with `baselines-bf16`) | |
-| `intervals` | confidence intervals from resampling test windows (CPU) | 3 | minutes |
 | `heldout` | LoCUS-2M and its random-init control tested on chromosomes that pretraining never saw | 360 | about 17 min per fold |
-| `long-range` | frozen embeddings on the eQTL and bulk RNA tasks of the long-range benchmark | 9 | |
 | `parsing` | how LCP, BPE and fixed segments react to one edit, statistics of the LCP parse, and what the boundaries reveal about masked bases (CPU) | 3 | about 2, 10 and 40 CPU minutes |
 | `stability` | how far one edit spreads through the frozen 2M twins | 1 | about 40 min |
 | `efficiency` | fine-tuning throughput and segmentation time (CPU for the latter) | 2 | minutes |
-| `timing` | wall clock of full fine-tunes, fold 0 of each NT18 task, one job per GPU; Caduceus-PS also in bf16, the precision of LoCUS (the recipe of `baselines-bf16`) | 108 | |
+| `timing` | wall clock of full fine-tunes, fold 0 of each NT18 task, one job per GPU; Caduceus-PS with the recipes of `baselines` (bfloat16) and `baselines-fp32` (float32) | 108 | |
 | `pretrain` | the four pretraining runs (not part of `all`) | 4 | 9-19 h per model |
 | `split-pretrain` | the pretraining-split ablation: the same four models pretrained without chromosomes 20 and 21 (not part of `all`) | 4 | 9-19 h per model |
 | `split-nt18` | those four models on NT18, 10 folds: the released split models, or your own `split-pretrain` with `--models-from runs` (not part of `all`) | 720 | as `nt18` |
@@ -98,8 +95,6 @@ bash scripts/get_real_reads.sh                     # real nanopore reads of the 
 
 - **Genome.** GRCh38.p14 is downloaded from NCBI, checked against its MD5 checksum, and cut into consecutive 4,096 bp
   windows that contain only A, C, G and T. Only pretraining needs the windows; `--download-only` skips them.
-- **hg19.** The bulk RNA task of the long-range benchmark uses hg19. `benchmarks/long_range/frozen.py prepare --task
-  bulk_rna` downloads UCSC's `hg19.fa.gz` (0.9 GB, MD5-checked) to `data/hg19.fa.gz` if it is missing.
 - **Benchmarks.** The datasets are pinned to the revisions used in the paper.
 - **BPE tokenizers.** The tokenizer of twin-bpe-2m is included as `data/tokenizers/bpe-4096-1gb-seed42.json`, and that of
   its split-ablation counterpart (trained the same way on chromosomes 1-19 and 22) as
@@ -163,17 +158,20 @@ are pinned to the revisions used in the paper.
 
 | Baseline | Hugging Face repository | Revision | Recipe |
 |---|---|---|---|
-| `caduceus-ps-1.9m` | kuleshov-group/caduceus-ps_seqlen-1k_d_model-256_n_layer-4_lr-8e-3 | 2de3650 | LoCUS-2M recipe, float32 |
-| `caduceus-ps-0.47m` | kuleshov-group/caduceus-ps_seqlen-1k_d_model-118_n_layer-4_lr-8e-3 | 51d88e3 | LoCUS-2M recipe, float32 |
+| `caduceus-ps-1.9m` | kuleshov-group/caduceus-ps_seqlen-1k_d_model-256_n_layer-4_lr-8e-3 | 2de3650 | LoCUS-2M recipe, bfloat16 |
+| `caduceus-ps-0.47m` | kuleshov-group/caduceus-ps_seqlen-1k_d_model-118_n_layer-4_lr-8e-3 | 51d88e3 | LoCUS-2M recipe, bfloat16 |
 
 ```bash
 bash install.sh --baselines                       # mamba-ssm and causal-conv1d (Caduceus), and the two models
 python scripts/finetune_baseline.py --baseline caduceus-ps-1.9m --data-root data/benchmarks/nt18 \
-    --task H3K27ac_revised --fold 0 --output results/examples/caduceus-ps-1.9m/H3K27ac_revised/fold-00.json
+    --task H3K27ac_revised --fold 0 --output results/examples/caduceus-ps-1.9m-bf16/H3K27ac_revised/fold-00.json
 ```
 
-- **Float32.** bf16 training at the recipe's learning rate failed for Caduceus-PS, so the baselines run in float32, each
-  batch of 128 accumulated over micro-batches of 32.
+- **Precision.** The baselines fine-tune in bfloat16 autocast like LoCUS (`configs/finetune/caduceus-ps-<size>-bf16.yaml`,
+  the default of `scripts/finetune_baseline.py`), each batch of 128 accumulated over micro-batches of 32. The
+  `baselines-fp32` plan runs the same recipe, folds, seeds and training-data order in float32
+  (`configs/finetune/caduceus-ps-<size>.yaml`); the supplementary table compares the two (bfloat16 - float32 on the
+  18-task mean: +0.001 for 0.47M, +0.004 for 1.9M in the paper).
 - **Caduceus's own settings (supplementary).** The `baselines-authors` plan fine-tunes Caduceus-PS at the sizes of
   LoCUS-0.5M (0.47M parameters) and LoCUS-2M (1.9M) on NT18 with Caduceus's own fine-tuning settings for the NT tasks
   (`configs/finetune/caduceus-ps-<size>-authors.yaml`; details in `third_party/README.md`): per task the learning rate and
@@ -200,12 +198,10 @@ Each folder here prepares the data of one benchmark or runs one analysis:
 | Nucleotide Transformer, revised (18 tasks, MCC) | `nt18/prepare.py` | `scripts/finetune.py`, folds 0-9 |
 | NT18 tested on chromosomes outside pretraining | `nt18/heldout_split.py` | `scripts/finetune.py` with the official test set as an extra test set, folds 0-9 |
 | Genomic Benchmarks (9 tasks, accuracy) | `genomic_benchmarks/prepare.py` | `scripts/finetune.py`, folds 0-9 |
-| Long-range benchmark, eQTL and bulk RNA (frozen embeddings) | `long_range/frozen.py prepare` | `long_range/frozen.py embed / fit` |
 | Tokenizer study: sequencing errors and PBSIM3 reads | `noisy_reads/make_errors.py`, `make_controls.py`, `simulate_pbsim.py` | `scripts/finetune.py --save-best`, then `noisy_reads/score.py` |
 | Tokenizer study on GUE splice sites (400 bp, 3 classes, MCC) | `gue/prepare.py`, the same scripts with `--tasks gue_splice`, `gue/independent_sets.py` | `scripts/finetune.py --save-best`, folds 0-9, then `noisy_reads/score.py` |
 | Tokenizer study on real nanopore reads (HG002, R10.4.1, sup and hac basecalls) | `scripts/get_real_reads.sh` | `noisy_reads/score.py --output-dir` on the tokenizer study's NT18 folds |
-| Single-nucleotide models on the error sets and real reads | the sets of the two rows above | `scripts/finetune_baseline.py --save-best`, then `noisy_reads/score.py --output-dir --save-predictions` |
-| Intervals from resampling test windows | the saved predictions (`score.py --save-predictions`) | `noisy_reads/window_intervals.py` |
+| Single-nucleotide models on the error sets and real reads | the sets of the two rows above | `scripts/finetune_baseline.py --save-best`, then `noisy_reads/score.py --output-dir` |
 | Parsing: how one edit changes LCP, fixed and BPE segments | genome windows (`scripts/prepare_genome.sh`) | `parsing/locality.py` |
 | LCP parse statistics: core types, segment lengths, coverage, worst case of one edit | genome windows | `parsing/lcp_statistics.py` |
 | Masked bases recovered from the segment boundaries (pretrained models, random and chromosome-1 sequences) | genome windows | `parsing/boundary_information.py` |
@@ -316,9 +312,6 @@ This writes each table of the paper that `results/` has results for to `results/
   same task-folds.
 - **Split-ablation tables.** NT18 for the models without chromosomes 20 and 21 next to the released models, and the paired
   differences of test MCC, validation loss and drops, with 95% intervals from resampling tasks (4,000 resamples).
-- **Interval tables** (plan `intervals`) resample test windows instead of tasks: each replicate draws the windows of a
-  task group with replacement, with the same weights for every model, fold, set and draw. The reference tables have these
-  intervals for the splice and promoter tasks, whose twin predictions were saved for the paper.
 
 ## Reproducibility
 

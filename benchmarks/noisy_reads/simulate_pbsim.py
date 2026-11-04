@@ -6,7 +6,7 @@ accuracy of at least 90%); the accuracy of each read is drawn around the request
 are unchanged, and only the test set is simulated.
 
     make pbsim3
-    python benchmarks/noisy_reads/simulate_pbsim.py --accuracies 97 99
+    python benchmarks/noisy_reads/simulate_pbsim.py --accuracies 97
 
 --pbsim-dir is a built checkout of github.com/yukiteruono/pbsim3 (default build/pbsim3, built by make pbsim3 at
 commit 35ce0de, the one of the reported sets); the executable is src/pbsim and the error model
@@ -101,7 +101,7 @@ def make_set(data_root: Path, output_root: Path, task: str, accuracy_percent: in
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--pbsim-dir", type=Path, default=ROOT / "build/pbsim3", help="built PBSIM3 checkout (default: make pbsim3)")
-    parser.add_argument("--accuracies", type=int, nargs="+", default=[97, 99], help="mean read accuracies in percent")
+    parser.add_argument("--accuracies", type=int, nargs="+", default=[97], help="mean read accuracies in percent (the paper: 97)")
     parser.add_argument("--draws", type=int, default=DRAWS, help=f"independent error draws per set (default {DRAWS})")
     parser.add_argument("--tasks", nargs="+", choices=NT18_TASKS + list(OTHER_TASKS), default=NT18_TASKS, metavar="TASK",
                         help="NT18 tasks without the _revised suffix, or gue_splice (default: the 18 NT18 tasks)")

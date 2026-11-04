@@ -1,5 +1,5 @@
-# Fine-tuning recipe of the Caduceus-PS 1.9M baseline (scripts/finetune_baseline.py): the LoCUS-2M recipe, in float32
-# (no autocast), each batch of 128 accumulated over 4 micro-batches of 32 (the update is that of the full batch).
+# Caduceus-PS 1.9M with the recipe of caduceus-ps-1.9m-bf16.yaml in float32 (no autocast): scripts/reproduce.py plan
+# baselines-fp32 (the precision check) and plan timing; each batch of 128 accumulated over 4 micro-batches of 32.
 epochs: 20
 batch_size: 128
 learning_rate: 1.0e-3

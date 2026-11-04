@@ -19,9 +19,6 @@ A set name refers to a directory under --data-root: "clean" is the task's own te
 are already scored are kept and skipped unless --overwrite is given. The step stored with the weights must equal the
 selected step of the fold result. --output-dir DIR writes the score file to DIR instead, next to a copy of the fold result,
 so that sets of another study (for example the real reads of real_reads.py) are kept apart from the fold's own score file.
---save-predictions also writes each set's logits (as scored) and labels, one record per row in the order of the set,
-to <score file directory>/fold-XX.predictions/<set>.npz (for intervals that resample test records); a set whose
-predictions are missing is scored again even if its score is already in the score file.
 """
 import argparse
 import json
@@ -30,7 +27,6 @@ import shutil
 import sys
 from pathlib import Path
 
-import numpy as np
 import torch
 
 from noisy_sets import DEFAULT_DATA_ROOT, OTHER_TASKS, ROOT, variant_task
@@ -45,7 +41,7 @@ from locus.hub import MODELS, weights_sha256  # noqa: E402
 from locus.finetune.train import effective_autocast_dtype, evaluation_logits, scores  # noqa: E402
 from locus.segmentation import Segmenter  # noqa: E402
 
-SET_NAMES = ("clean", "ont1", "ont3", "ontw1", "ontw3", "sub1", "sub3", "pbsim97", "pbsim99")
+SET_NAMES = ("clean", "ont1", "ont3", "ontw1", "ontw3", "sub1", "sub3", "pbsim97")
 
 
 def test_set_path(data_root: Path, task: str, set_name: str) -> Path:
@@ -96,7 +92,7 @@ def build_baseline_classifier(result: dict, weights: dict, baseline_path: str = 
 
 
 def score_fold(result_path: Path, set_names: list, data_root: Path, device: torch.device, pretrained: Path = None,
-               overwrite: bool = False, baseline_path: str = None, output_dir: Path = None, save_predictions: bool = False) -> dict:
+               overwrite: bool = False, baseline_path: str = None, output_dir: Path = None) -> dict:
     result = json.loads(result_path.read_text())
     stem = result_path.with_suffix("")
     saved = torch.load(Path(f"{stem}.best.pt"), map_location="cpu", weights_only=True)
@@ -110,9 +106,7 @@ def score_fold(result_path: Path, set_names: list, data_root: Path, device: torc
     existing = json.loads(output.read_text()) if output.is_file() else {"best_step": saved["best_step"], "sets": {}}
     if existing["best_step"] != saved["best_step"]:
         raise RuntimeError(f"{output} holds scores of step {existing['best_step']}, the saved weights are from step {saved['best_step']}")
-    predictions = output.with_name(output.name.removesuffix(".scored.json") + ".predictions")
-    todo = [name for name in set_names if overwrite or name not in existing["sets"]
-            or (save_predictions and not (predictions / f"{name}.npz").is_file())]
+    todo = [name for name in set_names if overwrite or name not in existing["sets"]]
     if not todo:
         return existing
     if "baseline" in result:
@@ -132,11 +126,6 @@ def score_fold(result_path: Path, set_names: list, data_root: Path, device: torc
         logits, labels = evaluation_logits(classifier, SegmentCache(records, segmenter), list(range(len(records))), batch_size, device,
                                            autocast_dtype, orientation)
         metrics, loss = scores(logits, labels)
-        if save_predictions:
-            predictions.mkdir(parents=True, exist_ok=True)
-            temporary = predictions / f"{set_name}.tmp.npz"
-            np.savez_compressed(temporary, logits=logits.astype(np.float32), labels=labels.astype(np.int16))
-            os.replace(temporary, predictions / f"{set_name}.npz")
         _save(output, saved["best_step"], set_name, {**metrics, "loss": loss})
         note = f" (fold result: {result['test_metrics']['mcc']:.6f})" if set_name == "clean" else ""
         print(f"{result['task']} fold {result['fold']} {set_name}: mcc {metrics['mcc']:.6f}{note}, loss {loss:.5f}", flush=True)
@@ -154,14 +143,13 @@ def main() -> None:
     parser.add_argument("--baseline-path", help="local copy of a baseline's Hugging Face repository (baseline folds; default: download)")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--output-dir", type=Path, help="write the score file (and a copy of the fold result) here; one fold result only")
-    parser.add_argument("--save-predictions", action="store_true", help="also save each set's logits and labels")
     arguments = parser.parse_args()
     if arguments.output_dir and len(arguments.results) > 1:
         parser.error("--output-dir takes one fold result")
     device = torch.device(arguments.device)
     for result_path in arguments.results:
         score_fold(result_path, arguments.sets, arguments.data_root, device, arguments.pretrained, arguments.overwrite, arguments.baseline_path,
-                   arguments.output_dir, arguments.save_predictions)
+                   arguments.output_dir)
 
 
 if __name__ == "__main__":

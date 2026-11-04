@@ -4,6 +4,8 @@
 
 Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
     results/<model>/nt18/<task>/fold-XX.json                 NT18 revised, test MCC (LoCUS models, locus-2m-random-init, baselines)
+    results/caduceus-ps-<size>-bf16/nt18/<task>/fold-XX.json  Caduceus-PS with the protocol of LoCUS (bfloat16, plan baselines)
+    results/caduceus-ps-<size>/nt18/<task>/fold-XX.json       the same in float32 (plan baselines-fp32, precision check)
     results/caduceus-ps-<size>-authors[-bf16]/nt18/<task>/fold-XX.json   Caduceus-PS with its own settings (bf16: overflowed folds)
     results/<model>-no-chr20-21/nt18/<task>/fold-XX.json (+ fold-XX.scored.json)   pretraining-split ablation
     results/<model>/genomic_benchmarks/<task>/fold-XX.json   Genomic Benchmarks, test accuracy
@@ -13,9 +15,7 @@ Expected layout (written by scripts/reproduce.py, or by the scripts it runs):
     results/real_reads/<lcp|fixed|bpe>/nt18/<task>/fold-XX.scored.json            real nanopore reads of the test windows
     results/single_nucleotide/<model>/nt18/<task>/fold-XX.scored.json   single-nucleotide baselines on the modified test sets
     results/real_reads/<model>/nt18/<task>/fold-XX.scored.json          single-nucleotide baselines and split models on the real reads
-    results/intervals/<nt18|real_reads|gue>.json             intervals from resampling test windows
     results/<locus-2m|locus-2m-random-init>/nt18_heldout/<task>/fold-XX.json   NT18 tested on chromosomes outside pretraining
-    results/long_range/frozen/fit_<model>_lrb_<task>_4k.json             frozen-embedding long-range tasks
     results/parsing/locality.json                            parse-level edit locality and context independence
     results/parsing/lcp_statistics.json                      LCP segmentation statistics and worst-case edit locality
     results/parsing/boundary_information.json                masked bases recovered from the segment boundaries (pretrained models)
@@ -40,18 +40,17 @@ from pathlib import Path
 from typing import Optional
 
 MODELS = ["locus-0.5m", "locus-2m"]
-BASELINES = ["caduceus-ps-1.9m"]
-# Caduceus-PS at the size of LoCUS-0.5M with the shared protocol, on NT18 only (not scored on the modified test sets)
-NT18_ONLY_BASELINES = ["caduceus-ps-0.47m"]
+# Caduceus-PS at the sizes of LoCUS-0.5M and LoCUS-2M with the protocol of LoCUS, in bfloat16 like LoCUS (scripts/reproduce.py
+# plan baselines); the 1.9M runs are also scored on the modified test sets and real reads (SINGLE_NUCLEOTIDE)
+BASELINES = ["caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"]
+# the same runs in float32 (plan baselines-fp32; supplementary precision check): float32 run -> bfloat16 run
+FP32_BASELINES = {"caduceus-ps-0.47m": "caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m": "caduceus-ps-1.9m-bf16"}
 TWINS = {"locus-2m": "lcp", "twin-fixed-2m": "fixed", "twin-bpe-2m": "bpe"}
 # Caduceus-PS 0.47M and 1.9M fine-tuned with Caduceus's own settings (scripts/reproduce.py plan baselines-authors; supplementary
 # table), next to LoCUS and Caduceus-PS 1.9M with the shared protocol
 AUTHORS_BASELINES = ["caduceus-ps-0.47m-authors", "caduceus-ps-1.9m-authors"]
 # folds whose fp16 training overflowed are run again in bfloat16 (scripts/reproduce.py plan baselines-authors-bf16)
 AUTHORS_BF16 = {run: f"{run}-bf16" for run in AUTHORS_BASELINES}
-# timing only: the Caduceus-PS recipes in bfloat16, the precision of LoCUS (scripts/reproduce.py plan timing)
-TIMING_BF16 = ["caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"]
-FROZEN_LABELS = {"locus-0.5m": "locus-0.5m", "locus-2m": "locus-2m", "tss": "no sequence: tissue + TSS distance"}
 # the work each model's fine-tuning data needs before training (benchmarks/efficiency/segmentation_time.py)
 SEGMENTER_OF = {"locus-0.5m": "lcp", "locus-2m": "lcp", "twin-fixed-2m": "fixed", "twin-bpe-2m": "bpe", "LoCUS-0.5M": "lcp", "LoCUS-2M": "lcp"}
 NT18_GROUPS = [("histone", ["H3K4me3", "H3K27ac", "H3K36me3", "H3K9me3", "H2AFZ", "H3K27me3", "H3K4me1", "H3K4me2", "H3K9ac", "H4K20me1"]),
@@ -73,7 +72,7 @@ REAL_GROUPS = NT18_GROUPS
 REAL_DRAWS = 10  # reads per window (benchmarks/noisy_reads/real_reads.py); a task-fold counts only with all of them scored
 NOISY_DRAWS = 10  # error draws per noisy set (benchmarks/noisy_reads/noisy_sets.py), required in the single-nucleotide comparison
 # single-nucleotide models (scripts/reproduce.py plan single-nucleotide): no nucleotides merged into tokens
-SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m")]  # (label, run); the label also seeds the model's bootstrap intervals
+SINGLE_NUCLEOTIDE = [("Caduceus", "caduceus-ps-1.9m-bf16")]  # (label, run); the label also seeds the model's bootstrap intervals
 # pretraining-split ablation (scripts/reproduce.py split-nt18, split-score): the model pretrained without chromosomes 20 and 21,
 # its label, and the paper runs of its released counterpart (relative to the results directory); the 2M ones are also scored
 SPLIT = [("locus-0.5m-no-chr20-21", "LoCUS-0.5M", "locus-0.5m/nt18"), ("locus-2m-no-chr20-21", "LoCUS-2M", "tokenizer_study/lcp/nt18"),
@@ -151,6 +150,15 @@ def text(c) -> str:
     return f"{c['mean']:.3f} ({len(c['values'])}/{c.get('folds', FOLDS)})"
 
 
+def signed_text(c) -> str:
+    """text() of a cell of differences, with the sign of the mean."""
+    if c is None or not c["values"]:
+        return "-"
+    if not c["complete"]:
+        return f"{c['mean']:+.3f} ({len(c['values'])}/{c.get('folds', FOLDS)})"
+    return f"{c['mean']:+.3f}" + (f" ± {c['sd']:.3f}" if c["sd"] is not None else "")
+
+
 def group_mean(cells: list):
     return statistics.mean(c["mean"] for c in cells) if cells and all(c and c["complete"] for c in cells) else None
 
@@ -171,7 +179,7 @@ def nt18_directory(results: Path, model: str) -> Path:
 
 
 def nt18_table(results: Path, numbers: dict) -> str:
-    models = [m for m in MODELS + ["twin-fixed-2m", "twin-bpe-2m", "locus-2m-random-init"] + NT18_ONLY_BASELINES + BASELINES if nt18_directory(results, m).is_dir()]
+    models = [m for m in MODELS + ["twin-fixed-2m", "twin-bpe-2m", "locus-2m-random-init"] + BASELINES if nt18_directory(results, m).is_dir()]
     rows, cells = [], {}
     for group, tasks in NT18_GROUPS:
         for task in tasks:
@@ -192,8 +200,9 @@ def nt18_table(results: Path, numbers: dict) -> str:
         count = lambda tasks: (sum(last[t][0] for t in tasks), sum(last[t][1] for t in tasks))
         numbers["nt18_random_init_last_epoch"] = {"all 18": count(list(last)), "splice": count(splice), "per task": last}
         notes += "Its selected epoch is the last one in {} of {} runs ({} of {} on the splice tasks). ".format(*count(list(last)), *count(splice))
-    notes += ("Baselines (caduceus-ps-0.47m, caduceus-ps-1.9m): fine-tuned with the same protocol (scripts/finetune_baseline.py)."
-              if set(models) & set(BASELINES + NT18_ONLY_BASELINES) else "")
+    notes += ("Baselines (caduceus-ps-0.47m-bf16, caduceus-ps-1.9m-bf16): Caduceus-PS fine-tuned with the same protocol and precision "
+              "(bfloat16) as LoCUS (scripts/finetune_baseline.py, configs/finetune/caduceus-ps-<size>-bf16.yaml)."
+              if set(models) & set(BASELINES) else "")
     return markdown("Nucleotide Transformer benchmark, revised (test MCC)", ["group", "task"] + models, rows, notes)
 
 
@@ -217,7 +226,7 @@ def authors_table(results: Path, numbers: dict) -> str:
     """NT18: Caduceus-PS fine-tuned with Caduceus's own settings next to LoCUS and the shared-protocol Caduceus-PS runs."""
     if not any((results / m / "nt18").is_dir() for m in AUTHORS_BASELINES):
         return ""
-    models = [m for m in MODELS + NT18_ONLY_BASELINES + BASELINES + AUTHORS_BASELINES if nt18_directory(results, m).is_dir()]
+    models = [m for m in MODELS + BASELINES + AUTHORS_BASELINES if nt18_directory(results, m).is_dir()]
     rows, cells, reruns = [], {}, 0
     for group, tasks in NT18_GROUPS:
         for task in tasks:
@@ -238,12 +247,57 @@ def authors_table(results: Path, numbers: dict) -> str:
     numbers["nt18_authors_bf16_reruns"] = reruns
     notes = ("caduceus-ps-<size>-authors: Caduceus-PS fine-tuned with Caduceus's own settings for the NT tasks "
              "(configs/finetune/caduceus-ps-<size>-authors.yaml: per task the learning rate and batch size of its paper's Table 6, "
-             "its weight-decay groups, no dropout, the forward strand in training and evaluation); caduceus-ps-1.9m: the protocol shared with "
-             "LoCUS. The folds, seeds and epoch selection (lowest validation loss) are the same for every column. "
+             "its weight-decay groups, no dropout, the forward strand in training and evaluation); caduceus-ps-<size>-bf16: the protocol "
+             "shared with LoCUS (main table). The folds, seeds and epoch selection (lowest validation loss) are the same for every column. "
              f"{reruns} folds whose fp16 training overflowed (non-finite steps or validation losses) are the bfloat16 reruns "
              "(caduceus-ps-<size>-authors-bf16.yaml).")
     return markdown("Nucleotide Transformer benchmark, Caduceus-PS with its own fine-tuning settings (test MCC)",
                     ["group", "task"] + models, rows, notes)
+
+
+def precision_table(results: Path, numbers: dict) -> str:
+    """NT18: the Caduceus-PS runs of the main table (bfloat16, plan baselines) next to the same runs in float32 (plan
+    baselines-fp32): same recipe, folds, seeds and training-data order; only the precision differs."""
+    pairs = [(fp32, bf16) for fp32, bf16 in FP32_BASELINES.items() if (results / fp32 / "nt18").is_dir() and (results / bf16 / "nt18").is_dir()]
+    if not pairs:
+        return ""
+    rows, cells = [], {}
+    for group, tasks in NT18_GROUPS:
+        for task in tasks:
+            cells[task] = {}
+            for fp32, bf16 in pairs:
+                scores = {m: fold_map(results / m / "nt18" / f"{task}_revised") for m in (bf16, fp32)}
+                both = sorted(set(scores[bf16]) & set(scores[fp32]))
+                cells[task][bf16] = cell(list(scores[bf16].values()), NT18_FOLDS)
+                cells[task][fp32] = cell(list(scores[fp32].values()), NT18_FOLDS)
+                cells[task][f"{bf16} - {fp32}"] = cell([scores[bf16][f] - scores[fp32][f] for f in both], NT18_FOLDS)
+                WARNINGS.extend(f"NT18 {fp32} {task}: {len(cells[task][fp32]['values'])} of {NT18_FOLDS} folds" for _ in [0]
+                                if not cells[task][fp32]["complete"])
+            rows.append([group, task] + [signed_text(c) if " - " in k else text(c) for k, c in cells[task].items()])
+    keys = list(cells[NT18_GROUPS[0][1][0]])
+    for group, tasks in NT18_GROUPS + [("all 18", [t for _, ts in NT18_GROUPS for t in ts])]:
+        rows.append(["**mean**", group] + [number(group_mean([cells[t][k] for t in tasks]), " - " in k) for k in keys])
+    all_tasks = [t for _, ts in NT18_GROUPS for t in ts]
+    higher = {bf16: sum(cells[t][bf16]["mean"] > cells[t][fp32]["mean"] for t in all_tasks)
+              for fp32, bf16 in pairs if all(cells[t][bf16]["complete"] and cells[t][fp32]["complete"] for t in all_tasks)}
+    numbers["nt18_precision"] = cells
+    numbers["nt18_precision_tasks_bf16_higher"] = higher
+    return markdown("Nucleotide Transformer benchmark, Caduceus-PS in bfloat16 and float32 (test MCC)", ["group", "task"] + keys, rows,
+                    "caduceus-ps-<size>-bf16: the runs of the main table (scripts/reproduce.py plan baselines, bfloat16 autocast like LoCUS); "
+                    "caduceus-ps-<size>: the same recipe, folds, seeds and training-data order in float32 (plan baselines-fp32). "
+                    "Difference: bfloat16 - float32 on the same fold, mean ± SD over the folds."
+                    + (" Tasks where bfloat16 scores higher: " + ", ".join(f"{bf16} {n}/18" for bf16, n in higher.items()) + "." if higher else ""))
+
+
+def fold_map(directory: Path) -> dict[int, float]:
+    """{fold: test MCC} of the finished folds, as fold_scores reads them."""
+    out = {}
+    for fold in range(NT18_FOLDS):
+        path = directory / f"fold-{fold:02d}.json"
+        if path.is_file():
+            report = json.loads(path.read_text())
+            out[fold] = selected_entry(report).get("test_metrics", report["test_metrics"])["mcc"]
+    return out
 
 
 def heldout_table(results: Path, numbers: dict) -> str:
@@ -318,26 +372,6 @@ def gb_table(results: Path, numbers: dict) -> str:
     rows.append(["**mean, all 9**"] + [number(group_mean([cells[t][m] for t in GB_TASKS])) for m in models])
     numbers["genomic_benchmarks"] = cells
     return markdown("Genomic Benchmarks (test accuracy)", ["task"] + models, rows, f"Mean ± SD over {OTHER_FOLDS} folds.")
-
-
-def frozen_fit(results: Path, model: str, task: str, length: str) -> dict:
-    path = results / "long_range/frozen" / f"fit_{model}_lrb_{task}_{length}.json"
-    return json.loads(path.read_text())["mean"] if path.is_file() else {}
-
-
-def frozen_table(results: Path, numbers: dict) -> str:
-    if not (results / "long_range/frozen").is_dir():
-        return ""
-    rows, values = [], {}
-    for model, label in FROZEN_LABELS.items():
-        eqtl, rna = frozen_fit(results, model, "eqtl", "4k"), frozen_fit(results, model, "bulk_rna", "4k")
-        if eqtl or rna:
-            values[model] = {"eqtl": eqtl, "bulk_rna": rna}
-            rows.append([label, number(eqtl.get("auroc")), number(eqtl.get("accuracy")), number(rna.get("spearman_genes")), number(rna.get("r2"))])
-    numbers["long_range_frozen"] = values
-    return markdown("Long-range benchmark, frozen embeddings, 4 kb input: causal eQTL and bulk RNA expression",
-                    ["model", "eQTL AUROC", "eQTL accuracy", "bulk RNA Spearman (genes)", "bulk RNA R2"], rows,
-                    "Means over the 5 chromosome folds (benchmarks/long_range/frozen.py).")
 
 
 def parsing_tables(results: Path, numbers: dict) -> str:
@@ -484,7 +518,7 @@ def timing_table(results: Path, numbers: dict) -> str:
     if not root.is_dir():
         return ""
     runs = {}
-    for model in MODELS + NT18_ONLY_BASELINES + BASELINES + TIMING_BF16:
+    for model in MODELS + list(FP32_BASELINES) + BASELINES:
         for path in sorted((root / model / "nt18").glob("*/fold-00.json")):
             report = json.loads(path.read_text())
             if not report["resources"]["resumed"]:
@@ -532,9 +566,9 @@ def timing_table(results: Path, numbers: dict) -> str:
                     "time). Segmentation: the time to segment the task's training and test records on both strands, once per run "
                     "(resources.segmentation_seconds, or, for runs that segmented before the clock started, the measurement of the "
                     "segmentation table on the same data; \"included\": inside the fine-tuning time, not measured on its own); the "
-                    "single-base baselines segment nothing (their bases are encoded per batch, inside the fine-tuning time). LoCUS runs in "
-                    "bf16 and Caduceus-PS in float32, as in the accuracy runs; caduceus-ps-<size>-bf16: the same Caduceus-PS recipe in bf16, "
-                    "timed only, so the models can also be compared at the same precision.")
+                    "single-base baselines segment nothing (their bases are encoded per batch, inside the fine-tuning time). LoCUS and "
+                    "caduceus-ps-<size>-bf16 (the recipe of the accuracy runs, plan baselines) run in bf16; caduceus-ps-<size>: the same "
+                    "Caduceus-PS recipe in float32 (plan baselines-fp32).")
 
 
 # fewest tasks for an interval from resampling tasks: with 2 or 3 tasks, drawing one task for every slot is more likely than
@@ -989,46 +1023,6 @@ def split_tables(results: Path, numbers: dict) -> str:
     return "\n".join(sections)
 
 
-INTERVAL_STUDIES = [("nt18", "NT18, simulated errors (drop = set - clean test set)"),
-                    ("real_reads", "NT18 test windows as real HG002 nanopore reads (drop = reads - reference sequences of the same windows)"),
-                    ("gue", "GUE splice sites, simulated errors (drop = set - clean test set)")]
-INTERVAL_FAMILIES = {"ont1": "errors 1%", "ont3": "errors 3%", "pbsim97": "PBSIM3 reads", "sub3": "3%, substitutions only",
-                     "ontw3": "3%, no edit within 100 bp of the junction", "realsup": "sup reads", "realhac": "hac reads"}
-# the protected window of ontw1 / ontw3 is placed around the splice junction, so these sets are reported for splice scopes only (as in
-# study_tables); window_intervals.py computes every family for every scope
-SPLICE_ONLY_FAMILIES = {"ontw1", "ontw3"}
-
-
-def interval_tables(results: Path, numbers: dict) -> str:
-    """Drops with intervals from resampling test windows (benchmarks/noisy_reads/window_intervals.py, plan intervals), for the
-    twins and, where scored, the single-nucleotide models."""
-    out, numbers["intervals"] = [], {}
-    for study, title in INTERVAL_STUDIES:
-        path = results / "intervals" / f"{study}.json"
-        if not path.is_file():
-            WARNINGS.append(f"intervals: {path} missing (plan intervals); table left out")
-            continue
-        data = json.loads(path.read_text())
-        for scope, entry in data["scopes"].items():
-            if "splice" not in scope:
-                entry["families"] = {f: row for f, row in entry["families"].items() if f not in SPLICE_ONLY_FAMILIES}
-        numbers["intervals"][study] = data
-        models = list(data["models"])
-        cell = lambda v: f"{v['value']:+.3f} [{v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f}]"
-        rows = []
-        for scope, entry in data["scopes"].items():
-            for family, row in entry["families"].items():
-                rows.append([scope, entry["task-folds"], INTERVAL_FAMILIES.get(family, family)] + [cell(row[f"{m} drop"]) for m in models]
-                            + [cell(row[f"{models[0]} - {m}"]) for m in models[1:]])
-        header = ["tasks", "task-folds", "set"] + [f"{m} drop" for m in models] + [f"{models[0]} - {m}" for m in models[1:]]
-        out.append(markdown(f"Robustness with intervals: {title}", header, rows,
-                            "Drop: mean over the task-folds of [mean over the 10 error draws (or reads) of the MCC on the set - the MCC on the "
-                            f"reference set]; {models[0]} - x > 0: {models[0]} loses less. Intervals: 2.5th-97.5th percentile over "
-                            f"{data['resamples']:,} resamples of the test windows (the same resample for every model, fold and set; "
-                            "benchmarks/noisy_reads/window_intervals.py). Only task-folds scored for every model are used."))
-    return "\n".join(out)
-
-
 def main() -> None:
     global NT18_FOLDS, OTHER_FOLDS
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1041,10 +1035,11 @@ def main() -> None:
     arguments = parser.parse_args()
     NT18_FOLDS, OTHER_FOLDS = arguments.nt18_folds, arguments.other_folds
     numbers = {}
-    sections = [nt18_table(arguments.results, numbers), authors_table(arguments.results, numbers), heldout_table(arguments.results, numbers), gb_table(arguments.results, numbers),
-                frozen_table(arguments.results, numbers), segmentation_table(arguments.results, numbers),
+    sections = [nt18_table(arguments.results, numbers), authors_table(arguments.results, numbers), precision_table(arguments.results, numbers),
+                heldout_table(arguments.results, numbers), gb_table(arguments.results, numbers),
+                segmentation_table(arguments.results, numbers),
                 efficiency_table(arguments.results, numbers), timing_table(arguments.results, numbers),
-                study_tables(arguments.results, numbers), gue_tables(arguments.results, numbers), real_reads_table(arguments.results, numbers), single_nucleotide_table(arguments.results, numbers), interval_tables(arguments.results, numbers), parsing_tables(arguments.results, numbers), lcp_statistics_tables(arguments.results, numbers),
+                study_tables(arguments.results, numbers), gue_tables(arguments.results, numbers), real_reads_table(arguments.results, numbers), single_nucleotide_table(arguments.results, numbers), parsing_tables(arguments.results, numbers), lcp_statistics_tables(arguments.results, numbers),
                 boundary_table(arguments.results, numbers),
                 stability_table(arguments.results, numbers), split_tables(arguments.results, numbers)]
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

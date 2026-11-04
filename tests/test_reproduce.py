@@ -66,8 +66,8 @@ def test_jobs_have_distinct_outputs(tmp_path):
     outputs = [job.output for job in jobs.values()]
     assert len(outputs) == len(set(outputs))
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in plans(tmp_path).items()}
-    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 360, "baselines-authors": 360, "baselines-authors-bf16": 0, "baselines-bf16": 360, "genomic-benchmarks": 180, "tokenizer-study": 1080, "gue-splice": 90,
-                      "real-reads": 1080, "single-nucleotide": 540, "single-nucleotide-bf16": 540, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "efficiency": 2, "timing": 108,
+    assert counts == {"pretrain": 4, "nt18": 360, "random-init": 180, "baselines": 360, "baselines-fp32": 360, "baselines-authors": 360, "baselines-authors-bf16": 0, "genomic-benchmarks": 180, "tokenizer-study": 1080, "gue-splice": 90,
+                      "real-reads": 1080, "single-nucleotide": 540, "heldout": 360, "parsing": 3, "stability": 1, "efficiency": 2, "timing": 108,
                       "split-pretrain": 4, "split-nt18": 720, "split-score": 1620}
 
 
@@ -76,8 +76,8 @@ def test_nt18_folds(tmp_path):
     to folds 0-2 of the split (default: all 10) and leaves the other plans unchanged."""
     arguments = argparse.Namespace(results=tmp_path / "results", data=tmp_path / "data", runs=tmp_path / "runs", models_from=None, nt18_folds=3)
     counts = {name: len({job.name for stage in plan.stages for job in stage}) for name, plan in reproduce.build_plans(arguments).items()}
-    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 108, "baselines-authors": 108, "baselines-authors-bf16": 0, "baselines-bf16": 108, "genomic-benchmarks": 180, "tokenizer-study": 324, "gue-splice": 27,
-                      "real-reads": 324, "single-nucleotide": 162, "single-nucleotide-bf16": 162, "intervals": 3, "heldout": 360, "long-range": 9, "parsing": 3, "stability": 1, "efficiency": 2, "timing": 108,
+    assert counts == {"pretrain": 4, "nt18": 108, "random-init": 54, "baselines": 108, "baselines-fp32": 108, "baselines-authors": 108, "baselines-authors-bf16": 0, "genomic-benchmarks": 180, "tokenizer-study": 324, "gue-splice": 27,
+                      "real-reads": 324, "single-nucleotide": 162, "heldout": 360, "parsing": 3, "stability": 1, "efficiency": 2, "timing": 108,
                       "split-pretrain": 4, "split-nt18": 216, "split-score": 486}
 
 
@@ -95,3 +95,49 @@ def test_one_fold_tables():
     one, two = collect_results.cell([0.5], folds=1), collect_results.cell([0.5, 0.6], folds=2)
     assert one["complete"] and one["sd"] is None and collect_results.text(one) == "0.500"
     assert collect_results.text(two) == "0.550 ± 0.071"
+
+
+def test_baselines_run_at_the_precision_of_locus(tmp_path):
+    """The baselines of the main tables (plans baselines and single-nucleotide) fine-tune with the bfloat16 recipes, the
+    precision of LoCUS; plan baselines-fp32 runs the same recipes in float32, and the two recipe files differ only there.
+    scripts/finetune_baseline.py defaults to the bfloat16 recipe."""
+    import yaml
+
+    from locus.finetune.baselines import BASELINES
+
+    built = plans(tmp_path)
+    recipe = lambda job: Path(job.command[job.command.index("--recipe") + 1]).name
+    assert {recipe(job) for job in built["baselines"].stages[0]} == {"caduceus-ps-0.47m-bf16.yaml", "caduceus-ps-1.9m-bf16.yaml"}
+    assert {recipe(job) for job in built["baselines-fp32"].stages[0]} == {"caduceus-ps-0.47m.yaml", "caduceus-ps-1.9m.yaml"}
+    assert all("/caduceus-ps-1.9m-bf16/" in str(job.output) for job in built["single-nucleotide"].stages[1])
+    load = lambda name: yaml.safe_load((ROOT / "configs/finetune" / f"{name}.yaml").read_text())
+    for size in ("0.47m", "1.9m"):
+        bf16, fp32 = load(f"caduceus-ps-{size}-bf16"), load(f"caduceus-ps-{size}")
+        assert bf16.pop("autocast") == "bfloat16" and fp32.pop("autocast") == "float32" and bf16 == fp32
+    assert {baseline.recipe for baseline in BASELINES.values()} == {"caduceus-ps-0.47m-bf16", "caduceus-ps-1.9m-bf16"}
+
+
+def test_precision_table(tmp_path, monkeypatch):
+    """The main NT18 table shows the bfloat16 baselines; the precision table pairs them with the float32 runs fold by fold."""
+    import json
+
+    import collect_results
+
+    monkeypatch.setattr(collect_results, "NT18_FOLDS", 2)
+    results = tmp_path / "results"
+    tasks = [task for _, group in collect_results.NT18_GROUPS for task in group]
+    for run, base in (("caduceus-ps-1.9m-bf16", 0.6), ("caduceus-ps-1.9m", 0.5)):
+        for task in tasks:
+            for fold in range(2):
+                path = results / run / "nt18" / f"{task}_revised" / f"fold-{fold:02d}.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                mcc = base + 0.01 * fold
+                path.write_text(json.dumps({"history": [{"validation_loss": 0.5, "validation_metrics": {"mcc": 0.0}, "test_metrics": {"mcc": mcc}}],
+                                            "test_metrics": {"mcc": mcc}}))
+    numbers = {}
+    main = collect_results.nt18_table(results, numbers)
+    assert "caduceus-ps-1.9m-bf16" in main.splitlines()[2] and "| caduceus-ps-1.9m |" not in main
+    table = collect_results.precision_table(results, numbers)
+    difference = numbers["nt18_precision"]["H2AFZ"]["caduceus-ps-1.9m-bf16 - caduceus-ps-1.9m"]
+    assert difference["values"] == pytest.approx([0.1, 0.1]) and "+0.100 ± 0.000" in table
+    assert numbers["nt18_precision_tasks_bf16_higher"] == {"caduceus-ps-1.9m-bf16": 18}

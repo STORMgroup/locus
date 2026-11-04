@@ -10,8 +10,9 @@ equivariant: its 2 x d_model output channels hold the forward half and the chann
 are averaged per base (with mean pooling and a linear head this equals CaduceusForSequenceClassification's averaging of the
 two halves' logits). Caduceus needs the mamba-ssm CUDA kernels and runs on GPU only.
 
-Fine-tuning recipes (scripts/finetune_baseline.py, configs/finetune): configs/finetune/<baseline>.yaml is the protocol shared
-with LoCUS: Caduceus-PS 0.47M and 1.9M use the LoCUS-2M recipe in float32 (no autocast).
+Fine-tuning recipes (scripts/finetune_baseline.py, configs/finetune): configs/finetune/<baseline>-bf16.yaml (the default) is the
+protocol shared with LoCUS: Caduceus-PS 0.47M and 1.9M use the LoCUS-2M recipe in bfloat16 autocast, the precision of LoCUS;
+configs/finetune/<baseline>.yaml is the same recipe in float32 (no autocast; the precision check).
 configs/finetune/caduceus-ps-<size>-authors.yaml (supplementary runs of Caduceus-PS 0.47M and 1.9M, the sizes of LoCUS-0.5M
 and LoCUS-2M) holds Caduceus's own fine-tuning settings for the Nucleotide Transformer tasks (github.com/kuleshov-group/caduceus,
 configs/experiment/hg38/nucleotide_transformer.yaml and train.py with src/utils/optim_groups.add_optimizer_hooks; per task the
@@ -39,9 +40,9 @@ class Baseline:
 BASELINES = {
     # the size of LoCUS-0.5M: the shared protocol on NT18 (added 2026-10-31) and Caduceus's own settings (supplementary table)
     "caduceus-ps-0.47m": Baseline("kuleshov-group/caduceus-ps_seqlen-1k_d_model-118_n_layer-4_lr-8e-3",
-                                  "51d88e326c0fadb0dcc63efdd7345119ce672ce5", "caduceus", "caduceus-ps-0.47m"),
+                                  "51d88e326c0fadb0dcc63efdd7345119ce672ce5", "caduceus", "caduceus-ps-0.47m-bf16"),
     "caduceus-ps-1.9m": Baseline("kuleshov-group/caduceus-ps_seqlen-1k_d_model-256_n_layer-4_lr-8e-3",
-                                 "2de36509b76b4395a97bfa39acafeb6f17b537c5", "caduceus", "caduceus-ps-1.9m"),
+                                 "2de36509b76b4395a97bfa39acafeb6f17b537c5", "caduceus", "caduceus-ps-1.9m-bf16"),
 }
 
 PAD_TOKEN = 4

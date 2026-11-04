@@ -3,7 +3,7 @@
     python scripts/compare_results.py                                   # results/tables.json against the paper
     python scripts/compare_results.py --results other/tables.json --all # also list every cell, not only the summary
 
-For every number present in both files (fold means of the fine-tuning tables and the frozen-embedding values) the difference rerun - paper is computed; the summary gives, per table, the number of cells compared, the mean
+For every number present in both files (fold means of the fine-tuning tables and the values of the parse and embedding tests) the difference rerun - paper is computed; the summary gives, per table, the number of cells compared, the mean
 and largest absolute difference, and the cells whose difference exceeds --tolerance. Fine-tuning on GPU is not bit-for-bit
 repeatable (floating-point atomics): in the paper, repeated fine-tunes with the same seed differed by about 0.013 MCC per
 fold on average, so 18-task means of a rerun are expected to differ by about 0.01 and single small tasks such as

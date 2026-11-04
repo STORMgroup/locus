@@ -64,7 +64,8 @@ recipes (`locus/finetune/baselines.py`, `scripts/finetune_baseline.py`, `configs
 - **Optimizer:** the LoCUS-2M recipe for both sizes (learning rate 1e-3, 1% warm-up, batch 128, 20 epochs, cosine decay to
   0.1x), AdamW with weight decay 0.1 on every parameter with two or more dimensions. This includes Mamba's `A_log`, which Mamba marks to be excluded from weight
   decay (`_no_weight_decay`); `D`, also marked, has one dimension and is not decayed.
-- **Precision:** float32 (LoCUS fine-tunes in bf16): bf16 training at this learning rate failed for Caduceus-PS.
+- **Precision:** bf16 autocast, as for LoCUS. The `baselines-fp32` plan repeats the runs in float32
+  (`configs/finetune/caduceus-ps-<size>.yaml`) as a precision check (supplementary table).
 - **Strands, folds and selection:** as for LoCUS (random strand in training, logits of both strands averaged at
   evaluation, the same validation folds and seeds, the epoch with the lowest validation loss).
 
@@ -98,10 +99,6 @@ No benchmark sequence or label is changed. The preparation scripts download pinn
 - GRCh38.p14 (NCBI RefSeq, MD5 checked): cut into windows that contain only A, C, G and T (`scripts/prepare_genome.sh`).
 - NT18 revised and Genomic Benchmarks: sequences and labels as published; preparation stops on any symbol other than
   A, C, G, T or N (NT18), or would replace it by N and count it (Genomic Benchmarks; the count is 0 for every split).
-- Frozen eQTL / bulk RNA tasks of the long-range benchmark: the benchmark's elements cut from the genome as the
-  benchmark's loader does (4 kb windows); an element whose 4 kb or 16 kb window runs off the chromosome or contains an N (the item set of the paper's runs, fixed when longer
-  inputs were also tried)
-  is dropped (counts in the prepared `rows.json.gz`).
 - GUE splice sites (DNABERT-2's GUE, `GUE/splice/reconstructed`): read from the Hugging Face copy leannmlindsey/GUE at
   commit 240df51a2cd2c0fb1d88efffaf86e8d1e477f932, whose files are identical to those of the GUE archive released with
   DNABERT-2; sequences upper-cased, labels unchanged; GUE's dev split is not used.

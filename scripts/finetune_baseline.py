@@ -2,12 +2,13 @@
 one validation fold of a benchmark task and score the test set.
 
     python scripts/finetune_baseline.py --baseline caduceus-ps-1.9m --data-root data/benchmarks/nt18 \\
-        --task H3K27ac_revised --fold 0 --output results/caduceus-ps-1.9m/nt18/H3K27ac_revised/fold-00.json
+        --task H3K27ac_revised --fold 0 --output results/caduceus-ps-1.9m-bf16/nt18/H3K27ac_revised/fold-00.json
 
 Everything except the encoder is shared with scripts/finetune.py: the folds (fold k validates on fold k of a stratified
 10-fold split of the training set, seed 42, and trains with seed 42 + k), random-strand training, strand-averaged
 evaluation, the dropout 0.1 set in every dropout layer of the encoder and before the linear classifier, selection of the
-epoch with the lowest validation loss, and resuming. The recipe defaults to configs/finetune/<baseline>.yaml; with
+epoch with the lowest validation loss, and resuming. The recipe defaults to configs/finetune/<baseline>-bf16.yaml, the
+protocol of LoCUS in bfloat16 like LoCUS; --recipe configs/finetune/<baseline>.yaml runs it in float32, and with
 --recipe configs/finetune/<baseline>-authors.yaml the baseline is fine-tuned with its authors' settings instead (recipe
 entries optimizer_groups: their weight-decay groups; train_orientation and evaluation_orientation: the strand read in
 training and in validation and test, "forward" or the default random strand and average of both strands; task_settings:
@@ -39,7 +40,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--baseline", required=True, choices=list(BASELINES))
     parser.add_argument("--baseline-path", help="local copy of the baseline's Hugging Face repository (default: download)")
-    parser.add_argument("--recipe", type=Path, help="default: configs/finetune/<baseline>.yaml")
+    parser.add_argument("--recipe", type=Path, help="default: configs/finetune/<baseline>-bf16.yaml (the protocol of LoCUS)")
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--task", required=True)
     parser.add_argument("--fold", type=int, required=True)
