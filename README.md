@@ -65,7 +65,7 @@ python scripts/finetune.py --pretrained locus-2m --recipe configs/finetune/locus
 ```
 
 On an RTX A5000 this takes about 15 minutes. The paper's test MCC for this task is 0.469 ± 0.009 over its 10 folds
-(0.487 on fold 0, its highest fold); runs of this example on fold 0 gave 0.448 to 0.467, because repeated GPU runs differ
+(0.487 on fold 0, its highest fold); runs of this example on fold 0 gave 0.448 to 0.481, because repeated GPU runs differ
 (see [Reproducibility](benchmarks/README.md#reproducibility)).
 
 The result file records every epoch and the test score of the epoch with the lowest validation loss. `--pretrained`
