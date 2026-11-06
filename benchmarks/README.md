@@ -303,7 +303,8 @@ This writes each table of the paper that `results/` has results for to `results/
   study, GUE splice and the real reads (`--nt18-folds`) and 10 for the Genomic Benchmarks and the held-out check
   (`--other-folds`). A cell with missing folds shows the
   mean and the number of folds instead, and the script warns about missing folds in the NT18, GUE splice and real-read
-  tables.
+  tables. Rows over several tasks (group and all-18 means, paired drop tests, real-read and single-nucleotide rows) are
+  filled only once every task-fold of their tasks is in; until then the drop tables show how many task-folds are in.
 - **Set names.** The table "Tokenizer study: modified test sets" explains the set names (ont1, sub3, pbsim97, ...).
 - **Paired drop tests.** Each drop is the mean over task-folds, with the standard deviation over folds and a 95%
   interval from a bootstrap over tasks (4,000 resamples). The folds of a task stay together because they share its test
@@ -333,15 +334,20 @@ This writes each table of the paper that `results/` has results for to `results/
   shared vs shared), and by about 0.01 on 18-task means. Small test sets differ more: on promoter_tata (212 test
   sequences, where 4 sequences change the MCC by about 0.04) same-seed runs of LoCUS-2M on fold 0 ranged from 0.77 to
   0.90, and on H3K9me3 runs differed by 0.03 to 0.06. The fine-tune example of the main README (H3K27ac, fold 0) gave
-  0.448 to 0.481 against the paper's 0.487. Compare means over folds and tasks, not single folds. `reproduce.py` sets
+  0.448 to 0.484 against the paper's 0.487. Compare means over folds and tasks, not single folds. `reproduce.py` sets
   `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` for its jobs, as the paper's runs did, so that three fine-tunes fit
   on one 24 GB GPU; this only changes how memory is allocated.
+- **Caduceus-PS.** The baselines also differ from run to run, so their single folds will not match the paper exactly
+  either. Four same-seed runs of Caduceus-PS 0.47M on promoter_tata, fold 0 (RTX A5000) gave 0.658 to 0.746 in bfloat16
+  (the main baseline; paper 0.720) and 0.682 to 0.727 in float32 (paper 0.689). The validation losses of two such runs
+  differed from the first epoch on in bfloat16, and from the third in float32, enough to change the selected epoch.
 - **Test sets with errors.** The error sets and controls are generated from fixed seeds, and PBSIM3 runs with a fixed
   seed at its pinned commit. Regenerated from the NT18 download, they are byte-identical to the paper's. PBSIM3 draws its
   random numbers from the C library, so this holds on Linux (glibc). `benchmarks/noisy_reads/test_sets_sha256.tsv` lists
   the SHA-256 of the paper's 1,330 generated sets (NT18 and GUE splice sites, 10 draws each); check yours with
   `cd data/benchmarks && sha256sum -c ../../benchmarks/noisy_reads/test_sets_sha256.tsv`. The real reads are checked
-  against the paper's checksums by `scripts/get_real_reads.sh`.
+  against the paper's checksums (`noisy_reads/real_reads_sha256.tsv`) by `scripts/get_real_reads.sh` and by the
+  real-reads step of `reproduce.py`, which both stop if a set differs.
 - **The LCP library.** `third_party/lcptools` is [lcptools](https://github.com/BilkentCompGen/lcptools) at commit
   9dcc05f with a small local patch (`third_party/lcptools/local-changes.patch`). The patch adds the core type to `struct
   core`, which the Python bindings in `locus/segmentation.py` need, and fixes how cores are released in

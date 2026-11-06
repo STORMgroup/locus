@@ -646,11 +646,16 @@ def study_tables(results: Path, numbers: dict) -> str:
     def with_sd(mean: float, sd, signed: bool = True) -> str:
         return number(mean, signed) + ("" if sd is None else f" ± {sd:.3f}")
 
-    rows, tests = [], []
+    rows, tests, empty = [], [], 0
     for label, key in STUDY_SETS:
         for scope, tasks in [("all 18", all_tasks)] + NT18_GROUPS:
             pairs = [(t, f) for t in tasks for f in range(NT18_FOLDS) if all(key in folds[name, t].get(f, {}) for name, _ in TOKENIZERS)]
-            if not pairs:
+            if len(pairs) < len(tasks) * NT18_FOLDS:
+                # like the NT18 means: a row is filled once all three twins have every task-fold of its tasks; the entry keeps
+                # the list of tests aligned with the paper's for compare_results
+                tests.append({"set": label, "scope": scope, "task_folds": len(pairs)})
+                rows.append([label, scope, f"{len(pairs)} of {len(tasks) * NT18_FOLDS}"] + [""] * 9)
+                empty += 1
                 continue
             drop = {name: [folds[name, t][f][key] - folds[name, t][f]["clean"] for t, f in pairs] for name, _ in TOKENIZERS}
             versus = {other: [a - b for a, b in zip(drop["LCP"], drop[other])] for other in ("BPE", "fixed")}
@@ -668,6 +673,8 @@ def study_tables(results: Path, numbers: dict) -> str:
                         [x for other in versus for x in (with_sd(test[f"LCP - {other}"], test[f"LCP - {other} fold sd"]),
                                                          interval_text(interval[other]), test[f"LCP less than {other}"])])
     numbers["tokenizer_study"]["drop tests"] = tests
+    if empty:
+        WARNINGS.append(f"tokenizer study, paired drop tests: {empty} of {len(tests)} rows left empty (task-folds missing)")
     out.append(markdown("Tokenizer study: paired drop tests by NT18 group (drop = set - clean on the same fold; > 0: LCP loses less)",
                         ["test set", "tasks", "task-folds", "LCP drop", "BPE drop", "fixed drop", "LCP - BPE", "LCP - BPE 95% CI", "LCP drops less than BPE",
                          "LCP - fixed", "LCP - fixed 95% CI", "LCP drops less than fixed"], rows,
@@ -826,7 +833,8 @@ def real_reads_table(results: Path, numbers: dict) -> str:
     table, values = [], {}
     for scope, scope_tasks in REAL_GROUPS + [("all 18", tasks)]:
         pairs = [(t, f) for t, f in have if t in scope_tasks]
-        if not pairs:
+        if len(pairs) < len(scope_tasks) * NT18_FOLDS:  # like the NT18 means: filled once every task-fold of its tasks is scored
+            table.append([scope, f"{len(pairs)} of {len(scope_tasks) * NT18_FOLDS}"] + [""] * 6)
             continue
         drop = {(name, b): [rows[name, t][f][f"real{b}"] - rows[name, t][f]["realref"] for t, f in pairs] for name, _ in TOKENIZERS for b in ("sup", "hac")}
         for name, _ in TOKENIZERS:
@@ -909,17 +917,17 @@ def single_nucleotide_table(results: Path, numbers: dict, single: list = None, k
                 scored = {name: [(t, f) for t, f in full if reference in rows[name, t].get(f, {})
                                  and rows[name, t][f].get(f"{key} draws") == NOISY_DRAWS] for name in names}
                 # a model enters a row once it has every task-fold of the row, so the rows of the other models do not change while
-                # its runs come in; without LCP and one complete model, the row uses the task-folds scored for every model
+                # its runs come in; like the NT18 means, the row stays empty until LCP and one other model have all of them
                 present = [name for name in names if len(scored[name]) == len(full)]
-                if "LCP" not in present or len(present) < 2:
-                    present = names
-                pairs = [p for p in full if all(p in scored[name] for name in present)]
                 missing = [name for name in names if name not in present]
-                if scope == "all 18" and (len(pairs) < len(full) or missing):
-                    WARNINGS.append(f"single-nucleotide models, {title.split(' (')[0]}, {label}: {len(pairs)} of {len(full)} task-folds"
-                                    + (f"; not complete: {', '.join(f'{name} ({len(scored[name])})' for name in missing)}" if missing else ""))
-                if not pairs:
+                if scope == "all 18" and missing:
+                    WARNINGS.append(f"single-nucleotide models, {title.split(' (')[0]}, {label}: not complete: "
+                                    + ", ".join(f"{name} ({len(scored[name])} of {len(full)} task-folds)" for name in missing))
+                if "LCP" not in present or len(present) < 2:
+                    table.append([label, scope, ", ".join(f"{name} {len(scored[name])}" for name in names) + f" of {len(full)}"]
+                                 + [""] * (len(names) + 3 * (len(names) - 1)))
                     continue
+                pairs = full
                 drop = {name: [rows[name, t][f][key] - rows[name, t][f][reference] for t, f in pairs] for name in present}
                 entry = {"task-folds": len(pairs), **{f"{name} drop": statistics.mean(drop[name]) if name in present else None for name in names}}
                 cells = []

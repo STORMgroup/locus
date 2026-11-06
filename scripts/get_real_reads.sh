@@ -31,11 +31,7 @@ if [[ ! -f data/benchmarks/nt18/splice_sites_all_revised/test.jsonl.gz ]]; then
     "$PYTHON" benchmarks/nt18/prepare.py
 fi
 
-"$PYTHON" benchmarks/noisy_reads/real_reads.py --nt18 data/benchmarks/nt18 --genome data/GRCh38.p14.fasta.gz --out "$OUT"
-
-if (cd "$OUT" && sha256sum -c --quiet "$ROOT/benchmarks/noisy_reads/real_reads_sha256.tsv"); then
-    echo "real reads identical to the paper's ($(wc -l < benchmarks/noisy_reads/real_reads_sha256.tsv) files): $OUT"
-else
-    echo "the extracted reads differ from the paper's (benchmarks/noisy_reads/real_reads_sha256.tsv); see above" >&2
-    exit 1
-fi
+# stops with the differing files if the sets are not the paper's (then summary.json is not written)
+"$PYTHON" benchmarks/noisy_reads/real_reads.py --nt18 data/benchmarks/nt18 --genome data/GRCh38.p14.fasta.gz --out "$OUT" \
+    --expected benchmarks/noisy_reads/real_reads_sha256.tsv
+echo "real reads identical to the paper's ($(wc -l < benchmarks/noisy_reads/real_reads_sha256.tsv) files): $OUT"

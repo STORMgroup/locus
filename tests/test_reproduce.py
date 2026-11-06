@@ -143,3 +143,56 @@ def test_precision_table(tmp_path, monkeypatch):
     difference = numbers["nt18_precision"]["H2AFZ"]["caduceus-ps-1.9m-bf16 - caduceus-ps-1.9m"]
     assert difference["values"] == pytest.approx([0.1, 0.1]) and "+0.100 ± 0.000" in table
     assert numbers["nt18_precision_tasks_bf16_higher"] == {"caduceus-ps-1.9m-bf16": 18}
+
+
+def test_rows_over_several_tasks_wait_for_every_task(tmp_path, monkeypatch):
+    """Like the NT18 means, the paired drop tests, the real-read rows and the single-nucleotide rows of a group or of all 18
+    tasks stay empty until every task-fold of their tasks is in, so a partial rerun is not compared with 18-task means."""
+    import json
+
+    import collect_results
+
+    monkeypatch.setattr(collect_results, "NT18_FOLDS", 1)
+    monkeypatch.setattr(collect_results, "WARNINGS", [])
+    draws = lambda name, value: {f"{name}-d{k}" if k else name: {"mcc": value} for k in range(collect_results.NOISY_DRAWS)}
+    noisy = {}
+    for _, key in collect_results.STUDY_SETS:
+        noisy.update(draws(key, 0.5))
+    real = {"realref": {"mcc": 0.7}, **draws("realsup", 0.6), **draws("realhac", 0.55)}
+
+    def write(results, tasks):
+        for task in tasks:
+            for _, directory in collect_results.TOKENIZERS:
+                path = results / "tokenizer_study" / directory / "nt18" / f"{task}_revised" / "fold-00.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({"best_step": 1, "test_metrics": {"mcc": 0.6}, "history": [
+                    {"validation_loss": 0.5, "validation_metrics": {"mcc": 0.6}, "test_metrics": {"mcc": 0.6}, "extra_test_metrics": noisy}]}))
+                path = results / "real_reads" / directory / "nt18" / f"{task}_revised" / "fold-00.scored.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({"best_step": 1, "sets": real}))
+            path = results / "single_nucleotide" / "caduceus-ps-1.9m-bf16" / "nt18" / f"{task}_revised" / "fold-00.scored.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"best_step": 1, "sets": {"clean": {"mcc": 0.6}, **noisy}}))
+            path = results / "real_reads" / "caduceus-ps-1.9m-bf16" / "nt18" / f"{task}_revised" / "fold-00.scored.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"best_step": 1, "sets": real}))
+
+    def collect(results):
+        numbers = {}
+        tables = (collect_results.study_tables(results, numbers) + collect_results.real_reads_table(results, numbers)
+                  + collect_results.single_nucleotide_table(results, numbers))
+        return numbers, tables
+
+    tasks = [task for _, group in collect_results.NT18_GROUPS for task in group]
+    write(tmp_path / "one", ["promoter_tata"])
+    numbers, tables = collect(tmp_path / "one")
+    assert all("LCP drop" not in test for test in numbers["tokenizer_study"]["drop tests"])
+    assert len(numbers["tokenizer_study"]["drop tests"]) == len(collect_results.STUDY_SETS) * (len(collect_results.NT18_GROUPS) + 1)
+    assert not numbers["real_reads"] and all(not values for values in numbers["single_nucleotide"].values())
+    assert "| 1% | all 18 | 1 of 18 |" in tables and "| promoter | 1 of 3 |" in tables
+    write(tmp_path / "all", tasks)
+    numbers, _ = collect(tmp_path / "all")
+    assert all(test["LCP drop"] == pytest.approx(-0.1) for test in numbers["tokenizer_study"]["drop tests"])
+    assert numbers["real_reads"]["all 18"]["LCP"]["drop sup"] == pytest.approx(-0.1)
+    simulated = numbers["single_nucleotide"]["NT18, simulated errors (drop = set - clean test set)"]
+    assert simulated["1%"]["all 18"]["task-folds"] == 18

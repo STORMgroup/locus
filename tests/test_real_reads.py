@@ -41,3 +41,13 @@ def test_insertion_at_the_window_edge_is_not_kept():
 def test_window_inside_a_deletion_is_empty():
     (sequence, substitutions, inserted, deleted, longest), _ = cut(121, 123)
     assert sequence == "" and deleted == 2 and longest == 3
+
+
+def test_checksum_problems(tmp_path):
+    expected = tmp_path / "expected.tsv"
+    expected.write_text("aa  A_realref_revised/test.jsonl.gz\nbb  A_realsup_revised/test.jsonl.gz\n")
+    same = {"A_realref_revised/test.jsonl.gz": "aa", "A_realsup_revised/test.jsonl.gz": "bb"}
+    assert real_reads.checksum_problems(same, expected) == []
+    assert real_reads.checksum_problems({"A_realref_revised/test.jsonl.gz": "ab", "B_realref_revised/test.jsonl.gz": "cc"}, expected) == [
+        "A_realref_revised/test.jsonl.gz: differs", "A_realsup_revised/test.jsonl.gz: missing",
+        "B_realref_revised/test.jsonl.gz: not in expected.tsv"]

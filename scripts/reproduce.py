@@ -31,7 +31,8 @@ Plans:
                         fine-tuned on its clean training data (folds as --nt18-folds), then scored on the same kinds of modified
                         test sets, also without the test rows that share a splice site with NT18 (benchmarks/gue/independent_sets.py)
     real-reads          the tokenizer study's NT18 folds scored on real HG002 nanopore reads of their test windows
-                        (benchmarks/noisy_reads/real_reads.py; streams the public CRAM files, needs network)
+                        (benchmarks/noisy_reads/real_reads.py; streams the public CRAM files, needs network; stops unless
+                        the sets are identical to the paper's, benchmarks/noisy_reads/real_reads_sha256.tsv)
     single-nucleotide   Caduceus-PS 1.9M's runs (single nucleotides, folds of the baselines plan) scored on the same modified test
                         sets and real reads: the loss that errors cause without a tokenizer (needs bash install.sh --baselines)
     single-nucleotide-fp32
@@ -200,7 +201,7 @@ def data_steps(data: Path) -> dict:
         "gue-independent": ([gue_independent / "metadata.json"], [script("benchmarks/gue/independent_sets.py", "--data-root", gue, "--out", gue_independent)]),
         "real-reads": ([data / "benchmarks/real_reads/summary.json"],
                        [script("benchmarks/noisy_reads/real_reads.py", "--nt18", nt18, "--genome", data / "GRCh38.p14.fasta.gz",
-                               "--out", data / "benchmarks/real_reads")]),
+                               "--out", data / "benchmarks/real_reads", "--expected", ROOT / "benchmarks/noisy_reads/real_reads_sha256.tsv")]),
     }
 
 

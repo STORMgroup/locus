@@ -25,8 +25,8 @@ so every set of a task has the same windows in the same order, and realref is th
 
 Also written:
   checksums.tsv     SHA-256 of every set file (sha256sum -c format); the sets are written deterministically, so
-                    scripts/get_real_reads.sh compares a new extraction with the paper's
-                    (benchmarks/noisy_reads/real_reads_sha256.tsv)
+                    --expected benchmarks/noisy_reads/real_reads_sha256.tsv (passed by scripts/get_real_reads.sh and
+                    scripts/reproduce.py) compares a new extraction with the paper's
 Score them into their own directory: benchmarks/noisy_reads/score.py <tokenizer-study fold result> --data-root <out>
 --sets realref realsup ... --output-dir results/real_reads/<twin>/nt18/<task>_revised (scripts/reproduce.py plan real-reads).
 
@@ -251,6 +251,8 @@ def main() -> None:
     parser.add_argument("--genome", type=Path, default=ROOT / "data/GRCh38.p14.fasta.gz", help="GRCh38.p14 (scripts/prepare_genome.sh)")
     parser.add_argument("--out", type=Path, default=ROOT / "data/benchmarks/real_reads")
     parser.add_argument("--limit", type=int, help="quick check: only the first LIMIT windows of each chromosome")
+    parser.add_argument("--expected", type=Path, help="checksums the sets must match (sha256sum -c format, such as "
+                        "benchmarks/noisy_reads/real_reads_sha256.tsv); summary.json is written only when they do")
     arguments = parser.parse_args()
     import pysam  # requirements.txt; imported here so that the other scripts do not need it
 
@@ -318,12 +320,28 @@ def main() -> None:
         summary[f"divergence_{basecall}"]["total"] = sum(summary[f"divergence_{basecall}"].values())
         summary[f"divergence_{basecall}"]["per_read_quantiles"] = {
             str(q): float(np.quantile(per_read[basecall], q)) for q in (0.1, 0.25, 0.5, 0.75, 0.9)} if per_read[basecall] else {}
-    (arguments.out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
     files = sorted(arguments.out.glob("*_revised/test.jsonl.gz"))
-    (arguments.out / "checksums.tsv").write_text("".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(arguments.out)}\n"
-                                                         for path in files))
+    checksums = {str(path.relative_to(arguments.out)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
+    (arguments.out / "checksums.tsv").write_text("".join(f"{digest}  {name}\n" for name, digest in checksums.items()))
     log(json.dumps(summary, indent=1))
     log(f"checksums.tsv: {len(files)} files")
+    if arguments.expected:
+        problems = checksum_problems(checksums, arguments.expected)
+        if problems:
+            sys.exit(f"the extracted reads differ from {arguments.expected} in {len(problems)} file(s), so summary.json is not "
+                     "written:\n  " + "\n  ".join(problems[:20]) + ("\n  ..." if len(problems) > 20 else ""))
+        log(f"identical to {arguments.expected} ({len(checksums)} files)")
+    (arguments.out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+
+
+def checksum_problems(checksums: dict, expected_path: Path) -> list:
+    """The set files (path relative to the output directory -> SHA-256) that differ from, are missing in, or are not listed
+    in a checksum file in sha256sum -c format."""
+    expected = {name.strip().lstrip("*"): digest for digest, name in
+                (line.split(None, 1) for line in expected_path.read_text().splitlines() if line.strip())}
+    problems = [f"{name}: missing" if name not in checksums else f"{name}: differs"
+                for name in sorted(expected) if checksums.get(name) != expected[name]]
+    return problems + [f"{name}: not in {expected_path.name}" for name in sorted(set(checksums) - set(expected))]
 
 
 if __name__ == "__main__":
